@@ -4,6 +4,10 @@ public class ErrorCodes {
     private ErrorCodes() {}
 
     public static final String VALIDATION_FAILED  = "validation_failed";  // 400
+    public static final String UNAUTHORIZED          = "unauthorized";          // 401
+    public static final String INVALID_REFRESH_TOKEN = "invalid_refresh_token"; // 401
+    public static final String FORBIDDEN             = "forbidden";             // 403
+    public static final String ACCOUNT_DISABLED      = "account_disabled";      // 403
     public static final String NOT_YOUR_RIDER     = "not_your_rider";     // 403
     public static final String NOT_FOUND          = "not_found";          // 404
     public static final String SEAT_TAKEN         = "seat_taken";         // 409

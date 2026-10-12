@@ -1,6 +1,8 @@
 package com.equestrian.equis.common.error;
 
 import org.springframework.http.*;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -14,6 +16,22 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     ProblemDetail handleApi(ApiException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(ex.status(), ex.getMessage());
         pd.setProperty("code", ex.code());
+        return pd;
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    ProblemDetail handleAuthentication(AuthenticationException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED, "Please sign in again.");
+        pd.setProperty("code", ErrorCodes.UNAUTHORIZED);
+        return pd;
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN, "You don't have access to this.");
+        pd.setProperty("code", ErrorCodes.FORBIDDEN);
         return pd;
     }
 
