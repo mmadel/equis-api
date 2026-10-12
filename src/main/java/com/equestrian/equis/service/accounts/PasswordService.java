@@ -1,12 +1,15 @@
 package com.equestrian.equis.service.accounts;
 
 import com.equestrian.equis.common.error.ApiException;
+import com.equestrian.equis.common.error.ApiFieldError;
 import com.equestrian.equis.common.error.ErrorCodes;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -27,8 +30,11 @@ public class PasswordService {
     public String hash(String raw) {
         int bytes = raw == null ? 0 : byteLength(raw);
         if (bytes < MIN_BYTES || bytes > MAX_BYTES) {
+            // Same body shape as a Bean Validation failure, so the page shows it under the password field.
             throw new ApiException(HttpStatus.BAD_REQUEST, ErrorCodes.VALIDATION_FAILED,
-                    "Password must be between " + MIN_BYTES + " and " + MAX_BYTES + " bytes.");
+                    "Some fields are not valid.",
+                    Map.of("fieldErrors", List.of(new ApiFieldError("password",
+                            "Password must be between " + MIN_BYTES + " and " + MAX_BYTES + " bytes."))));
         }
         return passwordEncoder.encode(raw);
     }

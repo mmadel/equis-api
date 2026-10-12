@@ -71,6 +71,6 @@ public class AccountLinkService {
 
     private static ApiException invalidLink() {
         return new ApiException(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_LINK,
-                "This link is not valid any more.");
+                "This link has expired or was already used. Ask your admin for a new one.");
     }
 }
