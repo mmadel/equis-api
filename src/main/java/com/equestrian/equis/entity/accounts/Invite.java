@@ -49,4 +49,8 @@ public class Invite {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    // A link works once and only until it expires.
+    public boolean isOpen(Instant now) {
+        return acceptedAt == null && expiresAt.isAfter(now);
+    }
 }

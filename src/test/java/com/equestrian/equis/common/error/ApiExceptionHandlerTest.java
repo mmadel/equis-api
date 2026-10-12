@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,6 +36,12 @@ public class ApiExceptionHandlerTest {
         @GetMapping("/test/conflict")
         void conflict() {
             throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.SEAT_TAKEN, "That seat is already taken.");
+        }
+
+        @GetMapping("/test/extra")
+        void extra() {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, ErrorCodes.INVALID_CREDENTIALS,
+                    "Wrong email or password.", Map.of("attemptsLeft", 3));
         }
 
         @PostMapping("/test/validate")
@@ -64,6 +72,14 @@ public class ApiExceptionHandlerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.code").value("seat_taken"))
                 .andExpect(jsonPath("$.detail").value("That seat is already taken."));
+    }
+
+    @Test
+    void apiException_copiesItsExtraPropertiesOntoTheBody() throws Exception {
+        mvc.perform(get("/test/extra"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("invalid_credentials"))
+                .andExpect(jsonPath("$.attemptsLeft").value(3));
     }
 
     @Test

@@ -37,6 +37,26 @@ public class AuthPropertiesTest {
         });
     }
 
+    @Test
+    void bindsAdminLockoutFromApplicationProperties() {
+        contextRunner.run(context -> {
+            AuthProperties properties = context.getBean(AuthProperties.class);
+
+            assertThat(properties.admin().lockout().maxAttempts()).isEqualTo(5);
+            assertThat(properties.admin().lockout().duration()).isEqualTo(Duration.ofMinutes(15));
+        });
+    }
+
+    @Test
+    void bindsLinkTtlsFromApplicationProperties() {
+        contextRunner.run(context -> {
+            AuthProperties properties = context.getBean(AuthProperties.class);
+
+            assertThat(properties.invite().ttl()).isEqualTo(Duration.ofHours(72));
+            assertThat(properties.reset().ttl()).isEqualTo(Duration.ofHours(24));
+        });
+    }
+
     @Configuration
     @EnableConfigurationProperties(AuthProperties.class)
     static class TestConfig {
