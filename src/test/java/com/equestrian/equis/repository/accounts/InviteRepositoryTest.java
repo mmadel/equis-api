@@ -3,6 +3,7 @@ package com.equestrian.equis.repository.accounts;
 import com.equestrian.equis.entity.accounts.Invite;
 import com.equestrian.equis.entity.accounts.InvitePurpose;
 import com.equestrian.equis.entity.accounts.Trainer;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -43,6 +44,12 @@ public class InviteRepositoryTest {
     TrainerRepository trainerRepository;
     @Autowired
     JdbcTemplate jdbcTemplate;
+
+    // V4 seeds dev trainers and an invite; clear them so each test starts from empty tables (rolled back afterwards).
+    @BeforeEach
+    void clearSeededTrainers() {
+        jdbcTemplate.update("DELETE FROM trainer");
+    }
 
     @Test
     void savesWithGeneratedIdAndCreatedAt() {

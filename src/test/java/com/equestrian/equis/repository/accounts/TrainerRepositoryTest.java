@@ -2,6 +2,7 @@ package com.equestrian.equis.repository.accounts;
 
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -30,6 +31,12 @@ public class TrainerRepositoryTest {
     TrainerRepository trainerRepository;
     @Autowired
     JdbcTemplate jdbcTemplate;
+
+    // V4 seeds dev trainers and an invite; clear them so each test starts from empty tables (rolled back afterwards).
+    @BeforeEach
+    void clearSeededTrainers() {
+        jdbcTemplate.update("DELETE FROM trainer");
+    }
 
     @Test
     void savesWithGeneratedIdDefaultStatusAndTimestamps() {
