@@ -92,6 +92,14 @@ public class TrainerRepositoryTest {
     }
 
     @Test
+    void existsByIdAndStatus() {
+        Trainer saved = trainerRepository.saveAndFlush(trainer("Sara Ali", "01000000001", "sara@example.com"));
+
+        assertThat(trainerRepository.existsByIdAndStatus(saved.getId(), TrainerStatus.INVITED)).isTrue();
+        assertThat(trainerRepository.existsByIdAndStatus(saved.getId(), TrainerStatus.ACTIVE)).isFalse();
+    }
+
+    @Test
     void rejectsBlankName() {
         assertThatThrownBy(() -> insert("   ", "01000000001", "sara@example.com", null, "invited"))
                 .isInstanceOf(DataIntegrityViolationException.class)
