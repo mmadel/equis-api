@@ -26,6 +26,17 @@ public class AuthPropertiesTest {
         });
     }
 
+    @Test
+    void bindsJwtSettingsFromApplicationProperties() {
+        contextRunner.run(context -> {
+            AuthProperties properties = context.getBean(AuthProperties.class);
+
+            assertThat(properties.jwt().secret()).isNotBlank();
+            assertThat(properties.jwt().issuer()).isEqualTo("equis-api");
+            assertThat(properties.jwt().accessTtl()).isEqualTo(Duration.ofMinutes(15));
+        });
+    }
+
     @Configuration
     @EnableConfigurationProperties(AuthProperties.class)
     static class TestConfig {

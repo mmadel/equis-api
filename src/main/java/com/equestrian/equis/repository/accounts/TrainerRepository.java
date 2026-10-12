@@ -1,6 +1,7 @@
 package com.equestrian.equis.repository.accounts;
 
 import com.equestrian.equis.entity.accounts.Trainer;
+import com.equestrian.equis.entity.accounts.TrainerStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -14,4 +15,6 @@ public interface TrainerRepository extends JpaRepository<Trainer, UUID> {
     boolean existsByEmail(String email);
 
     boolean existsByPhone(String phone);
+
+    boolean existsByIdAndStatus(UUID id, TrainerStatus status);
 }
