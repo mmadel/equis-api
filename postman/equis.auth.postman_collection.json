@@ -1,0 +1,424 @@
+{
+  "info": {
+    "name": "equis.auth",
+    "description": "Sign-in, token refresh and invite/reset link acceptance for the Equis API.\n\nTrainer requests use the dev rows seeded by V4. Set adminEmail and adminPassword in the collection variables to match APP_ADMIN_EMAIL and the password behind APP_ADMIN_PASSWORD_HASH.\n\nA successful login or refresh stores accessToken and refreshToken in the collection variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "adminEmail", "value": "admin@example.com" },
+    { "key": "adminPassword", "value": "" },
+    { "key": "trainerEmail", "value": "trainer1@example.com" },
+    { "key": "trainerPhone", "value": "010 0000 0001" },
+    { "key": "trainerPassword", "value": "Trainer@123" },
+    { "key": "inviteToken", "value": "dev-invite-token-trainer2-0000000000000000000000" },
+    { "key": "newPassword", "value": "Trainer@12345" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Login",
+      "item": [
+        {
+          "name": "Login - admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 with an admin token pair', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.role).to.eql('ADMIN');",
+                  "    pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": false\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login - admin wrong password (401, attemptsLeft)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// The 5th wrong try in a row answers 423 account_locked instead.",
+                  "pm.test('401 invalid_credentials with attemptsLeft, or 423 account_locked', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 423]);",
+                  "    const body = pm.response.json();",
+                  "    if (pm.response.code === 401) {",
+                  "        pm.expect(body.code).to.eql('invalid_credentials');",
+                  "        pm.expect(body.attemptsLeft).to.be.a('number');",
+                  "    } else {",
+                  "        pm.expect(body.code).to.eql('account_locked');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"wrong-password\",\n  \"rememberMe\": false\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login - trainer by email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 with a trainer token pair', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.role).to.eql('TRAINER');",
+                  "    pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{trainerEmail}}\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": true\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login - trainer by phone (with spaces)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 with a trainer token pair', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.role).to.eql('TRAINER');",
+                  "    pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{trainerPhone}}\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": false\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login - trainer wrong password (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 invalid_credentials without attemptsLeft', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.code).to.eql('invalid_credentials');",
+                  "    pm.expect(body).to.not.have.property('attemptsLeft');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{trainerEmail}}\",\n  \"password\": \"wrong-password\",\n  \"rememberMe\": false\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login - unknown account (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 invalid_credentials, same as a wrong password', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    pm.expect(pm.response.json().code).to.eql('invalid_credentials');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"nobody@example.com\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": false\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login - blank fields (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 validation_failed', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    pm.expect(pm.response.json().code).to.eql('validation_failed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"\",\n  \"password\": \"\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refresh",
+      "item": [
+        {
+          "name": "Refresh - rotate token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 with a new token pair', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.refreshToken).to.not.eql(pm.collectionVariables.get('refreshToken'));",
+                  "    pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh"
+          }
+        },
+        {
+          "name": "Refresh - unknown token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 invalid_refresh_token', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    pm.expect(pm.response.json().code).to.eql('invalid_refresh_token');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"not-a-real-token\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invite",
+      "item": [
+        {
+          "name": "Accept invite - invalid link (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// The password is too short on purpose: a bad link must be reported first.",
+                  "pm.test('400 invalid_link', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    pm.expect(pm.response.json().code).to.eql('invalid_link');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"not-a-real-token\",\n  \"password\": \"short\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/invite/accept"
+          }
+        },
+        {
+          "name": "Accept invite - short password (400, link stays usable)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 validation_failed on password', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.code).to.eql('validation_failed');",
+                  "    pm.expect(body.fieldErrors[0].field).to.eql('password');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"password\": \"short\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/invite/accept"
+          }
+        },
+        {
+          "name": "Accept invite - set password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Works once: the seeded link is used up afterwards.",
+                  "pm.test('204 with no body', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"password\": \"{{newPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/invite/accept"
+          }
+        },
+        {
+          "name": "Accept invite - link already used (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 invalid_link', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    pm.expect(pm.response.json().code).to.eql('invalid_link');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"password\": \"{{newPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/invite/accept"
+          }
+        },
+        {
+          "name": "Login - invited trainer after accepting",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 with a trainer token pair', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.response.json().role).to.eql('TRAINER');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"trainer2@example.com\",\n  \"password\": \"{{newPassword}}\",\n  \"rememberMe\": false\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        }
+      ]
+    }
+  ]
+}

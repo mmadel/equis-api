@@ -1,7 +1,9 @@
 package com.equestrian.equis.service.accounts;
 
 import com.equestrian.equis.common.error.ApiException;
+import com.equestrian.equis.common.error.ApiFieldError;
 import com.equestrian.equis.common.error.ErrorCodes;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -73,6 +75,10 @@ public class PasswordServiceTest {
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
                     assertThat(ex.status()).isEqualTo(HttpStatus.BAD_REQUEST);
                     assertThat(ex.code()).isEqualTo(ErrorCodes.VALIDATION_FAILED);
+                    assertThat(ex.properties().get("fieldErrors"))
+                            .asInstanceOf(InstanceOfAssertFactories.list(ApiFieldError.class))
+                            .extracting(ApiFieldError::field)
+                            .containsExactly("password");
                 });
     }
 
