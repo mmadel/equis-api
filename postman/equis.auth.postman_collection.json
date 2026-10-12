@@ -1,424 +1,1753 @@
 {
   "info": {
+    "_postman_id": "8fd64c87-05ae-4a83-80a2-94b2619f775d",
     "name": "equis.auth",
-    "description": "Sign-in, token refresh and invite/reset link acceptance for the Equis API.\n\nTrainer requests use the dev rows seeded by V4. Set adminEmail and adminPassword in the collection variables to match APP_ADMIN_EMAIL and the password behind APP_ADMIN_PASSWORD_HASH.\n\nA successful login or refresh stores accessToken and refreshToken in the collection variables.",
+    "description": "Riding Schedule \u2014 E1 auth flows (M1 trainer, W-A admin) against equis-api.\n\nBefore running:\n1. Fresh dev database (V1\u2013V5 applied): trainer 1 active, trainer 2 invited with the seeded invite token.\n2. Set adminEmail and adminPassword (values behind APP_ADMIN_EMAIL / APP_ADMIN_PASSWORD_HASH). Prefer a Postman environment so the password isn't saved in the collection.\n\nRun order: Trainer 1\u21924, then Admin 1\u21923. Admin 4 \u00b7 Lockout locks the admin for 15 minutes; run it last.\nSingle-use data: the invite token works once. Re-running 'Trainer \u00b7 3' needs a fresh database.\nNot covered here (no endpoint yet): W4 invite / reset links and disabling a trainer (E6).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080/api" },
-    { "key": "adminEmail", "value": "admin@example.com" },
-    { "key": "adminPassword", "value": "" },
-    { "key": "trainerEmail", "value": "trainer1@example.com" },
-    { "key": "trainerPhone", "value": "010 0000 0001" },
-    { "key": "trainerPassword", "value": "Trainer@123" },
-    { "key": "inviteToken", "value": "dev-invite-token-trainer2-0000000000000000000000" },
-    { "key": "newPassword", "value": "Trainer@12345" },
-    { "key": "accessToken", "value": "" },
-    { "key": "refreshToken", "value": "" }
-  ],
   "item": [
     {
-      "name": "Login",
+      "name": "Trainer (M1)",
+      "description": "Mobile app sign-in, refresh, invite accept and role doors.",
       "item": [
         {
-          "name": "Login - admin",
-          "event": [
+          "name": "1 \u00b7 Sign in",
+          "description": "Screen 0. Seeded trainer 1 (active) and trainer 2 (invited, no password yet).",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200 with an admin token pair', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.role).to.eql('ADMIN');",
-                  "    pm.collectionVariables.set('accessToken', body.accessToken);",
-                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": false\n}"
+              "name": "Login by phone (with spaces)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Spaces are stripped server-side. Saves trainerAccessToken / trainerRefreshToken.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"010 0000 0001\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "const b = pm.response.json();",
+                      "pm.test(\"role = TRAINER\", () => pm.expect(b.role).to.eql(\"TRAINER\"));",
+                      "pm.test(\"Has both tokens\", () => { pm.expect(b.accessToken).to.be.a(\"string\"); pm.expect(b.refreshToken).to.be.a(\"string\"); });",
+                      "pm.test(\"Access token lasts 15 min\", () => pm.expect(b.expiresIn).to.eql(900));",
+                      "pm.collectionVariables.set(\"trainerAccessToken\", b.accessToken);",
+                      "pm.collectionVariables.set(\"trainerRefreshToken\", b.refreshToken);"
+                    ]
+                  }
+                }
+              ]
             },
-            "url": "{{baseUrl}}/auth/login"
-          }
+            {
+              "name": "Login by email (mixed case)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Email is lowercased server-side. rememberMe=false \u2192 refresh token lasts 7 days.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"Trainer1@Example.com\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "const b = pm.response.json();",
+                      "pm.test(\"role = TRAINER\", () => pm.expect(b.role).to.eql(\"TRAINER\"));",
+                      "pm.test(\"Has both tokens\", () => { pm.expect(b.accessToken).to.be.a(\"string\"); pm.expect(b.refreshToken).to.be.a(\"string\"); });",
+                      "pm.test(\"Access token lasts 15 min\", () => pm.expect(b.expiresIn).to.eql(900));",
+                      "pm.collectionVariables.set(\"trainerAccessToken\", b.accessToken);",
+                      "pm.collectionVariables.set(\"trainerRefreshToken\", b.refreshToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Wrong password \u2192 401",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{trainerPhone}}\",\n  \"password\": \"Wrong@123\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_credentials\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_credentials\"));",
+                      "pm.test(\"No attemptsLeft for trainers\", () => pm.expect(pm.response.json()).to.not.have.property(\"attemptsLeft\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Unknown phone \u2192 same 401",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Same answer as a wrong password, so callers can't probe which phones exist.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"01099999999\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_credentials\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_credentials\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Invited trainer (no password yet) \u2192 same 401",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Run BEFORE the invite is accepted (folder 3). Afterwards this login succeeds.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{invitedTrainerEmail}}\",\n  \"password\": \"{{invitedTrainerNewPassword}}\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_credentials\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_credentials\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Empty login \u2192 400 validation",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"\",\n  \"password\": \"\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                      "pm.test(\"Has fieldErrors\", () => pm.expect(pm.response.json().fieldErrors).to.be.an(\"array\").that.is.not.empty);"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "Login - admin wrong password (401, attemptsLeft)",
-          "event": [
+          "name": "2 \u00b7 Refresh",
+          "description": "Run after 1 \u00b7 Sign in. Refresh rotates the pair; reusing an old refresh token is refused.",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// The 5th wrong try in a row answers 423 account_locked instead.",
-                  "pm.test('401 invalid_credentials with attemptsLeft, or 423 account_locked', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([401, 423]);",
-                  "    const body = pm.response.json();",
-                  "    if (pm.response.code === 401) {",
-                  "        pm.expect(body.code).to.eql('invalid_credentials');",
-                  "        pm.expect(body.attemptsLeft).to.be.a('number');",
-                  "    } else {",
-                  "        pm.expect(body.code).to.eql('account_locked');",
-                  "    }",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"wrong-password\",\n  \"rememberMe\": false\n}"
+              "name": "Refresh (stale Authorization header attached)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{trainerAccessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "The app calls refresh when its access token has expired. The bearer header is ignored on /auth/**.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{trainerRefreshToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.set(\"trainerUsedRefreshToken\", pm.collectionVariables.get(\"trainerRefreshToken\"));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "const b = pm.response.json();",
+                      "pm.test(\"role = TRAINER\", () => pm.expect(b.role).to.eql(\"TRAINER\"));",
+                      "pm.test(\"Has both tokens\", () => { pm.expect(b.accessToken).to.be.a(\"string\"); pm.expect(b.refreshToken).to.be.a(\"string\"); });",
+                      "pm.test(\"Access token lasts 15 min\", () => pm.expect(b.expiresIn).to.eql(900));",
+                      "pm.collectionVariables.set(\"trainerAccessToken\", b.accessToken);",
+                      "pm.collectionVariables.set(\"trainerRefreshToken\", b.refreshToken);"
+                    ]
+                  }
+                }
+              ]
             },
-            "url": "{{baseUrl}}/auth/login"
-          }
+            {
+              "name": "Reuse the old refresh token \u2192 401",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "Reuse detection. Depending on your rule this may also revoke the newer token; log in again afterwards if needed.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{trainerUsedRefreshToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_refresh_token\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_refresh_token\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Unknown refresh token \u2192 401",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"not-a-real-token\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_refresh_token\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_refresh_token\"));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "Login - trainer by email",
-          "event": [
+          "name": "3 \u00b7 Invite accept (set password)",
+          "description": "Invite link page. Uses the seeded trainer 2 invite token. The link is single-use: after 'Accept invite' succeeds, re-running needs a fresh database (or a new invite once W4 exists in E6).",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200 with a trainer token pair', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.role).to.eql('TRAINER');",
-                  "    pm.collectionVariables.set('accessToken', body.accessToken);",
-                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"{{trainerEmail}}\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": true\n}"
+              "name": "Password too short \u2192 400, link not used",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/invite/accept",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "invite",
+                    "accept"
+                  ]
+                },
+                "description": "7 bytes fails the 8\u201372 byte rule. The link stays usable.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"password\": \"Short1!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                      "pm.test(\"fieldErrors on password\", () => pm.expect(pm.response.json().fieldErrors.map(f => f.field)).to.include(\"password\"));"
+                    ]
+                  }
+                }
+              ]
             },
-            "url": "{{baseUrl}}/auth/login"
-          }
+            {
+              "name": "Accept invite \u2192 204",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/invite/accept",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "invite",
+                    "accept"
+                  ]
+                },
+                "description": "Sets the password and makes trainer 2 active. Does not sign in.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"password\": \"{{invitedTrainerNewPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Same link again \u2192 400 invalid_link",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/invite/accept",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "invite",
+                    "accept"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"password\": \"{{invitedTrainerNewPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_link\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_link\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Unknown link \u2192 400 invalid_link",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/invite/accept",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "invite",
+                    "accept"
+                  ]
+                },
+                "description": "Same answer as used or expired links.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"dev-unknown-token\",\n  \"password\": \"{{invitedTrainerNewPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_link\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_link\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "New trainer signs in \u2192 200",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{invitedTrainerPhone}}\",\n  \"password\": \"{{invitedTrainerNewPassword}}\",\n  \"rememberMe\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "const b = pm.response.json();",
+                      "pm.test(\"role = TRAINER\", () => pm.expect(b.role).to.eql(\"TRAINER\"));",
+                      "pm.test(\"Has both tokens\", () => { pm.expect(b.accessToken).to.be.a(\"string\"); pm.expect(b.refreshToken).to.be.a(\"string\"); });",
+                      "pm.test(\"Access token lasts 15 min\", () => pm.expect(b.expiresIn).to.eql(900));",
+                      "pm.collectionVariables.set(\"invitedTrainerAccessToken\", b.accessToken);",
+                      "pm.collectionVariables.set(\"invitedTrainerRefreshToken\", b.refreshToken);"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "Login - trainer by phone (with spaces)",
-          "event": [
+          "name": "4 \u00b7 Role doors",
+          "description": "Until E2 adds real /me endpoints, an allowed call passes the guard and gets 404 (no handler). The check is 'not 401/403'.",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200 with a trainer token pair', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.role).to.eql('TRAINER');",
-                  "    pm.collectionVariables.set('accessToken', body.accessToken);",
-                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"{{trainerPhone}}\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": false\n}"
+              "name": "No token on /me \u2192 401",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/me/levels",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "me",
+                    "levels"
+                  ]
+                },
+                "description": ""
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                    ]
+                  }
+                }
+              ]
             },
-            "url": "{{baseUrl}}/auth/login"
-          }
-        },
-        {
-          "name": "Login - trainer wrong password (401)",
-          "event": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('401 invalid_credentials without attemptsLeft', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.code).to.eql('invalid_credentials');",
-                  "    pm.expect(body).to.not.have.property('attemptsLeft');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"{{trainerEmail}}\",\n  \"password\": \"wrong-password\",\n  \"rememberMe\": false\n}"
+              "name": "Trainer token on /me \u2192 passes guard",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{trainerAccessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/me/levels",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "me",
+                    "levels"
+                  ]
+                },
+                "description": ""
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Passed the role guard (not 401/403)\", () => pm.expect(pm.response.code).to.not.be.oneOf([401, 403]));"
+                    ]
+                  }
+                }
+              ]
             },
-            "url": "{{baseUrl}}/auth/login"
-          }
-        },
-        {
-          "name": "Login - unknown account (401)",
-          "event": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('401 invalid_credentials, same as a wrong password', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "    pm.expect(pm.response.json().code).to.eql('invalid_credentials');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"nobody@example.com\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": false\n}"
+              "name": "Trainer token on /assessment \u2192 passes guard",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{trainerAccessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/assessment/slots",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "assessment",
+                    "slots"
+                  ]
+                },
+                "description": ""
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Passed the role guard (not 401/403)\", () => pm.expect(pm.response.code).to.not.be.oneOf([401, 403]));"
+                    ]
+                  }
+                }
+              ]
             },
-            "url": "{{baseUrl}}/auth/login"
-          }
-        },
-        {
-          "name": "Login - blank fields (400)",
-          "event": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400 validation_failed', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "    pm.expect(pm.response.json().code).to.eql('validation_failed');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"\",\n  \"password\": \"\"\n}"
+              "name": "Trainer token on /admin \u2192 403",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{trainerAccessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/session-templates",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "session-templates"
+                  ]
+                },
+                "description": ""
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 403\", () => pm.response.to.have.status(403));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = forbidden\", () => pm.expect(pm.response.json().code).to.eql(\"forbidden\"));"
+                    ]
+                  }
+                }
+              ]
             },
-            "url": "{{baseUrl}}/auth/login"
-          }
+            {
+              "name": "Tampered token on /me \u2192 401",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/me/levels",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "me",
+                    "levels"
+                  ]
+                },
+                "description": "Changes the last character of the trainer's access token."
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const t = pm.collectionVariables.get(\"trainerAccessToken\") || \"x.y.z\";",
+                      "pm.request.headers.upsert({key: \"Authorization\", value: \"Bearer \" + t.slice(0, -1) + (t.endsWith(\"A\") ? \"B\" : \"A\")});"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Refresh",
+      "name": "Admin (W-A)",
+      "description": "Web console sign-in, refresh, role doors and lockout.",
       "item": [
         {
-          "name": "Refresh - rotate token",
-          "event": [
+          "name": "1 \u00b7 Sign in",
+          "description": "Screen W0. Admin seeded by V5 from APP_ADMIN_EMAIL / APP_ADMIN_PASSWORD_HASH. Set adminEmail and adminPassword first.",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200 with a new token pair', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.refreshToken).to.not.eql(pm.collectionVariables.get('refreshToken'));",
-                  "    pm.collectionVariables.set('accessToken', body.accessToken);",
-                  "    pm.collectionVariables.set('refreshToken', body.refreshToken);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+              "name": "Admin login \u2192 200 ADMIN",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "A correct login also resets the failed-attempt counter.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "const b = pm.response.json();",
+                      "pm.test(\"role = ADMIN\", () => pm.expect(b.role).to.eql(\"ADMIN\"));",
+                      "pm.test(\"Has both tokens\", () => { pm.expect(b.accessToken).to.be.a(\"string\"); pm.expect(b.refreshToken).to.be.a(\"string\"); });",
+                      "pm.test(\"Access token lasts 15 min\", () => pm.expect(b.expiresIn).to.eql(900));",
+                      "pm.collectionVariables.set(\"adminAccessToken\", b.accessToken);",
+                      "pm.collectionVariables.set(\"adminRefreshToken\", b.refreshToken);"
+                    ]
+                  }
+                }
+              ]
             },
-            "url": "{{baseUrl}}/auth/refresh"
-          }
+            {
+              "name": "Admin login, email in uppercase \u2192 200",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmailUpper}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.set(\"adminEmailUpper\", (pm.collectionVariables.get(\"adminEmail\") || \"\").toUpperCase());"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "const b = pm.response.json();",
+                      "pm.test(\"role = ADMIN\", () => pm.expect(b.role).to.eql(\"ADMIN\"));",
+                      "pm.test(\"Has both tokens\", () => { pm.expect(b.accessToken).to.be.a(\"string\"); pm.expect(b.refreshToken).to.be.a(\"string\"); });",
+                      "pm.test(\"Access token lasts 15 min\", () => pm.expect(b.expiresIn).to.eql(900));",
+                      "pm.collectionVariables.set(\"adminAccessToken\", b.accessToken);",
+                      "pm.collectionVariables.set(\"adminRefreshToken\", b.refreshToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Wrong password \u2192 401 with attemptsLeft",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Counts toward the lock. Run 'Admin login' afterwards to reset the counter.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"Wrong@123\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_credentials\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_credentials\"));",
+                      "pm.test(\"attemptsLeft is a number\", () => pm.expect(pm.response.json().attemptsLeft).to.be.a(\"number\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Admin login \u2192 200 (reset counter)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "const b = pm.response.json();",
+                      "pm.test(\"role = ADMIN\", () => pm.expect(b.role).to.eql(\"ADMIN\"));",
+                      "pm.test(\"Has both tokens\", () => { pm.expect(b.accessToken).to.be.a(\"string\"); pm.expect(b.refreshToken).to.be.a(\"string\"); });",
+                      "pm.test(\"Access token lasts 15 min\", () => pm.expect(b.expiresIn).to.eql(900));",
+                      "pm.collectionVariables.set(\"adminAccessToken\", b.accessToken);",
+                      "pm.collectionVariables.set(\"adminRefreshToken\", b.refreshToken);"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
-          "name": "Refresh - unknown token (401)",
-          "event": [
+          "name": "2 \u00b7 Refresh",
+          "description": "",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('401 invalid_refresh_token', function () {",
-                  "    pm.response.to.have.status(401);",
-                  "    pm.expect(pm.response.json().code).to.eql('invalid_refresh_token');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"not-a-real-token\"\n}"
+              "name": "Refresh \u2192 200 ADMIN",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{adminRefreshToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.set(\"adminUsedRefreshToken\", pm.collectionVariables.get(\"adminRefreshToken\"));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "const b = pm.response.json();",
+                      "pm.test(\"role = ADMIN\", () => pm.expect(b.role).to.eql(\"ADMIN\"));",
+                      "pm.test(\"Has both tokens\", () => { pm.expect(b.accessToken).to.be.a(\"string\"); pm.expect(b.refreshToken).to.be.a(\"string\"); });",
+                      "pm.test(\"Access token lasts 15 min\", () => pm.expect(b.expiresIn).to.eql(900));",
+                      "pm.collectionVariables.set(\"adminAccessToken\", b.accessToken);",
+                      "pm.collectionVariables.set(\"adminRefreshToken\", b.refreshToken);"
+                    ]
+                  }
+                }
+              ]
             },
-            "url": "{{baseUrl}}/auth/refresh"
-          }
+            {
+              "name": "Reuse the old refresh token \u2192 401",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{adminUsedRefreshToken}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_refresh_token\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_refresh_token\"));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "3 \u00b7 Role doors",
+          "description": "Until W1 endpoints exist (E2), an allowed call passes the guard and gets 404.",
+          "item": [
+            {
+              "name": "Admin token on /admin \u2192 passes guard",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminAccessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/session-templates",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "session-templates"
+                  ]
+                },
+                "description": ""
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Passed the role guard (not 401/403)\", () => pm.expect(pm.response.code).to.not.be.oneOf([401, 403]));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Admin token on /me \u2192 403",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminAccessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/me/levels",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "me",
+                    "levels"
+                  ]
+                },
+                "description": ""
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 403\", () => pm.response.to.have.status(403));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = forbidden\", () => pm.expect(pm.response.json().code).to.eql(\"forbidden\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Admin token on /assessment \u2192 403",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminAccessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/assessment/slots",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "assessment",
+                    "slots"
+                  ]
+                },
+                "description": ""
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 403\", () => pm.response.to.have.status(403));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = forbidden\", () => pm.expect(pm.response.json().code).to.eql(\"forbidden\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "No token on /admin \u2192 401",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/admin/session-templates",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "session-templates"
+                  ]
+                },
+                "description": ""
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "4 \u00b7 Lockout (locks the admin for 15 minutes)",
+          "description": "Run this folder last and on its own. It locks the admin account. Unlock with the recovery CLI: docker compose exec -it api java -jar /app/app.jar --spring.profiles.active=admin-cli unlock <admin email> \u2014 or wait 15 minutes.",
+          "item": [
+            {
+              "name": "Start clean: correct login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                      "const b = pm.response.json();",
+                      "pm.test(\"role = ADMIN\", () => pm.expect(b.role).to.eql(\"ADMIN\"));",
+                      "pm.test(\"Has both tokens\", () => { pm.expect(b.accessToken).to.be.a(\"string\"); pm.expect(b.refreshToken).to.be.a(\"string\"); });",
+                      "pm.test(\"Access token lasts 15 min\", () => pm.expect(b.expiresIn).to.eql(900));",
+                      "pm.collectionVariables.set(\"adminAccessToken\", b.accessToken);",
+                      "pm.collectionVariables.set(\"adminRefreshToken\", b.refreshToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Wrong password 1 \u2192 attemptsLeft 4",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"Wrong@123\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_credentials\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_credentials\"));",
+                      "pm.test(\"attemptsLeft = 4\", () => pm.expect(pm.response.json().attemptsLeft).to.eql(4));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Wrong password 2 \u2192 attemptsLeft 3",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"Wrong@123\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_credentials\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_credentials\"));",
+                      "pm.test(\"attemptsLeft = 3\", () => pm.expect(pm.response.json().attemptsLeft).to.eql(3));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Wrong password 3 \u2192 attemptsLeft 2",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"Wrong@123\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_credentials\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_credentials\"));",
+                      "pm.test(\"attemptsLeft = 2\", () => pm.expect(pm.response.json().attemptsLeft).to.eql(2));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Wrong password 4 \u2192 attemptsLeft 1",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"Wrong@123\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = invalid_credentials\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_credentials\"));",
+                      "pm.test(\"attemptsLeft = 1\", () => pm.expect(pm.response.json().attemptsLeft).to.eql(1));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Wrong password 5 \u2192 423 locked",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"Wrong@123\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 423\", () => pm.response.to.have.status(423));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = account_locked\", () => pm.expect(pm.response.json().code).to.eql(\"account_locked\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Right password while locked \u2192 423",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "The password isn't even checked while locked.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 423\", () => pm.response.to.have.status(423));",
+                      "pm.test(\"Error is a ProblemDetail\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"problem+json\"));",
+                      "pm.test(\"code = account_locked\", () => pm.expect(pm.response.json().code).to.eql(\"account_locked\"));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
     },
     {
-      "name": "Invite",
-      "item": [
-        {
-          "name": "Accept invite - invalid link (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// The password is too short on purpose: a bad link must be reported first.",
-                  "pm.test('400 invalid_link', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "    pm.expect(pm.response.json().code).to.eql('invalid_link');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"not-a-real-token\",\n  \"password\": \"short\"\n}"
-            },
-            "url": "{{baseUrl}}/auth/invite/accept"
-          }
-        },
-        {
-          "name": "Accept invite - short password (400, link stays usable)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400 validation_failed on password', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.code).to.eql('validation_failed');",
-                  "    pm.expect(body.fieldErrors[0].field).to.eql('password');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"password\": \"short\"\n}"
-            },
-            "url": "{{baseUrl}}/auth/invite/accept"
-          }
-        },
-        {
-          "name": "Accept invite - set password",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// Works once: the seeded link is used up afterwards.",
-                  "pm.test('204 with no body', function () {",
-                  "    pm.response.to.have.status(204);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"password\": \"{{newPassword}}\"\n}"
-            },
-            "url": "{{baseUrl}}/auth/invite/accept"
-          }
-        },
-        {
-          "name": "Accept invite - link already used (400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400 invalid_link', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "    pm.expect(pm.response.json().code).to.eql('invalid_link');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"password\": \"{{newPassword}}\"\n}"
-            },
-            "url": "{{baseUrl}}/auth/invite/accept"
-          }
-        },
-        {
-          "name": "Login - invited trainer after accepting",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200 with a trainer token pair', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "    pm.expect(pm.response.json().role).to.eql('TRAINER');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"trainer2@example.com\",\n  \"password\": \"{{newPassword}}\",\n  \"rememberMe\": false\n}"
-            },
-            "url": "{{baseUrl}}/auth/login"
-          }
-        }
-      ]
+      "key": "trainerPhone",
+      "value": "01000000001"
+    },
+    {
+      "key": "trainerEmail",
+      "value": "trainer1@example.com"
+    },
+    {
+      "key": "trainerPassword",
+      "value": "Trainer@123"
+    },
+    {
+      "key": "invitedTrainerPhone",
+      "value": "01000000002"
+    },
+    {
+      "key": "invitedTrainerEmail",
+      "value": "trainer2@example.com"
+    },
+    {
+      "key": "inviteToken",
+      "value": "dev-invite-token-trainer2-0000000000000000000000"
+    },
+    {
+      "key": "invitedTrainerNewPassword",
+      "value": "NewPass@2026"
+    },
+    {
+      "key": "adminEmail",
+      "value": ""
+    },
+    {
+      "key": "adminPassword",
+      "value": ""
+    },
+    {
+      "key": "adminEmailUpper",
+      "value": ""
+    },
+    {
+      "key": "trainerAccessToken",
+      "value": ""
+    },
+    {
+      "key": "trainerRefreshToken",
+      "value": ""
+    },
+    {
+      "key": "trainerUsedRefreshToken",
+      "value": ""
+    },
+    {
+      "key": "invitedTrainerAccessToken",
+      "value": ""
+    },
+    {
+      "key": "invitedTrainerRefreshToken",
+      "value": ""
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "adminRefreshToken",
+      "value": ""
+    },
+    {
+      "key": "adminUsedRefreshToken",
+      "value": ""
     }
   ]
 }
