@@ -2,6 +2,7 @@ package com.equestrian.equis.repository.sessions;
 
 import com.equestrian.equis.entity.sessions.Session;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,4 +25,17 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
                                          @Param("nowTime") LocalTime nowTime);
 
     boolean existsByTemplateIdAndSessionDate(UUID templateId, LocalDate sessionDate);
+
+    // Returns 1 when the session was inserted, 0 when the template already has one on that date.
+    @Modifying
+    @Query(value = """
+            INSERT INTO session (template_id, session_date, start_time, end_time, capacity)
+            VALUES (:templateId, :sessionDate, :startTime, :endTime, :capacity)
+            ON CONFLICT (template_id, session_date) DO NOTHING
+            """, nativeQuery = true)
+    int insertIfAbsent(@Param("templateId") UUID templateId,
+                       @Param("sessionDate") LocalDate sessionDate,
+                       @Param("startTime") LocalTime startTime,
+                       @Param("endTime") LocalTime endTime,
+                       @Param("capacity") int capacity);
 }
