@@ -21,6 +21,19 @@ public interface AssignmentRepository extends JpaRepository<Assignment, UUID> {
             """)
     List<Assignment> findBySessionIdIn(@Param("sessionIds") Collection<UUID> sessionIds);
 
+    // One row per level with a filled seat in a scheduled session from..to; assessment sessions are left out.
+    @Query("""
+            select t.level.id as levelId, count(a) as seatCount
+            from Assignment a
+            join a.session s
+            join s.template t
+            where t.level is not null
+              and s.status = com.equestrian.equis.entity.sessions.SessionStatus.SCHEDULED
+              and s.sessionDate between :from and :to
+            group by t.level.id
+            """)
+    List<LevelSeatCount> countScheduledPerLevel(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
     long countBySessionId(UUID sessionId);
 
     // Bulk delete: assignments already loaded in the persistence context are not refreshed.

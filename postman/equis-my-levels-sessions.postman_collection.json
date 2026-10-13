@@ -1,0 +1,1242 @@
+{
+  "info": {
+    "_postman_id": "4aba0673-9721-42af-82e6-3354791d3160",
+    "name": "equis-my-levels-sessions",
+    "description": "Riding Schedule \u2014 E3 trainer levels and sessions (M2\u2013M4) against equis-api: GET /me/levels, GET /me/levels/{id}/sessions, GET /me/sessions/{id} and PUT /me/sessions/{id}/assignments.\n\nBefore running:\n1. Dev database with V1\u2013V12 applied and sessions generated: trainer 1 is active and has at least two riders in level 1, and level 1 has an upcoming session with two seats free.\n2. trainerLogin / trainerPassword default to seeded trainer 1.\n\nRun order: 0 \u2192 4. Folder 2 picks the session, folder 3 remembers the trainer's seats in it, folder 4 changes them and puts them back.\nNot covered here (needs data the API cannot set up yet): session_closed (started or cancelled session), level_out_of_range, already_booked and capacity_exceeded on the PUT, and a cancelled session shown read-only.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 \u00b7 Sign in",
+      "description": "Run first: every other request uses trainerAccessToken and the date range set here.",
+      "item": [
+        {
+          "name": "Trainer login \u2192 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Saves trainerAccessToken (valid for 15 minutes), and from / to / toTooFar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{trainerLogin}}\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"role = TRAINER\", () => pm.expect(b.role).to.eql(\"TRAINER\"));",
+                  "pm.collectionVariables.set(\"trainerAccessToken\", b.accessToken);",
+                  "// The range starts today and covers 56 days, the longest the API accepts.",
+                  "const day = n => { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + \"-\" + String(d.getMonth() + 1).padStart(2, \"0\") + \"-\" + String(d.getDate()).padStart(2, \"0\"); };",
+                  "pm.collectionVariables.set(\"from\", day(0));",
+                  "pm.collectionVariables.set(\"to\", day(55));",
+                  "pm.collectionVariables.set(\"toTooFar\", day(56));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 \u00b7 My levels (M2)",
+      "description": "GET /me/levels: the six levels with this week's numbers (Saturday to Friday, school time).",
+      "item": [
+        {
+          "name": "All six levels \u2192 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test(\"Levels 1 to 6, in order\", () => pm.expect(list.map(l => l.id)).to.eql([1, 2, 3, 4, 5, 6]));",
+                  "pm.test(\"Each has a name and a colour\", () => list.forEach(l => { pm.expect(l.name).to.be.a(\"string\"); pm.expect(l.colour).to.match(/^#[0-9A-Fa-f]{6}$/); }));",
+                  "pm.test(\"Each has the four counts\", () => list.forEach(l => [\"sessionsThisWeek\", \"myRiders\", \"seatsFilled\", \"seatsTotal\"].forEach(k => pm.expect(l[k]).to.be.a(\"number\"))));",
+                  "pm.test(\"Filled seats never exceed total seats\", () => list.forEach(l => pm.expect(l.seatsFilled).to.be.at.most(l.seatsTotal)));",
+                  "pm.test(\"No sessions means no seats\", () => list.filter(l => l.sessionsThisWeek === 0).forEach(l => pm.expect(l.seatsTotal).to.eql(0)));",
+                  "pm.test(\"Trainer has riders in the level under test\", () => pm.expect(list.find(l => l.id === Number(pm.collectionVariables.get(\"levelId\"))).myRiders).to.be.at.least(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token \u2192 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 \u00b7 Level sessions (M3)",
+      "description": "GET /me/levels/{id}/sessions?from=&to=: scheduled sessions grouped by day. The range is at most 56 days, both ends included.",
+      "item": [
+        {
+          "name": "Next 56 days \u2192 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels/{{levelId}}/sessions?from={{from}}&to={{to}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels",
+                "{{levelId}}",
+                "sessions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{from}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{to}}"
+                }
+              ]
+            },
+            "description": "Saves sessionId and sessionDate for folders 3 and 4."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Echoes the level and the range\", () => { pm.expect(b.level.id).to.eql(Number(pm.collectionVariables.get(\"levelId\"))); pm.expect(b.from).to.eql(pm.collectionVariables.get(\"from\")); pm.expect(b.to).to.eql(pm.collectionVariables.get(\"to\")); });",
+                  "pm.test(\"Days are in order, inside the range, never empty\", () => { const dates = b.days.map(d => d.date); pm.expect(dates).to.eql([...dates].sort()); b.days.forEach(d => { pm.expect(d.date >= b.from && d.date <= b.to).to.be.true; pm.expect(d.sessions).to.not.be.empty; }); });",
+                  "const all = b.days.flatMap(d => d.sessions);",
+                  "pm.test(\"Sessions of a day are in start order\", () => b.days.forEach(d => { const starts = d.sessions.map(s => s.start); pm.expect(starts).to.eql([...starts].sort()); }));",
+                  "pm.test(\"booked = number of seats, at most capacity\", () => all.forEach(s => { pm.expect(s.booked).to.eql(s.seats.length); pm.expect(s.booked).to.be.at.most(s.capacity); pm.expect(s.past).to.be.a(\"boolean\"); }));",
+                  "pm.test(\"Only my seats name a rider\", () => all.flatMap(s => s.seats).forEach(seat => { if (seat.mine) { pm.expect(seat.riderId).to.be.a(\"string\"); pm.expect(seat.initials).to.be.a(\"string\"); } else { pm.expect(seat).to.eql({ mine: false }); } }));",
+                  "// Folders 3 and 4 use the first upcoming session where other trainers left at least two seats.",
+                  "const pick = all.find(s => !s.past && s.capacity - s.seats.filter(seat => !seat.mine).length >= 2);",
+                  "pm.test(\"Found an upcoming session with two seats free\", () => pm.expect(pick, \"run the session generator or seed level templates\").to.exist);",
+                  "if (pick) { pm.collectionVariables.set(\"sessionId\", pick.id); pm.collectionVariables.set(\"sessionDate\", b.days.find(d => d.sessions.includes(pick)).date); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "One day \u2192 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels/{{levelId}}/sessions?from={{from}}&to={{from}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels",
+                "{{levelId}}",
+                "sessions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{from}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{from}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"At most that one day\", () => pm.response.json().days.forEach(d => pm.expect(d.date).to.eql(pm.collectionVariables.get(\"from\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "To before from \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels/{{levelId}}/sessions?from={{to}}&to={{from}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels",
+                "{{levelId}}",
+                "sessions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{to}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{from}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = invalid_range\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_range\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "57 days \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels/{{levelId}}/sessions?from={{from}}&to={{toTooFar}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels",
+                "{{levelId}}",
+                "sessions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{from}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{toTooFar}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = invalid_range\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_range\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Level 9 \u2192 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels/9/sessions?from={{from}}&to={{to}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels",
+                "9",
+                "sessions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{from}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{to}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = level_not_found\", () => pm.expect(pm.response.json().code).to.eql(\"level_not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No to \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels/{{levelId}}/sessions?from={{from}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels",
+                "{{levelId}}",
+                "sessions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{from}}"
+                }
+              ]
+            },
+            "description": "A missing or malformed date is a plain 400 without a code."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Date not ISO \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels/{{levelId}}/sessions?from=17/10/2026&to={{to}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels",
+                "{{levelId}}",
+                "sessions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "17/10/2026"
+                },
+                {
+                  "key": "to",
+                  "value": "{{to}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token \u2192 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels/{{levelId}}/sessions?from={{from}}&to={{to}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels",
+                "{{levelId}}",
+                "sessions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{from}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{to}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 \u00b7 Session detail (M4)",
+      "description": "GET /me/sessions/{id}: the session, my seats in it and my riders of its level. A missing or assessment session is a 404.",
+      "item": [
+        {
+          "name": "The chosen session \u2192 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}"
+              ]
+            },
+            "description": "Saves originalRiderIds (to restore at the end) and twoRiderIds."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Is the chosen session\", () => pm.expect(b.id).to.eql(pm.collectionVariables.get(\"sessionId\")));",
+                  "pm.test(\"Level has id, name and colour\", () => { pm.expect(b.level.id).to.eql(Number(pm.collectionVariables.get(\"levelId\"))); pm.expect(b.level.name).to.be.a(\"string\"); pm.expect(b.level.colour).to.match(/^#[0-9A-Fa-f]{6}$/); });",
+                  "pm.test(\"Date and HH:mm times\", () => { pm.expect(b.date).to.match(/^\\d{4}-\\d{2}-\\d{2}$/); pm.expect(b.start).to.match(/^\\d{2}:\\d{2}$/); pm.expect(b.end).to.match(/^\\d{2}:\\d{2}$/); });",
+                  "pm.test(\"Capacity, readOnly and otherCoachSeats\", () => { pm.expect(b.capacity).to.be.a(\"number\"); pm.expect(b.readOnly).to.be.a(\"boolean\"); pm.expect(b.otherCoachSeats).to.be.a(\"number\"); });",
+                  "pm.test(\"inThisSession matches mySeats\", () => { const mine = b.mySeats.map(s => s.riderId).sort(); pm.expect(b.riders.filter(r => r.inThisSession).map(r => r.id).sort()).to.eql(mine); });",
+                  "pm.test(\"Not read-only\", () => pm.expect(b.readOnly).to.be.false);",
+                  "pm.test(\"At least two riders of mine in this level\", () => pm.expect(b.riders.length).to.be.at.least(2));",
+                  "pm.test(\"Riders are in name order with initials\", () => { const names = b.riders.map(r => r.name); pm.expect(names).to.eql([...names].sort((x, y) => x.localeCompare(y))); b.riders.forEach(r => pm.expect(r.initials).to.be.a(\"string\")); });",
+                  "// Folder 4 seats the first two riders, then puts this original list back.",
+                  "pm.collectionVariables.set(\"originalRiderIds\", JSON.stringify(b.mySeats.map(s => s.riderId)));",
+                  "pm.collectionVariables.set(\"twoRiderIds\", JSON.stringify(b.riders.slice(0, 2).map(r => r.id)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown id \u2192 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/00000000-0000-0000-0000-00000000dead",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "00000000-0000-0000-0000-00000000dead"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = session_not_found\", () => pm.expect(pm.response.json().code).to.eql(\"session_not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id not a UUID \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "abc"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token \u2192 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 \u00b7 Assign riders (also cleans up)",
+      "description": "PUT /me/sessions/{id}/assignments replaces my whole list for the session and answers with the same body as GET. The last request puts the original list back, so the collection can be run again.",
+      "item": [
+        {
+          "name": "Seat two riders \u2192 200",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderIds\": {{twoRiderIds}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Is the chosen session\", () => pm.expect(b.id).to.eql(pm.collectionVariables.get(\"sessionId\")));",
+                  "pm.test(\"Level has id, name and colour\", () => { pm.expect(b.level.id).to.eql(Number(pm.collectionVariables.get(\"levelId\"))); pm.expect(b.level.name).to.be.a(\"string\"); pm.expect(b.level.colour).to.match(/^#[0-9A-Fa-f]{6}$/); });",
+                  "pm.test(\"Date and HH:mm times\", () => { pm.expect(b.date).to.match(/^\\d{4}-\\d{2}-\\d{2}$/); pm.expect(b.start).to.match(/^\\d{2}:\\d{2}$/); pm.expect(b.end).to.match(/^\\d{2}:\\d{2}$/); });",
+                  "pm.test(\"Capacity, readOnly and otherCoachSeats\", () => { pm.expect(b.capacity).to.be.a(\"number\"); pm.expect(b.readOnly).to.be.a(\"boolean\"); pm.expect(b.otherCoachSeats).to.be.a(\"number\"); });",
+                  "pm.test(\"inThisSession matches mySeats\", () => { const mine = b.mySeats.map(s => s.riderId).sort(); pm.expect(b.riders.filter(r => r.inThisSession).map(r => r.id).sort()).to.eql(mine); });",
+                  "pm.test(\"My seats are exactly the two riders\", () => pm.expect(b.mySeats.map(s => s.riderId).sort()).to.eql(JSON.parse(pm.collectionVariables.get(\"twoRiderIds\")).sort()));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detail shows the same seats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"My seats are exactly the two riders\", () => pm.expect(pm.response.json().mySeats.map(s => s.riderId).sort()).to.eql(JSON.parse(pm.collectionVariables.get(\"twoRiderIds\")).sort()));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Level list shows them as mine",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels/{{levelId}}/sessions?from={{sessionDate}}&to={{sessionDate}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels",
+                "{{levelId}}",
+                "sessions"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{sessionDate}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{sessionDate}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const slot = pm.response.json().days.flatMap(d => d.sessions).find(s => s.id === pm.collectionVariables.get(\"sessionId\"));",
+                  "pm.test(\"Session is listed\", () => pm.expect(slot).to.exist);",
+                  "pm.test(\"Two seats are mine, with rider ids\", () => pm.expect(slot.seats.filter(s => s.mine).map(s => s.riderId).sort()).to.eql(JSON.parse(pm.collectionVariables.get(\"twoRiderIds\")).sort()));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Same list again \u2192 200, unchanged",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderIds\": {{twoRiderIds}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Still two seats\", () => pm.expect(pm.response.json().mySeats.length).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rider that is not mine \u2192 403",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}",
+                "assignments"
+              ]
+            },
+            "description": "An unknown rider id is answered like another trainer's rider.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderIds\": [\"00000000-0000-0000-0000-00000000dead\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"code = not_your_rider\", () => pm.expect(pm.response.json().code).to.eql(\"not_your_rider\"));",
+                  "pm.test(\"Names the rider\", () => pm.expect(pm.response.json().fieldErrors[0].field).to.eql(\"00000000-0000-0000-0000-00000000dead\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No riderIds \u2192 400",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"Field error on riderIds\", () => pm.expect(pm.response.json().fieldErrors[0].field).to.eql(\"riderIds\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown session \u2192 404",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/00000000-0000-0000-0000-00000000dead/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "00000000-0000-0000-0000-00000000dead",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = not_found\", () => pm.expect(pm.response.json().code).to.eql(\"not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token \u2192 401",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refusals changed nothing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Still the two riders\", () => pm.expect(pm.response.json().mySeats.map(s => s.riderId).sort()).to.eql(JSON.parse(pm.collectionVariables.get(\"twoRiderIds\")).sort()));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Empty list frees my seats \u2192 200",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderIds\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"No seats of mine\", () => pm.expect(b.mySeats).to.eql([]));",
+                  "pm.test(\"No rider is in the session\", () => b.riders.forEach(r => pm.expect(r.inThisSession).to.be.false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Put the original list back \u2192 200",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{sessionId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{sessionId}}",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderIds\": {{originalRiderIds}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"My seats are as before the run\", () => pm.expect(pm.response.json().mySeats.map(s => s.riderId).sort()).to.eql(JSON.parse(pm.collectionVariables.get(\"originalRiderIds\")).sort()));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "trainerLogin",
+      "value": "trainer1@example.com"
+    },
+    {
+      "key": "trainerPassword",
+      "value": "Trainer@123"
+    },
+    {
+      "key": "trainerAccessToken",
+      "value": ""
+    },
+    {
+      "key": "levelId",
+      "value": "1"
+    },
+    {
+      "key": "from",
+      "value": ""
+    },
+    {
+      "key": "to",
+      "value": ""
+    },
+    {
+      "key": "toTooFar",
+      "value": ""
+    },
+    {
+      "key": "sessionId",
+      "value": ""
+    },
+    {
+      "key": "sessionDate",
+      "value": ""
+    },
+    {
+      "key": "originalRiderIds",
+      "value": "[]"
+    },
+    {
+      "key": "twoRiderIds",
+      "value": "[]"
+    }
+  ]
+}
