@@ -3,9 +3,16 @@ package com.equestrian.equis.service.sessions;
 import com.equestrian.equis.common.config.SessionProperties;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
+import com.equestrian.equis.entity.accounts.Trainer;
+import com.equestrian.equis.entity.riders.Rider;
+import com.equestrian.equis.entity.sessions.Assignment;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.entity.sessions.SessionStatus;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
+import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.levels.LevelRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
+import com.equestrian.equis.repository.sessions.AssignmentRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +50,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
 @EnableConfigurationProperties(SessionProperties.class)
-@Import({SessionTemplateService.class, SessionTemplateRules.class, SessionGenerator.class, NoBookedSeats.class})
+@Import({SessionTemplateService.class, SessionTemplateRules.class, SessionGenerator.class, AssignmentBookedSeats.class,
+        AssignmentCancellationListener.class})
 @RecordApplicationEvents
 public class SessionTemplateServiceTest {
     private static final int LEVEL_1 = 1;
@@ -65,6 +73,14 @@ public class SessionTemplateServiceTest {
     SessionRepository sessionRepository;
     @Autowired
     SessionTemplateRepository sessionTemplateRepository;
+    @Autowired
+    AssignmentRepository assignmentRepository;
+    @Autowired
+    RiderRepository riderRepository;
+    @Autowired
+    TrainerRepository trainerRepository;
+    @Autowired
+    LevelRepository levelRepository;
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Autowired
@@ -236,6 +252,48 @@ public class SessionTemplateServiceTest {
     }
 
     @Test
+    void deleteCountsAndRemovesTheSeatsOfUpcomingSessions() {
+        // 09:00 today is before the fixed 13:00, so today's session has started and keeps its seat.
+        SessionTemplate template = created(DayOfWeek.MONDAY, "09:00");
+        List<Session> sessions = sessionsOf(template);
+        Trainer sara = trainer();
+        Rider laila = rider("Laila Nour", sara);
+        Rider nour = rider("Nour Adel", null);
+        assign(sessions.get(0), laila, sara);
+        assign(sessions.get(1), laila, sara);
+        assign(sessions.get(1), nour, sara);
+        assign(sessions.get(2), laila, sara);
+
+        DeleteImpact impact = service.delete(template.getId());
+
+        assertThat(impact).isEqualTo(new DeleteImpact(HORIZON_WEEKS - 1, 3));
+        assertThat(assignmentRepository.findAll()).extracting(Assignment::getSession)
+                .containsExactly(sessions.get(0));
+    }
+
+    @Test
+    void updateToAnotherDayRemovesTheSeatsOfTheCancelledSessions() {
+        SessionTemplate template = created(DayOfWeek.MONDAY, "16:00");
+        Trainer sara = trainer();
+        assign(sessionsOf(template).getFirst(), rider("Laila Nour", sara), sara);
+
+        service.update(template.getId(), input(LEVEL_1, DayOfWeek.TUESDAY, "16:00", "17:00", 6, VALID_FROM));
+
+        assertThat(assignmentRepository.count()).isZero();
+    }
+
+    @Test
+    void updateKeepsTheSeatsOfSessionsThatStay() {
+        SessionTemplate template = created(DayOfWeek.MONDAY, "16:00");
+        Trainer sara = trainer();
+        assign(sessionsOf(template).getFirst(), rider("Laila Nour", sara), sara);
+
+        service.update(template.getId(), input(LEVEL_1, DayOfWeek.MONDAY, "18:00", "19:00", 6, VALID_FROM));
+
+        assertThat(assignmentRepository.count()).isEqualTo(1);
+    }
+
+    @Test
     void deleteLeavesASessionThatAlreadyStartedAlone() {
         SessionTemplate template = created(DayOfWeek.MONDAY, "09:00");
 
@@ -280,6 +338,26 @@ public class SessionTemplateServiceTest {
                                        LocalDate validFrom) {
         return new SessionTemplateInput(levelId, day, LocalTime.parse(start), LocalTime.parse(end), capacity,
                 validFrom);
+    }
+
+    private void assign(Session session, Rider rider, Trainer trainer) {
+        assignmentRepository.saveAndFlush(Assignment.of(session, rider, trainer));
+    }
+
+    private Trainer trainer() {
+        Trainer trainer = new Trainer();
+        trainer.setName("Sara Ali");
+        trainer.setPhone("01999990001");
+        trainer.setEmail("template-service-test-sara@example.com");
+        return trainerRepository.saveAndFlush(trainer);
+    }
+
+    private Rider rider(String name, Trainer trainer) {
+        Rider rider = new Rider();
+        rider.setName(name);
+        rider.setLevel(levelRepository.getReferenceById((short) LEVEL_1));
+        rider.setTrainer(trainer);
+        return riderRepository.saveAndFlush(rider);
     }
 
     private List<Session> sessionsOf(SessionTemplate template) {
