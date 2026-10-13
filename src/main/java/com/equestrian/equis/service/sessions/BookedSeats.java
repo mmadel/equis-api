@@ -6,4 +6,7 @@ import java.util.UUID;
 public interface BookedSeats {
     // The highest number of booked seats in any upcoming session of the template; 0 when there are none.
     int maxBookedInUpcoming(UUID templateId);
+
+    // The number of bookings across all upcoming sessions of the template.
+    int bookingsInUpcoming(UUID templateId);
 }

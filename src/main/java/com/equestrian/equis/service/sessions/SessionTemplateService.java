@@ -28,22 +28,34 @@ public class SessionTemplateService {
     private final LevelRepository levels;
     private final SessionTemplateRules rules;
     private final SessionGenerator generator;
+    private final BookedSeats bookedSeats;
     private final ApplicationEventPublisher events;
     private final Clock clock;
     private final ZoneId schoolZone;
 
     public SessionTemplateService(SessionTemplateRepository templates, SessionRepository sessions,
                                   LevelRepository levels, SessionTemplateRules rules, SessionGenerator generator,
-                                  ApplicationEventPublisher events, Clock clock,
+                                  BookedSeats bookedSeats, ApplicationEventPublisher events, Clock clock,
                                   @Value("${app.time-zone}") ZoneId schoolZone) {
         this.templates = templates;
         this.sessions = sessions;
         this.levels = levels;
         this.rules = rules;
         this.generator = generator;
+        this.bookedSeats = bookedSeats;
         this.events = events;
         this.clock = clock;
         this.schoolZone = schoolZone;
+    }
+
+    @Transactional(readOnly = true)
+    public List<SessionTemplate> listByLevel(short levelId) {
+        return templates.findByLevelIdAndDeletedAtIsNullOrderByDayOfWeekAscStartTimeAsc(levelId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SessionTemplate> listAssessment() {
+        return templates.findByLevelIsNullAndDeletedAtIsNullOrderByDayOfWeekAscStartTimeAsc();
     }
 
     @Transactional
@@ -92,6 +104,8 @@ public class SessionTemplateService {
         SessionTemplate template = load(id);
 
         Instant now = clock.instant();
+        // Counted before the cancel, while the sessions are still upcoming.
+        int bookings = bookedSeats.bookingsInUpcoming(id);
         List<Session> cancelled = upcoming(id, now);
         cancelled.forEach(session -> session.cancel(now));
 
@@ -99,7 +113,7 @@ public class SessionTemplateService {
         templates.saveAndFlush(template);
         publishCancelled(id, cancelled, now);
 
-        return new DeleteImpact(cancelled.size());
+        return new DeleteImpact(cancelled.size(), bookings);
     }
 
     private SessionTemplate load(UUID id) {

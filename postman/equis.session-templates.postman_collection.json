@@ -1,0 +1,1290 @@
+{
+  "info": {
+    "_postman_id": "28ffa725-4097-45bf-9303-4b8e390a1327",
+    "name": "equis.session-templates",
+    "description": "Riding Schedule \u2014 E2 session templates (W1 admin) against equis-api: list, create, edit and delete under /admin/session-templates.\n\nBefore running:\n1. Dev database with V1\u2013V9 applied. Level 3 must have no Wednesday or Friday templates of its own, or the overlap checks will see extra warnings.\n2. Set adminEmail and adminPassword. Prefer a Postman environment so the password isn't saved in the collection.\n\nRun order: 0 \u2192 4. The collection creates three templates and deletes them again in folder 4. Deletes are soft, so the rows and their cancelled sessions stay in the database.\nNot covered here: booked-seat counts and the capacity_exceeded conflict (bookings do not exist yet, so every count is 0).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 \u00b7 Sign in",
+      "description": "Run first: every other request uses adminAccessToken.",
+      "item": [
+        {
+          "name": "Admin login \u2192 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Saves adminAccessToken (valid for 15 minutes).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"role = ADMIN\", () => pm.expect(b.role).to.eql(\"ADMIN\"));",
+                  "pm.collectionVariables.set(\"adminAccessToken\", b.accessToken);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 \u00b7 List (W1 tabs)",
+      "description": "GET with level = a level number (1\u20136) or \"assessment\". Anything else is a 400.",
+      "item": [
+        {
+          "name": "Level 1 tab \u2192 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates?level=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "A fresh dev database has two seeded level 1 templates (V8)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test(\"Is an array\", () => pm.expect(list).to.be.an(\"array\"));",
+                  "pm.test(\"Only level 1\", () => list.forEach(t => pm.expect(t.levelId).to.eql(1)));",
+                  "pm.test(\"Times are HH:mm\", () => list.forEach(t => { pm.expect(t.start).to.match(/^\\d{2}:\\d{2}$/); pm.expect(t.end).to.match(/^\\d{2}:\\d{2}$/); }));",
+                  "pm.test(\"Each row has both counts\", () => list.forEach(t => { pm.expect(t.maxBookedInUpcoming).to.be.a(\"number\"); pm.expect(t.bookingsInUpcoming).to.be.a(\"number\"); }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assessment tab \u2192 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates?level=assessment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "assessment"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test(\"Is an array\", () => pm.expect(list).to.be.an(\"array\"));",
+                  "pm.test(\"No level on assessment slots\", () => list.forEach(t => pm.expect(t.levelId).to.be.null));",
+                  "pm.test(\"Times are HH:mm\", () => list.forEach(t => { pm.expect(t.start).to.match(/^\\d{2}:\\d{2}$/); pm.expect(t.end).to.match(/^\\d{2}:\\d{2}$/); }));",
+                  "pm.test(\"Each row has both counts\", () => list.forEach(t => { pm.expect(t.maxBookedInUpcoming).to.be.a(\"number\"); pm.expect(t.bookingsInUpcoming).to.be.a(\"number\"); }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Level 7 \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates?level=7",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "7"
+                }
+              ]
+            },
+            "description": "There are six levels."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(b.code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"Field error on level\", () => pm.expect(b.fieldErrors.map(f => f.field)).to.eql([\"level\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Level abc \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates?level=abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "abc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(b.code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"Field error on level\", () => pm.expect(b.fieldErrors.map(f => f.field)).to.eql([\"level\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No level \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(b.code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"Field error on level\", () => pm.expect(b.fieldErrors.map(f => f.field)).to.eql([\"level\"]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 \u00b7 Create",
+      "description": "POST returns 201 with a Location header, the saved template and any warnings. Upcoming sessions are generated 8 weeks ahead in the same transaction.",
+      "item": [
+        {
+          "name": "Create level 3, Wednesday 10:00 \u2192 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ]
+            },
+            "description": "Sets validFrom to today and saves templateId. Level 3 has no seeded templates, so no overlap.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"10:00\",\n  \"end\": \"11:00\",\n  \"capacity\": 6,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"validFrom\", new Date().toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Location points at the new template\", () => pm.expect(pm.response.headers.get(\"Location\")).to.eql(\"/api/admin/session-templates/\" + b.template.id));",
+                  "pm.test(\"Template echoes the request\", () => { pm.expect(b.template.levelId).to.eql(3); pm.expect(b.template.dayOfWeek).to.eql(\"WEDNESDAY\"); pm.expect(b.template.start).to.eql(\"10:00\"); pm.expect(b.template.end).to.eql(\"11:00\"); pm.expect(b.template.capacity).to.eql(6); pm.expect(b.template.validFrom).to.eql(pm.collectionVariables.get(\"validFrom\")); });",
+                  "pm.test(\"Nothing booked yet\", () => { pm.expect(b.template.maxBookedInUpcoming).to.eql(0); pm.expect(b.template.bookingsInUpcoming).to.eql(0); });",
+                  "pm.test(\"No warnings\", () => pm.expect(b.warnings).to.eql([]));",
+                  "pm.collectionVariables.set(\"templateId\", b.template.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create an overlapping one \u2192 201 with warning",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ]
+            },
+            "description": "Same level and day, 10:30\u201311:30. An overlap is a warning, not an error: the template is saved.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"10:30\",\n  \"end\": \"11:30\",\n  \"capacity\": 6,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"One overlap warning\", () => { pm.expect(b.warnings).to.have.lengthOf(1); pm.expect(b.warnings[0].code).to.eql(\"overlap\"); });",
+                  "pm.test(\"Warning names the first template with HH:mm times\", () => pm.expect(b.warnings[0].overlaps).to.eql([{ id: pm.collectionVariables.get(\"templateId\"), start: \"10:00\", end: \"11:00\" }]));",
+                  "pm.collectionVariables.set(\"overlapTemplateId\", b.template.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create an assessment slot (no levelId) \u2192 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ]
+            },
+            "description": "Thursday 14:00\u201314:30; the seeded assessment slots are on Saturday and Tuesday.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dayOfWeek\": \"THURSDAY\",\n  \"start\": \"14:00\",\n  \"end\": \"14:30\",\n  \"capacity\": 3,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"levelId is null\", () => pm.expect(b.template.levelId).to.be.null);",
+                  "pm.collectionVariables.set(\"assessmentTemplateId\", b.template.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Empty body \u2192 400, five field errors",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(b.code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"All required fields are named\", () => pm.expect(b.fieldErrors.map(f => f.field).sort()).to.eql([\"capacity\", \"dayOfWeek\", \"end\", \"start\", \"validFrom\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Capacity 13 \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"10:00\",\n  \"end\": \"11:00\",\n  \"capacity\": 13,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(b.code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"Field error on capacity\", () => pm.expect(b.fieldErrors.map(f => f.field)).to.eql([\"capacity\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Level 7 \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 7,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"10:00\",\n  \"end\": \"11:00\",\n  \"capacity\": 6,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(b.code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"Field error on levelId\", () => pm.expect(b.fieldErrors.map(f => f.field)).to.eql([\"levelId\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "End before start \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ]
+            },
+            "description": "Checked by the session rules, not Bean Validation.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"11:00\",\n  \"end\": \"10:00\",\n  \"capacity\": 6,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(b.code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"Field error on end\", () => pm.expect(b.fieldErrors.map(f => f.field)).to.eql([\"end\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Time with seconds \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ]
+            },
+            "description": "Times are HH:mm. An unreadable body is a 400 without a code property.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"10:00:00\",\n  \"end\": \"11:00\",\n  \"capacity\": 6,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token \u2192 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"10:00\",\n  \"end\": \"11:00\",\n  \"capacity\": 6,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 \u00b7 Edit",
+      "description": "PUT sends the full template. Upcoming sessions take the new times and capacity; a day change cancels them and generates the new day.",
+      "item": [
+        {
+          "name": "Change times and capacity \u2192 200",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates/{{templateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates",
+                "{{templateId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"12:00\",\n  \"end\": \"13:30\",\n  \"capacity\": 8,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Same template\", () => pm.expect(b.template.id).to.eql(pm.collectionVariables.get(\"templateId\")));",
+                  "pm.test(\"New times and capacity\", () => { pm.expect(b.template.start).to.eql(\"12:00\"); pm.expect(b.template.end).to.eql(\"13:30\"); pm.expect(b.template.capacity).to.eql(8); });",
+                  "pm.test(\"No longer overlaps the 10:30 template\", () => pm.expect(b.warnings).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Move to Friday \u2192 200",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates/{{templateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates",
+                "{{templateId}}"
+              ]
+            },
+            "description": "Cancels the upcoming Wednesday sessions and generates Fridays.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"FRIDAY\",\n  \"start\": \"12:00\",\n  \"end\": \"13:30\",\n  \"capacity\": 8,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Day is FRIDAY\", () => pm.expect(pm.response.json().template.dayOfWeek).to.eql(\"FRIDAY\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Shows in the level 3 tab",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates?level=3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const t = pm.response.json().find(t => t.id === pm.collectionVariables.get(\"templateId\"));",
+                  "pm.test(\"Edited template is listed\", () => pm.expect(t).to.be.an(\"object\"));",
+                  "pm.test(\"With the edited values\", () => { pm.expect(t.dayOfWeek).to.eql(\"FRIDAY\"); pm.expect(t.start).to.eql(\"12:00\"); pm.expect(t.capacity).to.eql(8); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Capacity 0 \u2192 400",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates/{{templateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates",
+                "{{templateId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"10:00\",\n  \"end\": \"11:00\",\n  \"capacity\": 0,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(b.code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"Field error on capacity\", () => pm.expect(b.fieldErrors.map(f => f.field)).to.eql([\"capacity\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown id \u2192 404",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"10:00\",\n  \"end\": \"11:00\",\n  \"capacity\": 6,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = not_found\", () => pm.expect(pm.response.json().code).to.eql(\"not_found\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 \u00b7 Delete (also cleans up)",
+      "description": "DELETE soft-deletes the template, cancels its upcoming sessions and returns the counts. Removes everything this collection created, so it can be run again.",
+      "item": [
+        {
+          "name": "Delete the edited template \u2192 200 with counts",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates/{{templateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates",
+                "{{templateId}}"
+              ]
+            },
+            "description": "Eight weeks of Fridays; seven when today is a Friday and 12:00 has passed."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Has both counts\", () => { pm.expect(b.cancelledSessions).to.be.a(\"number\"); pm.expect(b.cancelledBookings).to.eql(0); });",
+                  "pm.test(\"Cancelled the upcoming Fridays\", () => pm.expect(b.cancelledSessions).to.be.within(7, 8));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete it again \u2192 404",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates/{{templateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates",
+                "{{templateId}}"
+              ]
+            },
+            "description": "A deleted template no longer exists."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = not_found\", () => pm.expect(pm.response.json().code).to.eql(\"not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edit a deleted template \u2192 404",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates/{{templateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates",
+                "{{templateId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelId\": 3,\n  \"dayOfWeek\": \"WEDNESDAY\",\n  \"start\": \"10:00\",\n  \"end\": \"11:00\",\n  \"capacity\": 6,\n  \"validFrom\": \"{{validFrom}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = not_found\", () => pm.expect(pm.response.json().code).to.eql(\"not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete the overlapping template \u2192 200",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates/{{overlapTemplateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates",
+                "{{overlapTemplateId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Has both counts\", () => { pm.expect(b.cancelledSessions).to.be.a(\"number\"); pm.expect(b.cancelledBookings).to.eql(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete the assessment slot \u2192 200",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates/{{assessmentTemplateId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates",
+                "{{assessmentTemplateId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Has both counts\", () => { pm.expect(b.cancelledSessions).to.be.a(\"number\"); pm.expect(b.cancelledBookings).to.eql(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Level 3 tab no longer shows them",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates?level=3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates"
+              ],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "3"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const ids = pm.response.json().map(t => t.id);",
+                  "pm.test(\"Deleted templates are gone\", () => { pm.expect(ids).to.not.include(pm.collectionVariables.get(\"templateId\")); pm.expect(ids).to.not.include(pm.collectionVariables.get(\"overlapTemplateId\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown id \u2192 404",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/session-templates/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "session-templates",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = not_found\", () => pm.expect(pm.response.json().code).to.eql(\"not_found\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "adminEmail",
+      "value": ""
+    },
+    {
+      "key": "adminPassword",
+      "value": ""
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "validFrom",
+      "value": ""
+    },
+    {
+      "key": "templateId",
+      "value": ""
+    },
+    {
+      "key": "overlapTemplateId",
+      "value": ""
+    },
+    {
+      "key": "assessmentTemplateId",
+      "value": ""
+    }
+  ]
+}
