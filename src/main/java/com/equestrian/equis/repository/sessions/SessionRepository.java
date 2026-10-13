@@ -32,6 +32,40 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
     @Query("select s from Session s where s.id = :id")
     Optional<Session> findByIdForUpdate(@Param("id") UUID id);
 
+    // The session with its template and level loaded; the level is null for an assessment session.
+    @Query("""
+            select s from Session s
+            join fetch s.template t
+            left join fetch t.level
+            where s.id = :id
+            """)
+    Optional<Session> findWithLevelById(@Param("id") UUID id);
+
+    // Scheduled sessions of the level from..to (both included), each with its template loaded.
+    @Query("""
+            select s from Session s
+            join fetch s.template t
+            where t.level.id = :levelId
+              and s.status = com.equestrian.equis.entity.sessions.SessionStatus.SCHEDULED
+              and s.sessionDate between :from and :to
+            order by s.sessionDate, s.startTime
+            """)
+    List<Session> findScheduledByLevel(@Param("levelId") Short levelId,
+                                       @Param("from") LocalDate from,
+                                       @Param("to") LocalDate to);
+
+    // One row per level with a scheduled session from..to; assessment sessions are left out.
+    @Query("""
+            select t.level.id as levelId, count(s) as sessionCount, sum(s.capacity) as seatsTotal
+            from Session s
+            join s.template t
+            where t.level is not null
+              and s.status = com.equestrian.equis.entity.sessions.SessionStatus.SCHEDULED
+              and s.sessionDate between :from and :to
+            group by t.level.id
+            """)
+    List<LevelSessionCount> countScheduledPerLevel(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
     boolean existsByTemplateIdAndSessionDate(UUID templateId, LocalDate sessionDate);
 
     // Returns 1 when the session was inserted, 0 when the template already has one on that date.
