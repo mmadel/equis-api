@@ -1,7 +1,9 @@
 package com.equestrian.equis.repository.sessions;
 
 import com.equestrian.equis.entity.sessions.Session;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface SessionRepository extends JpaRepository<Session, UUID> {
@@ -23,6 +26,11 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
     List<Session> findUpcomingByTemplate(@Param("templateId") UUID templateId,
                                          @Param("today") LocalDate today,
                                          @Param("nowTime") LocalTime nowTime);
+
+    // Row lock held until the transaction ends, so two trainers cannot fill the last seats at once.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select s from Session s where s.id = :id")
+    Optional<Session> findByIdForUpdate(@Param("id") UUID id);
 
     boolean existsByTemplateIdAndSessionDate(UUID templateId, LocalDate sessionDate);
 

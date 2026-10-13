@@ -16,6 +16,7 @@ public class ErrorCodes {
     public static final String CAPACITY_EXCEEDED  = "capacity_exceeded";  // 409
     public static final String ALREADY_BOOKED     = "already_booked";     // 409
     public static final String PHONE_TAKEN        = "phone_taken";        // 409
+    public static final String SESSION_CLOSED     = "session_closed";     // 409
     public static final String LEVEL_OUT_OF_RANGE = "level_out_of_range"; // 422
     public static final String RESULT_TOO_EARLY   = "result_too_early";   // 422
     public static final String ACCOUNT_LOCKED     = "account_locked";     // 423
