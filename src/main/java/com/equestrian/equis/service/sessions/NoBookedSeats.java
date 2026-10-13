@@ -11,4 +11,9 @@ public class NoBookedSeats implements BookedSeats {
     public int maxBookedInUpcoming(UUID templateId) {
         return 0;
     }
+
+    @Override
+    public int bookingsInUpcoming(UUID templateId) {
+        return 0;
+    }
 }

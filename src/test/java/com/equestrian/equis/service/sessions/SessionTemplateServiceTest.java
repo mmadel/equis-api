@@ -223,7 +223,7 @@ public class SessionTemplateServiceTest {
 
         DeleteImpact impact = service.delete(template.getId());
 
-        assertThat(impact).isEqualTo(new DeleteImpact(HORIZON_WEEKS));
+        assertThat(impact).isEqualTo(new DeleteImpact(HORIZON_WEEKS, 0));
         assertThat(template.getDeletedAt()).isEqualTo(NOW);
         assertThat(sessionTemplateRepository.findByIdAndDeletedAtIsNull(template.getId())).isEmpty();
         assertThat(sessionsOf(template)).hasSize(HORIZON_WEEKS).allSatisfy(session -> {
@@ -239,7 +239,7 @@ public class SessionTemplateServiceTest {
     void deleteLeavesASessionThatAlreadyStartedAlone() {
         SessionTemplate template = created(DayOfWeek.MONDAY, "09:00");
 
-        assertThat(service.delete(template.getId())).isEqualTo(new DeleteImpact(HORIZON_WEEKS - 1));
+        assertThat(service.delete(template.getId())).isEqualTo(new DeleteImpact(HORIZON_WEEKS - 1, 0));
 
         assertThat(sessionsOf(template).getFirst().getStatus()).isEqualTo(SessionStatus.SCHEDULED);
     }
@@ -249,7 +249,7 @@ public class SessionTemplateServiceTest {
         SessionTemplate template = service.create(
                 input(LEVEL_1, DayOfWeek.MONDAY, "16:00", "17:00", 6, TODAY.plusWeeks(HORIZON_WEEKS))).template();
 
-        assertThat(service.delete(template.getId())).isEqualTo(new DeleteImpact(0));
+        assertThat(service.delete(template.getId())).isEqualTo(new DeleteImpact(0, 0));
 
         assertThat(events.stream(SessionsCancelledEvent.class)).isEmpty();
     }
