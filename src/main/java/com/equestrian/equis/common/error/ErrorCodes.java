@@ -19,6 +19,7 @@ public class ErrorCodes {
     public static final String LEVEL_NOT_FOUND    = "level_not_found";    // 404
     public static final String SESSION_NOT_FOUND  = "session_not_found";  // 404
     public static final String SLOT_NOT_FOUND     = "slot_not_found";     // 404
+    public static final String BOOKING_NOT_FOUND  = "booking_not_found";  // 404
     public static final String SEAT_TAKEN        = "seat_taken";         // 409
     public static final String CAPACITY_EXCEEDED  = "capacity_exceeded";  // 409
     public static final String ALREADY_BOOKED     = "already_booked";     // 409

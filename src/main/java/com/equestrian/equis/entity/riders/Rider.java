@@ -1,6 +1,7 @@
 package com.equestrian.equis.entity.riders;
 
 import com.equestrian.equis.entity.accounts.Trainer;
+import com.equestrian.equis.entity.assessment.Member;
 import com.equestrian.equis.entity.levels.Level;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -60,6 +61,18 @@ public class Rider {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    // The only way a real rider is created: the member placed at an assessment, assigned to the assessor.
+    // The member must be loaded (its name and phone are copied); the trainer may be a reference.
+    public static Rider fromAssessment(Member member, Level level, Trainer trainer) {
+        Rider rider = new Rider();
+        rider.name = member.getName();
+        rider.phone = member.getPhone();
+        rider.level = level;
+        rider.trainer = trainer;
+        rider.memberId = member.getId();
+        return rider;
+    }
 
     // First letters of the first and last name, e.g. "Sara Adel Hassan" -> "SH"; a single name gives one letter.
     public String initials() {

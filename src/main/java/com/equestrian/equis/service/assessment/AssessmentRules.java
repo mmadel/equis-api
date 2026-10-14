@@ -109,8 +109,7 @@ public class AssessmentRules {
         switch (b.getStatus()) {
             case CANCELLED -> throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.BOOKING_CANCELLED,
                     "This booking was cancelled.");
-            case PLACED, NOSHOW -> throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.RESULT_ALREADY_RECORDED,
-                    "A result is already recorded.");
+            case PLACED, NOSHOW -> throw resultAlreadyRecorded();
             case UPCOMING -> { }
         }
         // Open from the start time itself, matching AssessmentBooking.isWaiting.
@@ -124,6 +123,14 @@ public class AssessmentRules {
 
     public ApiException slotNotFound() {
         return new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.SLOT_NOT_FOUND, "Assessment slot not found.");
+    }
+
+    public ApiException bookingNotFound() {
+        return new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.BOOKING_NOT_FOUND, "Booking not found.");
+    }
+
+    public ApiException resultAlreadyRecorded() {
+        return new ApiException(HttpStatus.CONFLICT, ErrorCodes.RESULT_ALREADY_RECORDED, "A result is already recorded.");
     }
 
     public ApiException phoneTaken() {
