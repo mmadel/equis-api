@@ -74,6 +74,14 @@ public class Rider {
         return rider;
     }
 
+    // The only way a rider's level changes: exactly one step up or down. The caller records the LevelChange.
+    public void moveToLevel(Level to) {
+        if (!LevelChange.isOneStep(level, to)) {
+            throw new IllegalArgumentException("A rider moves exactly one level at a time");
+        }
+        this.level = to;
+    }
+
     // First letters of the first and last name, e.g. "Sara Adel Hassan" -> "SH"; a single name gives one letter.
     public String initials() {
         if (name == null || name.isBlank()) {
