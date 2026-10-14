@@ -11,6 +11,9 @@ import java.util.UUID;
 public interface RiderRepository extends JpaRepository<Rider, UUID> {
     List<Rider> findByTrainerIdAndLevelIdOrderByName(UUID trainerId, Short levelId);
 
+    // Whether the member was already placed as a rider.
+    boolean existsByMemberId(UUID memberId);
+
     // One row per level the trainer has riders in; levels without riders are absent.
     @Query("""
             select r.level.id as levelId, count(r) as riderCount

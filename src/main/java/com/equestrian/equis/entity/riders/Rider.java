@@ -45,7 +45,7 @@ public class Rider {
     @JoinColumn(name = "trainer_id")
     private Trainer trainer;
 
-    // Plain id until the member entity exists.
+    // The member this rider came from, if any. A plain id: the foreign key is in the database and the rider never loads the member.
     @Column(name = "member_id")
     private UUID memberId;
 
