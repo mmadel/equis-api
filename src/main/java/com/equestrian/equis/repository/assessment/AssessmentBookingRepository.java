@@ -30,6 +30,29 @@ public interface AssessmentBookingRepository extends JpaRepository<AssessmentBoo
             """)
     List<AssessmentBooking> findBySessionId(@Param("sessionId") UUID sessionId);
 
+    // A slot's bookings with member, assessor and level, oldest first, cancelled ones left out: A3 / A4.
+    // The id only breaks ties between bookings made in the same instant, so the order is stable.
+    @Query("""
+            select b from AssessmentBooking b
+            join fetch b.member
+            join fetch b.assessor
+            left join fetch b.level
+            where b.session.id = :sessionId
+              and b.status <> com.equestrian.equis.entity.assessment.BookingStatus.CANCELLED
+            order by b.createdAt, b.id
+            """)
+    List<AssessmentBooking> findVisibleBySessionId(@Param("sessionId") UUID sessionId);
+
+    // The bookings that aren't cancelled, per slot; slots without any are absent. Don't call with an empty list.
+    @Query("""
+            select b.session.id as sessionId, count(b) as booked
+            from AssessmentBooking b
+            where b.session.id in :sessionIds
+              and b.status <> com.equestrian.equis.entity.assessment.BookingStatus.CANCELLED
+            group by b.session.id
+            """)
+    List<SlotBookedCount> countActiveBySessionIdIn(@Param("sessionIds") Collection<UUID> sessionIds);
+
     long countBySessionIdAndStatus(UUID sessionId, BookingStatus status);
 
     // With UPCOMING there is at most one: a member has one active booking.

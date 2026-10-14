@@ -2,6 +2,7 @@ package com.equestrian.equis.service.levels;
 
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
+import com.equestrian.equis.common.time.DateRanges;
 import com.equestrian.equis.dto.levels.LevelRef;
 import com.equestrian.equis.dto.levels.LevelSessionsResponse;
 import com.equestrian.equis.dto.levels.LevelSessionsResponse.Day;
@@ -29,7 +30,6 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -94,10 +94,7 @@ public class MyLevelsService {
     public LevelSessionsResponse sessions(UUID trainerId, short levelId, LocalDate from, LocalDate to) {
         Level level = levels.findById(levelId).orElseThrow(() ->
                 new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.LEVEL_NOT_FOUND, "This level does not exist."));
-        if (to.isBefore(from) || ChronoUnit.DAYS.between(from, to) >= MAX_RANGE_DAYS) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, ErrorCodes.INVALID_RANGE,
-                    "The dates must be in order and cover at most " + MAX_RANGE_DAYS + " days.");
-        }
+        DateRanges.require(from, to, MAX_RANGE_DAYS);
 
         List<Session> inRange = sessions.findScheduledByLevel(levelId, from, to);
         Map<UUID, List<Assignment>> seatsBySession = inRange.isEmpty() ? Map.of()

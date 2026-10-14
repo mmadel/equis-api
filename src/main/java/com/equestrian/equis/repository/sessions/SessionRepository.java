@@ -54,6 +54,17 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
                                        @Param("from") LocalDate from,
                                        @Param("to") LocalDate to);
 
+    // Scheduled assessment slots from..to (both included), each with its template loaded.
+    @Query("""
+            select s from Session s
+            join fetch s.template t
+            where t.level is null
+              and s.status = com.equestrian.equis.entity.sessions.SessionStatus.SCHEDULED
+              and s.sessionDate between :from and :to
+            order by s.sessionDate, s.startTime
+            """)
+    List<Session> findAssessmentSlots(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
     // One row per level with a scheduled session from..to; assessment sessions are left out.
     @Query("""
             select t.level.id as levelId, count(s) as sessionCount, sum(s.capacity) as seatsTotal
