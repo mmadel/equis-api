@@ -1,0 +1,1859 @@
+{
+  "info": {
+    "_postman_id": "2d62921a-1ca5-4f78-83d8-6934a1f4e9ed",
+    "name": "equis-assessment",
+    "description": "Riding Schedule — E4 assessment (M3, M4) against equis-api: GET /assessment/slots, POST /me/members, GET /me/assessment/slots/{id} and POST /me/bookings/{id}/result.\n\nBefore running:\n1. Dev database with V1–V13 applied and an assessment template (one without a level) whose sessions are generated, with an open slot in the next two weeks. Trainer 1 is active.\n2. trainerLogin / trainerPassword default to seeded trainer 1. For the 403 checks, set adminEmail and adminPassword (prefer a Postman environment); without them those requests are skipped.\n3. Run in school time (Africa/Cairo): the date variables are computed in the runner's local zone.\n\nRun order: 0 → 4. Folder 1 picks the open slot, folder 2 books a new member into it (one member and one seat per run; there is no delete), folder 3 reads it back, folder 4 tries to record a result.\nThe result's success path (200, then result_already_recorded) runs only when trainer 1 has a booking from last week still waiting; it then creates a rider. Not covered here: slot_full, slot_closed, member_already_booked, not_assessor and booking_cancelled, which need data the API cannot set up from one trainer.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 · Sign in",
+      "description": "Run first. Saves trainerAccessToken, the date variables, and adminAccessToken when adminEmail is set.",
+      "item": [
+        {
+          "name": "Trainer login → 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Saves trainerAccessToken (valid for 15 minutes) and today / inTwoWeeks / lastWeek / toTooFar.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{trainerLogin}}\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"role = TRAINER\", () => pm.expect(b.role).to.eql(\"TRAINER\"));",
+                  "pm.collectionVariables.set(\"trainerAccessToken\", b.accessToken);",
+                  "// Local dates; the server uses school time (Africa/Cairo), so run this in that zone.",
+                  "const day = n => { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + \"-\" + String(d.getMonth() + 1).padStart(2, \"0\") + \"-\" + String(d.getDate()).padStart(2, \"0\"); };",
+                  "pm.collectionVariables.set(\"today\", day(0));",
+                  "pm.collectionVariables.set(\"inTwoWeeks\", day(13));",
+                  "pm.collectionVariables.set(\"lastWeek\", day(-7));",
+                  "pm.collectionVariables.set(\"yesterday\", day(-1));",
+                  "pm.collectionVariables.set(\"toTooFar\", day(56));",
+                  "pm.collectionVariables.set(\"toLongest\", day(55));",
+                  "// A fresh member phone every run, so the register request never clashes with an old run.",
+                  "pm.collectionVariables.set(\"memberPhone\", \"010\" + String(Math.floor(Math.random() * 1e8)).padStart(8, \"0\"));",
+                  "pm.collectionVariables.set(\"adminAccessToken\", \"\");",
+                  "pm.collectionVariables.set(\"openSlotId\", \"\");",
+                  "pm.collectionVariables.set(\"startedSlotId\", \"\");",
+                  "pm.collectionVariables.set(\"waitingBookingId\", \"\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin login → 200 (optional)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Only for the 403 checks. Skipped when adminEmail is empty.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"rememberMe\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"adminEmail\")) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"role = ADMIN\", () => pm.expect(b.role).to.eql(\"ADMIN\"));",
+                  "pm.collectionVariables.set(\"adminAccessToken\", b.accessToken);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 · Slot list (A1, A2)",
+      "description": "GET /assessment/slots. The same list for every trainer.",
+      "item": [
+        {
+          "name": "No dates → next two weeks → 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assessment/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assessment",
+                "slots"
+              ]
+            },
+            "description": "Saves openSlotId: the first open slot, as A1 preselects it."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const isDate = s => /^\\d{4}-\\d{2}-\\d{2}$/.test(s);",
+                  "const isTime = s => /^\\d{2}:\\d{2}$/.test(s);",
+                  "const checkSlot = s => {",
+                  "    pm.expect(s.id).to.be.a(\"string\");",
+                  "    pm.expect(isDate(s.date), \"date \" + s.date).to.be.true;",
+                  "    pm.expect(isTime(s.start) && isTime(s.end), s.start + \"-\" + s.end).to.be.true;",
+                  "    pm.expect(s.capacity).to.be.a(\"number\");",
+                  "    pm.expect(s.booked).to.be.a(\"number\");",
+                  "    pm.expect(s.open).to.be.a(\"boolean\");",
+                  "    // A full slot is never open.",
+                  "    if (s.booked >= s.capacity) pm.expect(s.open).to.be.false;",
+                  "};",
+                  "const b = pm.response.json();",
+                  "const days = b.days;",
+                  "const slots = days.flatMap(d => d.slots);",
+                  "pm.test(\"Each day holds slots of that date\", () => days.forEach(d => { pm.expect(d.slots).to.not.be.empty; d.slots.forEach(s => pm.expect(s.date).to.eql(d.date)); }));",
+                  "pm.test(\"Days in date order, slots in start order\", () => { const keys = slots.map(s => s.date + \" \" + s.start); pm.expect(keys).to.eql([...keys].sort()); });",
+                  "pm.test(\"Every slot has the contract fields\", () => slots.forEach(checkSlot));",
+                  "pm.test(\"Every slot is inside the range\", () => slots.forEach(s => pm.expect(s.date >= b.from && s.date <= b.to).to.be.true));",
+                  "pm.test(\"from = today, to = today + 13\", () => { pm.expect(b.from).to.eql(pm.collectionVariables.get(\"today\")); pm.expect(b.to).to.eql(pm.collectionVariables.get(\"inTwoWeeks\")); });",
+                  "const open = slots.find(s => s.open);",
+                  "pm.test(\"There is an open slot to book into\", () => pm.expect(open, \"needs an upcoming assessment slot with a free seat\").to.exist);",
+                  "if (open) pm.collectionVariables.set(\"openSlotId\", open.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Explicit range → 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assessment/slots?from={{today}}&to={{toLongest}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assessment",
+                "slots"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{today}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{toLongest}}"
+                }
+              ]
+            },
+            "description": "56 days, the longest range the API accepts."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const isDate = s => /^\\d{4}-\\d{2}-\\d{2}$/.test(s);",
+                  "const isTime = s => /^\\d{2}:\\d{2}$/.test(s);",
+                  "const checkSlot = s => {",
+                  "    pm.expect(s.id).to.be.a(\"string\");",
+                  "    pm.expect(isDate(s.date), \"date \" + s.date).to.be.true;",
+                  "    pm.expect(isTime(s.start) && isTime(s.end), s.start + \"-\" + s.end).to.be.true;",
+                  "    pm.expect(s.capacity).to.be.a(\"number\");",
+                  "    pm.expect(s.booked).to.be.a(\"number\");",
+                  "    pm.expect(s.open).to.be.a(\"boolean\");",
+                  "    // A full slot is never open.",
+                  "    if (s.booked >= s.capacity) pm.expect(s.open).to.be.false;",
+                  "};",
+                  "const b = pm.response.json();",
+                  "const days = b.days;",
+                  "const slots = days.flatMap(d => d.slots);",
+                  "pm.test(\"Each day holds slots of that date\", () => days.forEach(d => { pm.expect(d.slots).to.not.be.empty; d.slots.forEach(s => pm.expect(s.date).to.eql(d.date)); }));",
+                  "pm.test(\"Days in date order, slots in start order\", () => { const keys = slots.map(s => s.date + \" \" + s.start); pm.expect(keys).to.eql([...keys].sort()); });",
+                  "pm.test(\"Every slot has the contract fields\", () => slots.forEach(checkSlot));",
+                  "pm.test(\"Every slot is inside the range\", () => slots.forEach(s => pm.expect(s.date >= b.from && s.date <= b.to).to.be.true));",
+                  "pm.test(\"from / to are echoed\", () => { pm.expect(b.from).to.eql(pm.collectionVariables.get(\"today\")); pm.expect(b.to).to.eql(pm.collectionVariables.get(\"toLongest\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Last week → started slots, not open → 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assessment/slots?from={{lastWeek}}&to={{yesterday}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assessment",
+                "slots"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{lastWeek}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{yesterday}}"
+                }
+              ]
+            },
+            "description": "from may be in the past, so A2 can reach slots waiting for results. Saves startedSlotId when there is one."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const isDate = s => /^\\d{4}-\\d{2}-\\d{2}$/.test(s);",
+                  "const isTime = s => /^\\d{2}:\\d{2}$/.test(s);",
+                  "const checkSlot = s => {",
+                  "    pm.expect(s.id).to.be.a(\"string\");",
+                  "    pm.expect(isDate(s.date), \"date \" + s.date).to.be.true;",
+                  "    pm.expect(isTime(s.start) && isTime(s.end), s.start + \"-\" + s.end).to.be.true;",
+                  "    pm.expect(s.capacity).to.be.a(\"number\");",
+                  "    pm.expect(s.booked).to.be.a(\"number\");",
+                  "    pm.expect(s.open).to.be.a(\"boolean\");",
+                  "    // A full slot is never open.",
+                  "    if (s.booked >= s.capacity) pm.expect(s.open).to.be.false;",
+                  "};",
+                  "const b = pm.response.json();",
+                  "const days = b.days;",
+                  "const slots = days.flatMap(d => d.slots);",
+                  "pm.test(\"Each day holds slots of that date\", () => days.forEach(d => { pm.expect(d.slots).to.not.be.empty; d.slots.forEach(s => pm.expect(s.date).to.eql(d.date)); }));",
+                  "pm.test(\"Days in date order, slots in start order\", () => { const keys = slots.map(s => s.date + \" \" + s.start); pm.expect(keys).to.eql([...keys].sort()); });",
+                  "pm.test(\"Every slot has the contract fields\", () => slots.forEach(checkSlot));",
+                  "pm.test(\"Every slot is inside the range\", () => slots.forEach(s => pm.expect(s.date >= b.from && s.date <= b.to).to.be.true));",
+                  "const past = slots.filter(s => s.date < pm.collectionVariables.get(\"today\"));",
+                  "pm.test(\"Past slots are listed but never open\", () => past.forEach(s => pm.expect(s.open).to.be.false));",
+                  "// The latest past slot: folder 3 looks in it for a booking waiting for a result.",
+                  "if (past.length) pm.collectionVariables.set(\"startedSlotId\", past[past.length - 1].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "to before from → 400 invalid_range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assessment/slots?from={{inTwoWeeks}}&to={{today}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assessment",
+                "slots"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{inTwoWeeks}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{today}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = invalid_range\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_range\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "57 days → 400 invalid_range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assessment/slots?from={{today}}&to={{toTooFar}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assessment",
+                "slots"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{today}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{toTooFar}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = invalid_range\", () => pm.expect(pm.response.json().code).to.eql(\"invalid_range\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bad date → 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assessment/slots?from=2026-13-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assessment",
+                "slots"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-13-01"
+                }
+              ]
+            },
+            "description": "Spring's own type-mismatch ProblemDetail, without a code."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token → 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/assessment/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assessment",
+                "slots"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin token → 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/assessment/slots",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assessment",
+                "slots"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Needs adminEmail / adminPassword; skipped when the admin did not sign in.",
+                  "if (!pm.collectionVariables.get(\"adminAccessToken\")) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"code = forbidden\", () => pm.expect(pm.response.json().code).to.eql(\"forbidden\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 · Register a member (A1)",
+      "description": "POST /me/members. Creates a member and a booking in openSlotId with the trainer as assessor. There is no delete, so each run leaves one member and one booking behind and takes a seat.",
+      "item": [
+        {
+          "name": "Empty body → 400 validation_failed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "members"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "const fe = (pm.response.json().fieldErrors || []).map(e => e.field).sort();",
+                  "pm.test(\"fieldErrors = name, slotId\", () => pm.expect(fe).to.eql([\"name\", \"slotId\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bad phone → 400 validation_failed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "members"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Member\",\n  \"phone\": \"12345\",\n  \"slotId\": \"{{openSlotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "const fe = (pm.response.json().fieldErrors || []).map(e => e.field).sort();",
+                  "pm.test(\"fieldErrors = phone\", () => pm.expect(fe).to.eql([\"phone\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "slotId not a UUID → 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "members"
+              ]
+            },
+            "description": "Spring's own ProblemDetail for an unreadable body, without a code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Member\",\n  \"slotId\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown slot → 404 slot_not_found",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "members"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Member\",\n  \"slotId\": \"00000000-0000-0000-0000-00000000dead\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = slot_not_found\", () => pm.expect(pm.response.json().code).to.eql(\"slot_not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register and book → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "members"
+              ]
+            },
+            "description": "Saves bookingId and memberId.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Member\",\n  \"phone\": \"{{memberPhone}}\",\n  \"slotId\": \"{{openSlotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Ids returned\", () => { pm.expect(b.bookingId).to.be.a(\"string\"); pm.expect(b.memberId).to.be.a(\"string\"); });",
+                  "pm.test(\"Booked into the chosen slot\", () => pm.expect(b.slotId).to.eql(pm.collectionVariables.get(\"openSlotId\")));",
+                  "pm.collectionVariables.set(\"bookingId\", b.bookingId);",
+                  "pm.collectionVariables.set(\"memberId\", b.memberId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Same phone again → 409 phone_taken",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "members"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Member\",\n  \"phone\": \"{{memberPhone}}\",\n  \"slotId\": \"{{openSlotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"code = phone_taken\", () => pm.expect(pm.response.json().code).to.eql(\"phone_taken\"));",
+                  "const fe = (pm.response.json().fieldErrors || []).map(e => e.field).sort();",
+                  "pm.test(\"fieldErrors = phone\", () => pm.expect(fe).to.eql([\"phone\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token → 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "members"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Member\",\n  \"phone\": \"{{memberPhone}}\",\n  \"slotId\": \"{{openSlotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin token → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "members"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Member\",\n  \"phone\": \"{{memberPhone}}\",\n  \"slotId\": \"{{openSlotId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Needs adminEmail / adminPassword; skipped when the admin did not sign in.",
+                  "if (!pm.collectionVariables.get(\"adminAccessToken\")) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"code = forbidden\", () => pm.expect(pm.response.json().code).to.eql(\"forbidden\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 · One slot (A3, A4)",
+      "description": "GET /me/assessment/slots/{id}. Any trainer can open any slot; other trainers' bookings show no phone or notes.",
+      "item": [
+        {
+          "name": "Booked slot → 200 with the new booking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/assessment/slots/{{openSlotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "assessment",
+                "slots",
+                "{{openSlotId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const isDate = s => /^\\d{4}-\\d{2}-\\d{2}$/.test(s);",
+                  "const isTime = s => /^\\d{2}:\\d{2}$/.test(s);",
+                  "const checkSlot = s => {",
+                  "    pm.expect(s.id).to.be.a(\"string\");",
+                  "    pm.expect(isDate(s.date), \"date \" + s.date).to.be.true;",
+                  "    pm.expect(isTime(s.start) && isTime(s.end), s.start + \"-\" + s.end).to.be.true;",
+                  "    pm.expect(s.capacity).to.be.a(\"number\");",
+                  "    pm.expect(s.booked).to.be.a(\"number\");",
+                  "    pm.expect(s.open).to.be.a(\"boolean\");",
+                  "    // A full slot is never open.",
+                  "    if (s.booked >= s.capacity) pm.expect(s.open).to.be.false;",
+                  "};",
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "pm.test(\"Slot fields\", () => { checkSlot(s); pm.expect(s.id).to.eql(pm.collectionVariables.get(\"openSlotId\")); pm.expect(s.started).to.be.false; });",
+                  "pm.test(\"booked = number of bookings listed\", () => pm.expect(s.booked).to.eql(s.bookings.length));",
+                  "const row = s.bookings.find(r => r.id === pm.collectionVariables.get(\"bookingId\"));",
+                  "pm.test(\"New booking is listed\", () => pm.expect(row).to.exist);",
+                  "pm.test(\"It is mine and upcoming, with the phone\", () => {",
+                  "    pm.expect(row.mine).to.be.true;",
+                  "    pm.expect(row.status).to.eql(\"upcoming\");",
+                  "    pm.expect(row.memberId).to.eql(pm.collectionVariables.get(\"memberId\"));",
+                  "    pm.expect(row.memberName).to.eql(\"Postman Member\");",
+                  "    pm.expect(row.memberPhone).to.eql(pm.collectionVariables.get(\"memberPhone\"));",
+                  "    pm.expect(row.levelId).to.be.null;",
+                  "});",
+                  "pm.test(\"Other trainers' rows carry no phone or notes\", () => s.bookings.filter(r => !r.mine).forEach(r => { pm.expect(r.memberPhone).to.be.null; pm.expect(r.notes).to.be.null; }));",
+                  "pm.test(\"levelId only on placed rows\", () => s.bookings.forEach(r => pm.expect(r.levelId !== null).to.eql(r.status === \"placed\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Started slot → 200, rows waiting or recorded",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/assessment/slots/{{startedSlotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "assessment",
+                "slots",
+                "{{startedSlotId}}"
+              ]
+            },
+            "description": "Skipped when folder 1 found no slot last week. Saves waitingBookingId when one of the trainer's bookings waits for a result."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"startedSlotId\")) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "pm.test(\"started, not open\", () => { pm.expect(s.started).to.be.true; pm.expect(s.open).to.be.false; });",
+                  "pm.test(\"No row is still upcoming\", () => s.bookings.forEach(r => pm.expect(r.status).to.be.oneOf([\"waiting\", \"placed\", \"noshow\"])));",
+                  "// Folder 4 records a result for one of the trainer's waiting bookings, when there is one.",
+                  "const waiting = s.bookings.find(r => r.mine && r.status === \"waiting\");",
+                  "pm.collectionVariables.set(\"waitingBookingId\", waiting ? waiting.id : \"\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown slot → 404 slot_not_found",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/assessment/slots/00000000-0000-0000-0000-00000000dead",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "assessment",
+                "slots",
+                "00000000-0000-0000-0000-00000000dead"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = slot_not_found\", () => pm.expect(pm.response.json().code).to.eql(\"slot_not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id not a UUID → 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/assessment/slots/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "assessment",
+                "slots",
+                "abc"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token → 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/assessment/slots/{{openSlotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "assessment",
+                "slots",
+                "{{openSlotId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin token → 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/assessment/slots/{{openSlotId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "assessment",
+                "slots",
+                "{{openSlotId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Needs adminEmail / adminPassword; skipped when the admin did not sign in.",
+                  "if (!pm.collectionVariables.get(\"adminAccessToken\")) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"code = forbidden\", () => pm.expect(pm.response.json().code).to.eql(\"forbidden\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 · Record a result (A5)",
+      "description": "POST /me/bookings/{id}/result. The booking from folder 2 is in a slot that hasn't started, so it is refused; the success path runs only on a booking from last week that is still waiting. Placing creates a rider.",
+      "item": [
+        {
+          "name": "Missing attended → 400 validation_failed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/{{bookingId}}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "{{bookingId}}",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "const fe = (pm.response.json().fieldErrors || []).map(e => e.field).sort();",
+                  "pm.test(\"fieldErrors = attended\", () => pm.expect(fe).to.eql([\"attended\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Notes over 500 → 400 validation_failed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/{{bookingId}}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "{{bookingId}}",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attended\": false,\n  \"notes\": \"{{longNotes}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"longNotes\", \"x\".repeat(501));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "const fe = (pm.response.json().fieldErrors || []).map(e => e.field).sort();",
+                  "pm.test(\"fieldErrors = notes\", () => pm.expect(fe).to.eql([\"notes\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Attended without level → 400 level_required",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/{{bookingId}}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "{{bookingId}}",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attended\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"fieldErrors levelId: level_required\", () => pm.expect(pm.response.json().fieldErrors).to.eql([{ field: \"levelId\", message: \"level_required\" }]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No-show with level → 400 level_not_allowed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/{{bookingId}}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "{{bookingId}}",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attended\": false,\n  \"levelId\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"fieldErrors levelId: level_not_allowed\", () => pm.expect(pm.response.json().fieldErrors).to.eql([{ field: \"levelId\", message: \"level_not_allowed\" }]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Slot not started → 409 slot_not_started",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/{{bookingId}}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "{{bookingId}}",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attended\": true,\n  \"levelId\": 3,\n  \"notes\": \"Recorded from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"code = slot_not_started\", () => pm.expect(pm.response.json().code).to.eql(\"slot_not_started\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown booking → 404 booking_not_found",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/00000000-0000-0000-0000-00000000dead/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "00000000-0000-0000-0000-00000000dead",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attended\": true,\n  \"levelId\": 3,\n  \"notes\": \"Recorded from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = booking_not_found\", () => pm.expect(pm.response.json().code).to.eql(\"booking_not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id not a UUID → 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/abc/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "abc",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attended\": true,\n  \"levelId\": 3,\n  \"notes\": \"Recorded from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Waiting booking → 200 placed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/{{waitingBookingId}}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "{{waitingBookingId}}",
+                "result"
+              ]
+            },
+            "description": "Skipped when folder 3 found no waiting booking of the trainer's.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attended\": true,\n  \"levelId\": 3,\n  \"notes\": \"Recorded from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"waitingBookingId\")) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"placed, with a rider\", () => { pm.expect(b.bookingId).to.eql(pm.collectionVariables.get(\"waitingBookingId\")); pm.expect(b.status).to.eql(\"placed\"); pm.expect(b.riderId).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Same booking again → 409 result_already_recorded",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/{{waitingBookingId}}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "{{waitingBookingId}}",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attended\": true,\n  \"levelId\": 3,\n  \"notes\": \"Recorded from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"waitingBookingId\")) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"code = result_already_recorded\", () => pm.expect(pm.response.json().code).to.eql(\"result_already_recorded\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token → 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/{{bookingId}}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "{{bookingId}}",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attended\": true,\n  \"levelId\": 3,\n  \"notes\": \"Recorded from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin token → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/bookings/{{bookingId}}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "bookings",
+                "{{bookingId}}",
+                "result"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attended\": true,\n  \"levelId\": 3,\n  \"notes\": \"Recorded from Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Needs adminEmail / adminPassword; skipped when the admin did not sign in.",
+                  "if (!pm.collectionVariables.get(\"adminAccessToken\")) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"code = forbidden\", () => pm.expect(pm.response.json().code).to.eql(\"forbidden\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "trainerLogin",
+      "value": "trainer1@example.com"
+    },
+    {
+      "key": "trainerPassword",
+      "value": "Trainer@123"
+    },
+    {
+      "key": "adminEmail",
+      "value": ""
+    },
+    {
+      "key": "adminPassword",
+      "value": ""
+    },
+    {
+      "key": "trainerAccessToken",
+      "value": ""
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "inTwoWeeks",
+      "value": ""
+    },
+    {
+      "key": "lastWeek",
+      "value": ""
+    },
+    {
+      "key": "yesterday",
+      "value": ""
+    },
+    {
+      "key": "toLongest",
+      "value": ""
+    },
+    {
+      "key": "toTooFar",
+      "value": ""
+    },
+    {
+      "key": "memberPhone",
+      "value": ""
+    },
+    {
+      "key": "openSlotId",
+      "value": ""
+    },
+    {
+      "key": "startedSlotId",
+      "value": ""
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    },
+    {
+      "key": "memberId",
+      "value": ""
+    },
+    {
+      "key": "waitingBookingId",
+      "value": ""
+    },
+    {
+      "key": "longNotes",
+      "value": ""
+    }
+  ]
+}
