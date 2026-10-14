@@ -8,6 +8,7 @@ import com.equestrian.equis.dto.sessions.SaveResponse;
 import com.equestrian.equis.dto.sessions.SessionTemplateCreateRequest;
 import com.equestrian.equis.dto.sessions.SessionTemplateResponse;
 import com.equestrian.equis.dto.sessions.SessionTemplateUpdateRequest;
+import com.equestrian.equis.entity.levels.Levels;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
 import com.equestrian.equis.service.sessions.BookedSeats;
 import com.equestrian.equis.service.sessions.SaveResult;
@@ -36,8 +37,6 @@ import java.util.UUID;
 @RequestMapping("/admin/session-templates")
 public class SessionTemplateController {
     private static final String ASSESSMENT = "assessment";
-    private static final int MIN_LEVEL = 1;
-    private static final int MAX_LEVEL = 6;
 
     private final SessionTemplateService service;
     private final BookedSeats bookedSeats;
@@ -88,7 +87,7 @@ public class SessionTemplateController {
     private static short levelId(String level) {
         try {
             int id = Integer.parseInt(level);
-            if (id >= MIN_LEVEL && id <= MAX_LEVEL) {
+            if (Levels.isValid(id)) {
                 return (short) id;
             }
         } catch (NumberFormatException e) {
@@ -97,7 +96,7 @@ public class SessionTemplateController {
         throw new ApiException(HttpStatus.BAD_REQUEST, ErrorCodes.VALIDATION_FAILED,
                 "Some fields are not valid.",
                 Map.of("fieldErrors", List.of(new ApiFieldError("level",
-                        "Level must be \"" + ASSESSMENT + "\" or a number from " + MIN_LEVEL + " to " + MAX_LEVEL
+                        "Level must be \"" + ASSESSMENT + "\" or a number from " + Levels.MIN_LEVEL + " to " + Levels.MAX_LEVEL
                                 + "."))));
     }
 }
