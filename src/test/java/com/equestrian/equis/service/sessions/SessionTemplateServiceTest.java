@@ -4,17 +4,24 @@ import com.equestrian.equis.common.config.SessionProperties;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.entity.accounts.Trainer;
+import com.equestrian.equis.entity.assessment.AssessmentBooking;
+import com.equestrian.equis.entity.assessment.BookingStatus;
+import com.equestrian.equis.entity.assessment.Member;
 import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.entity.sessions.Assignment;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.entity.sessions.SessionStatus;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
+import com.equestrian.equis.repository.assessment.MemberRepository;
 import com.equestrian.equis.repository.levels.LevelRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.repository.sessions.AssignmentRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.service.assessment.BookingCancellationListener;
+import com.equestrian.equis.service.assessment.BookingSeatCounts;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,8 +57,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
 @EnableConfigurationProperties(SessionProperties.class)
-@Import({SessionTemplateService.class, SessionTemplateRules.class, SessionGenerator.class, AssignmentBookedSeats.class,
-        AssignmentCancellationListener.class})
+@Import({SessionTemplateService.class, SessionTemplateRules.class, SessionGenerator.class, TemplateBookedSeats.class, BookingSeatCounts.class,
+        AssignmentCancellationListener.class, BookingCancellationListener.class})
 @RecordApplicationEvents
 public class SessionTemplateServiceTest {
     private static final int LEVEL_1 = 1;
@@ -81,6 +88,10 @@ public class SessionTemplateServiceTest {
     TrainerRepository trainerRepository;
     @Autowired
     LevelRepository levelRepository;
+    @Autowired
+    AssessmentBookingRepository bookingRepository;
+    @Autowired
+    MemberRepository memberRepository;
     @Autowired
     JdbcTemplate jdbcTemplate;
     @Autowired
@@ -321,6 +332,45 @@ public class SessionTemplateServiceTest {
         assertNotFound(() -> service.delete(deleted.getId()));
     }
 
+    @Test
+    void deleteOfAnAssessmentSlotCountsAndCancelsItsUpcomingBookings() {
+        SessionTemplate slot = service.create(input(null, DayOfWeek.MONDAY, "16:00", "17:00", 4, VALID_FROM))
+                .template();
+        List<Session> sessions = sessionsOf(slot);
+        Trainer sara = trainer();
+        AssessmentBooking omar = book("Omar Khaled", sessions.get(0), sara);
+        AssessmentBooking hana = book("Hana Samy", sessions.get(1), sara);
+        AssessmentBooking placed = book("Mona Adel", sessions.get(1), sara);
+        placed.recordAttended(levelRepository.getReferenceById((short) LEVEL_1), null, NOW);
+        bookingRepository.saveAndFlush(placed);
+
+        assertThat(service.delete(slot.getId())).isEqualTo(new DeleteImpact(HORIZON_WEEKS, 2));
+
+        assertThat(bookingRepository.findAllById(List.of(omar.getId(), hana.getId()))).allSatisfy(booking -> {
+            assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELLED);
+            assertThat(booking.getCancelledAt()).isEqualTo(NOW);
+        });
+        assertThat(bookingRepository.findById(placed.getId())).get()
+                .extracting(AssessmentBooking::getStatus).isEqualTo(BookingStatus.PLACED);
+    }
+
+    @Test
+    void updateOfAnAssessmentSlotCannotDropCapacityBelowItsBookings() {
+        SessionTemplate slot = service.create(input(null, DayOfWeek.MONDAY, "16:00", "17:00", 4, VALID_FROM))
+                .template();
+        Session first = sessionsOf(slot).getFirst();
+        Trainer sara = trainer();
+        book("Omar Khaled", first, sara);
+        book("Hana Samy", first, sara);
+
+        assertThatThrownBy(() -> service.update(slot.getId(),
+                input(null, DayOfWeek.MONDAY, "16:00", "17:00", 1, VALID_FROM)))
+                .isInstanceOfSatisfying(ApiException.class, ex -> {
+                    assertThat(ex.status()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(ex.code()).isEqualTo(ErrorCodes.CAPACITY_EXCEEDED);
+                });
+    }
+
     private void assertNotFound(Runnable call) {
         assertThatThrownBy(call::run).isInstanceOfSatisfying(ApiException.class, ex -> {
             assertThat(ex.status()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -342,6 +392,11 @@ public class SessionTemplateServiceTest {
 
     private void assign(Session session, Rider rider, Trainer trainer) {
         assignmentRepository.saveAndFlush(Assignment.of(session, rider, trainer));
+    }
+
+    private AssessmentBooking book(String name, Session slot, Trainer assessor) {
+        Member member = memberRepository.saveAndFlush(Member.register(name, null));
+        return bookingRepository.saveAndFlush(AssessmentBooking.book(member, slot, assessor));
     }
 
     private Trainer trainer() {
