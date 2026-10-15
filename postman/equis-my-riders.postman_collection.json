@@ -1,0 +1,1348 @@
+{
+  "info": {
+    "_postman_id": "5219303f-a6e2-46ef-9630-06b0ed844f0b",
+    "name": "equis-my-riders",
+    "description": "Riding Schedule \u2014 E5 my riders and level changes (M5) against equis-api: GET /me/riders, GET /me/riders/{id}/level-history and POST /me/riders/{id}/level-change.\n\nBefore running:\n1. Dev database with V1\u2013V14 applied and sessions generated: trainer 1 is active and has at least one rider on levels 1\u20135 (the V12 seed gives three on Level 1).\n2. trainerLogin / trainerPassword default to seeded trainer 1.\n\nRun order: 0 \u2192 3. Folder 1 picks the rider (one with a next session if there is one), folder 2 remembers their seats and history, folder 3 promotes them and demotes them back.\nSide effects that stay: the rider's upcoming seats in their starting level are freed, and each run adds two history lines.\nSkipped when the data is not there: level_at_top / level_at_bottom (no rider of mine on Level 6 / Level 1) and the 422 seat check (the rider had no upcoming seat).\nNot covered here: another trainer's rider (answered like an unknown id, 404 rider_not_found) and the admin token (403 forbidden).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 \u00b7 Sign in",
+      "description": "Run first: every other request uses trainerAccessToken.",
+      "item": [
+        {
+          "name": "Trainer login \u2192 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Saves trainerAccessToken (valid for 15 minutes).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{trainerLogin}}\",\n  \"password\": \"{{trainerPassword}}\",\n  \"rememberMe\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"role = TRAINER\", () => pm.expect(b.role).to.eql(\"TRAINER\"));",
+                  "pm.collectionVariables.set(\"trainerAccessToken\", b.accessToken);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 \u00b7 My riders (M5)",
+      "description": "GET /me/riders answers the whole list; tabs, counts and search are done in the app. The first request picks the rider the rest of the collection moves.",
+      "item": [
+        {
+          "name": "All my riders \u2192 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Is an array\", () => pm.expect(b).to.be.an(\"array\"));",
+                  "pm.test(\"Each rider has the contract fields\", () => b.forEach(r => {",
+                  "    pm.expect(r.id).to.match(/^[0-9a-f-]{36}$/);",
+                  "    pm.expect(r.name).to.be.a(\"string\");",
+                  "    pm.expect(r.initials).to.be.a(\"string\");",
+                  "    pm.expect(r.levelId).to.be.within(1, 6);",
+                  "    pm.expect(r.since).to.match(/^\\d{4}-\\d{2}-\\d{2}$/);",
+                  "    pm.expect(r).to.have.property(\"nextSession\");",
+                  "    pm.expect(r).to.not.have.property(\"phone\");",
+                  "    if (r.nextSession) { pm.expect(r.nextSession.date).to.match(/^\\d{4}-\\d{2}-\\d{2}$/); pm.expect(r.nextSession.start).to.match(/^\\d{2}:\\d{2}$/); pm.expect(r.nextSession.end).to.match(/^\\d{2}:\\d{2}$/); }",
+                  "}));",
+                  "// The rider is promoted and then demoted back, so any level below 6 works; prefer one with a next session so the freed seats show.",
+                  "const movable = b.filter(r => r.levelId <= 5);",
+                  "const pick = movable.find(r => r.nextSession) || movable[0];",
+                  "pm.test(\"Has a rider on levels 1\u20135 to move\", () => pm.expect(pick).to.exist);",
+                  "pm.collectionVariables.set(\"riderId\", pick.id);",
+                  "pm.collectionVariables.set(\"riderName\", pick.name);",
+                  "pm.collectionVariables.set(\"riderLevel\", String(pick.levelId));",
+                  "pm.collectionVariables.set(\"riderLevelUp\", String(pick.levelId + 1));",
+                  "// Riders already at the ends, if I have any, for level_at_top / level_at_bottom.",
+                  "const top = b.find(r => r.levelId === 6), bottom = b.find(r => r.levelId === 1);",
+                  "pm.collectionVariables.set(\"topRiderId\", top ? top.id : \"\");",
+                  "pm.collectionVariables.set(\"bottomRiderId\", bottom ? bottom.id : \"\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My levels before the change",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels"
+              ]
+            },
+            "description": "Remembers myRiders on the rider's level and the one above, for the check after the promotion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "const count = id => b.find(l => l.id === id).myRiders;",
+                  "const from = Number(pm.collectionVariables.get(\"riderLevel\"));",
+                  "pm.collectionVariables.set(\"myRidersFromBefore\", String(count(from)));",
+                  "pm.collectionVariables.set(\"myRidersToBefore\", String(count(from + 1)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token \u2192 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 \u00b7 Rider level (4a)",
+      "description": "GET /me/riders/{id}/level-history answers the whole Rider level page and its confirm sheet's impact.",
+      "item": [
+        {
+          "name": "The chosen rider \u2192 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Is the chosen rider\", () => { pm.expect(b.id).to.eql(pm.collectionVariables.get(\"riderId\")); pm.expect(b.name).to.eql(pm.collectionVariables.get(\"riderName\")); pm.expect(b.initials).to.be.a(\"string\"); });",
+                  "pm.test(\"levelId and since\", () => { pm.expect(b.levelId).to.eql(Number(pm.collectionVariables.get(\"riderLevel\"))); pm.expect(b.since).to.match(/^\\d{4}-\\d{2}-\\d{2}$/); });",
+                  "pm.test(\"canPromote true, canDemote above Level 1\", () => { pm.expect(b.canPromote).to.eql(true); pm.expect(b.canDemote).to.eql(b.levelId > 1); });",
+                  "pm.test(\"upcomingSeats have date and HH:mm times\", () => b.upcomingSeats.forEach(s => { pm.expect(s.sessionId).to.match(/^[0-9a-f-]{36}$/); pm.expect(s.date).to.match(/^\\d{4}-\\d{2}-\\d{2}$/); pm.expect(s.start).to.match(/^\\d{2}:\\d{2}$/); pm.expect(s.end).to.match(/^\\d{2}:\\d{2}$/); }));",
+                  "pm.test(\"history lines have type, levels, byName and at\", () => b.history.forEach(h => { pm.expect([\"placed\", \"promoted\", \"demoted\"]).to.include(h.type); pm.expect(h).to.have.property(\"fromLevelId\"); pm.expect(h.toLevelId).to.be.within(1, 6); pm.expect(h).to.have.property(\"reason\"); pm.expect(h.at).to.be.a(\"string\"); }));",
+                  "// The seats the promotion should free, in date order.",
+                  "pm.collectionVariables.set(\"upcomingSeatIds\", JSON.stringify(b.upcomingSeats.map(s => s.sessionId)));",
+                  "pm.collectionVariables.set(\"oldSessionId\", b.upcomingSeats.length ? b.upcomingSeats[0].sessionId : \"\");",
+                  "pm.collectionVariables.set(\"historyCount\", String(b.history.length));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown id \u2192 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/00000000-0000-0000-0000-00000000dead/level-history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "00000000-0000-0000-0000-00000000dead",
+                "level-history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = rider_not_found\", () => pm.expect(pm.response.json().code).to.eql(\"rider_not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id not a UUID \u2192 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/abc/level-history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "abc",
+                "level-history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token \u2192 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 \u00b7 Level change (4b, also cleans up)",
+      "description": "POST /me/riders/{id}/level-change moves the rider one level and frees their upcoming seats in the old level. The refusals come first and must change nothing; then the rider is promoted, checked on the other screens, and demoted back to where they started.",
+      "item": [
+        {
+          "name": "Empty body \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"fieldErrors name direction, fromLevelId, reason\", () => pm.expect(pm.response.json().fieldErrors.map(f => f.field).sort()).to.eql([\"direction\", \"fromLevelId\", \"reason\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Blank reason \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\",\n  \"fromLevelId\": {{riderLevel}},\n  \"reason\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"fieldErrors name reason\", () => pm.expect(pm.response.json().fieldErrors.map(f => f.field).sort()).to.eql([\"reason\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reason of 101 characters \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\",\n  \"fromLevelId\": {{riderLevel}},\n  \"reason\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"fieldErrors name reason\", () => pm.expect(pm.response.json().fieldErrors.map(f => f.field).sort()).to.eql([\"reason\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "fromLevelId 7 \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\",\n  \"fromLevelId\": 7,\n  \"reason\": \"Ready for canter\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"code = validation_failed\", () => pm.expect(pm.response.json().code).to.eql(\"validation_failed\"));",
+                  "pm.test(\"fieldErrors name fromLevelId\", () => pm.expect(pm.response.json().fieldErrors.map(f => f.field).sort()).to.eql([\"fromLevelId\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direction sideways \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-change"
+              ]
+            },
+            "description": "Not up / down: Spring's own 400, no code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"sideways\",\n  \"fromLevelId\": {{riderLevel}},\n  \"reason\": \"Ready for canter\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Id not a UUID \u2192 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/abc/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "abc",
+                "level-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\",\n  \"fromLevelId\": {{riderLevel}},\n  \"reason\": \"Ready for canter\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown rider \u2192 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/00000000-0000-0000-0000-00000000dead/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "00000000-0000-0000-0000-00000000dead",
+                "level-change"
+              ]
+            },
+            "description": "Another trainer's rider is answered the same way.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\",\n  \"fromLevelId\": {{riderLevel}},\n  \"reason\": \"Ready for canter\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"code = rider_not_found\", () => pm.expect(pm.response.json().code).to.eql(\"rider_not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wrong fromLevelId \u2192 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-change"
+              ]
+            },
+            "description": "The rider is no longer on the level the sheet showed (another device, a double tap).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\",\n  \"fromLevelId\": {{riderLevelUp}},\n  \"reason\": \"Ready for canter\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"code = level_changed\", () => pm.expect(pm.response.json().code).to.eql(\"level_changed\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Up from Level 6 \u2192 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{topRiderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{topRiderId}}",
+                "level-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\",\n  \"fromLevelId\": 6,\n  \"reason\": \"Ready for more\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"topRiderId\")) {",
+                  "    console.log(\"No rider of mine on Level 6; skipped.\");",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"code = level_at_top\", () => pm.expect(pm.response.json().code).to.eql(\"level_at_top\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Down from Level 1 \u2192 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{bottomRiderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{bottomRiderId}}",
+                "level-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"down\",\n  \"fromLevelId\": 1,\n  \"reason\": \"Needs more walk work\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"bottomRiderId\")) {",
+                  "    console.log(\"No rider of mine on Level 1; skipped.\");",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"code = level_at_bottom\", () => pm.expect(pm.response.json().code).to.eql(\"level_at_bottom\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token \u2192 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\",\n  \"fromLevelId\": {{riderLevel}},\n  \"reason\": \"Ready for canter\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"code = unauthorized\", () => pm.expect(pm.response.json().code).to.eql(\"unauthorized\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refusals changed nothing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Same level\", () => pm.expect(b.levelId).to.eql(Number(pm.collectionVariables.get(\"riderLevel\"))));",
+                  "pm.test(\"Same seats\", () => pm.expect(b.upcomingSeats.map(s => s.sessionId)).to.eql(JSON.parse(pm.collectionVariables.get(\"upcomingSeatIds\"))));",
+                  "pm.test(\"No new history line\", () => pm.expect(b.history.length).to.eql(Number(pm.collectionVariables.get(\"historyCount\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Promote \u2192 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-change"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\",\n  \"fromLevelId\": {{riderLevel}},\n  \"reason\": \"Ready for canter\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "const from = Number(pm.collectionVariables.get(\"riderLevel\"));",
+                  "pm.test(\"Is the chosen rider\", () => pm.expect(b.riderId).to.eql(pm.collectionVariables.get(\"riderId\")));",
+                  "pm.test(\"One level up\", () => { pm.expect(b.fromLevelId).to.eql(from); pm.expect(b.toLevelId).to.eql(from + 1); });",
+                  "pm.test(\"Reason and changedAt\", () => { pm.expect(b.reason).to.eql(\"Ready for canter\"); pm.expect(b.changedAt).to.match(/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$/); });",
+                  "pm.test(\"freedSeats are the upcoming seats 4a showed, in date order\", () => pm.expect(b.freedSeats.map(s => s.sessionId)).to.eql(JSON.parse(pm.collectionVariables.get(\"upcomingSeatIds\"))));",
+                  "pm.test(\"freedSeats have date and HH:mm times\", () => b.freedSeats.forEach(s => { pm.expect(s.date).to.match(/^\\d{4}-\\d{2}-\\d{2}$/); pm.expect(s.start).to.match(/^\\d{2}:\\d{2}$/); pm.expect(s.end).to.match(/^\\d{2}:\\d{2}$/); }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Same request again \u2192 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-change"
+              ]
+            },
+            "description": "A double tap moves the rider one step only.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"up\",\n  \"fromLevelId\": {{riderLevel}},\n  \"reason\": \"Ready for canter\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"code = level_changed\", () => pm.expect(pm.response.json().code).to.eql(\"level_changed\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My riders shows the new level",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json().find(r => r.id === pm.collectionVariables.get(\"riderId\"));",
+                  "pm.test(\"Rider is on the level above\", () => pm.expect(r.levelId).to.eql(Number(pm.collectionVariables.get(\"riderLevelUp\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rider level shows the promotion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"NOW on the level above\", () => pm.expect(b.levelId).to.eql(Number(pm.collectionVariables.get(\"riderLevelUp\"))));",
+                  "pm.test(\"No upcoming seats left in the new level from the old one\", () => b.upcomingSeats.forEach(s => pm.expect(JSON.parse(pm.collectionVariables.get(\"upcomingSeatIds\"))).to.not.include(s.sessionId)));",
+                  "pm.test(\"One new history line, on top\", () => pm.expect(b.history.length).to.eql(Number(pm.collectionVariables.get(\"historyCount\")) + 1));",
+                  "pm.test(\"Top line is the promotion\", () => { const h = b.history[0]; pm.expect(h.type).to.eql(\"promoted\"); pm.expect(h.fromLevelId).to.eql(Number(pm.collectionVariables.get(\"riderLevel\"))); pm.expect(h.toLevelId).to.eql(Number(pm.collectionVariables.get(\"riderLevelUp\"))); pm.expect(h.reason).to.eql(\"Ready for canter\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "My levels moved one rider up",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/levels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "levels"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "const count = id => b.find(l => l.id === id).myRiders;",
+                  "const from = Number(pm.collectionVariables.get(\"riderLevel\"));",
+                  "pm.test(\"Old level \u22121\", () => pm.expect(count(from)).to.eql(Number(pm.collectionVariables.get(\"myRidersFromBefore\")) - 1));",
+                  "pm.test(\"New level +1\", () => pm.expect(count(from + 1)).to.eql(Number(pm.collectionVariables.get(\"myRidersToBefore\")) + 1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Seat back in an old-level session \u2192 422",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/sessions/{{oldSessionId}}/assignments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "sessions",
+                "{{oldSessionId}}",
+                "assignments"
+              ]
+            },
+            "description": "The rider is no longer in that session's level. Skipped when they had no upcoming seat.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderIds\": [\"{{riderId}}\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"oldSessionId\")) {",
+                  "    console.log(\"The rider had no upcoming seat in the old level; skipped.\");",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"code = level_out_of_range\", () => pm.expect(pm.response.json().code).to.eql(\"level_out_of_range\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Put the rider back \u2192 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{trainerAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/riders/{{riderId}}/level-change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "riders",
+                "{{riderId}}",
+                "level-change"
+              ]
+            },
+            "description": "Demotes the rider to where they started so the collection can run again. The freed seats are not given back, and two history lines stay.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"direction\": \"down\",\n  \"fromLevelId\": {{riderLevelUp}},\n  \"reason\": \"Postman run: put back\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Back on the starting level\", () => { pm.expect(b.fromLevelId).to.eql(Number(pm.collectionVariables.get(\"riderLevelUp\"))); pm.expect(b.toLevelId).to.eql(Number(pm.collectionVariables.get(\"riderLevel\"))); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "trainerLogin",
+      "value": "trainer1@example.com"
+    },
+    {
+      "key": "trainerPassword",
+      "value": "Trainer@123"
+    },
+    {
+      "key": "trainerAccessToken",
+      "value": ""
+    },
+    {
+      "key": "riderId",
+      "value": ""
+    },
+    {
+      "key": "riderName",
+      "value": ""
+    },
+    {
+      "key": "riderLevel",
+      "value": ""
+    },
+    {
+      "key": "riderLevelUp",
+      "value": ""
+    },
+    {
+      "key": "topRiderId",
+      "value": ""
+    },
+    {
+      "key": "bottomRiderId",
+      "value": ""
+    },
+    {
+      "key": "myRidersFromBefore",
+      "value": ""
+    },
+    {
+      "key": "myRidersToBefore",
+      "value": ""
+    },
+    {
+      "key": "upcomingSeatIds",
+      "value": "[]"
+    },
+    {
+      "key": "oldSessionId",
+      "value": ""
+    },
+    {
+      "key": "historyCount",
+      "value": ""
+    }
+  ]
+}
