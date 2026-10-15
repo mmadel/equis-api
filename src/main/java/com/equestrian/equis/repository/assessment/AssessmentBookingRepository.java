@@ -58,6 +58,17 @@ public interface AssessmentBookingRepository extends JpaRepository<AssessmentBoo
     // With UPCOMING there is at most one: a member has one active booking.
     Optional<AssessmentBooking> findByMemberIdAndStatus(UUID memberId, BookingStatus status);
 
+    // The booking a member was placed by, with assessor and level: the "Placed in Level N" line on 4a.
+    // A member is placed at most once, so there is at most one.
+    @Query("""
+            select b from AssessmentBooking b
+            join fetch b.assessor
+            join fetch b.level
+            where b.member.id = :memberId
+              and b.status = com.equestrian.equis.entity.assessment.BookingStatus.PLACED
+            """)
+    Optional<AssessmentBooking> findPlacedByMemberId(@Param("memberId") UUID memberId);
+
     List<AssessmentBooking> findBySessionIdInAndStatus(Collection<UUID> sessionIds, BookingStatus status);
 
     // The UPCOMING booking count of each upcoming scheduled session of the template; sessions without any are absent.
