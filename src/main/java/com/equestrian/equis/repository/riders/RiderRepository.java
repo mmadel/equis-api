@@ -15,6 +15,14 @@ import java.util.UUID;
 public interface RiderRepository extends JpaRepository<Rider, UUID> {
     List<Rider> findByTrainerIdAndLevelIdOrderByName(UUID trainerId, Short levelId);
 
+    // All the trainer's riders for My riders, by level then name ignoring case. Unassigned riders have no trainer.
+    @Query("""
+            select r from Rider r
+            where r.trainer.id = :trainerId
+            order by r.level.id, lower(r.name)
+            """)
+    List<Rider> findMine(@Param("trainerId") UUID trainerId);
+
     // Whether the member was already placed as a rider.
     boolean existsByMemberId(UUID memberId);
 

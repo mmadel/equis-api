@@ -24,6 +24,18 @@ public interface AssignmentRepository extends JpaRepository<Assignment, UUID> {
             """)
     List<Assignment> findFromDateByRiderId(@Param("riderId") UUID riderId, @Param("from") LocalDate from);
 
+    // Every seat of the trainer's riders in scheduled sessions on or after today, with the session loaded, in time order.
+    // The caller drops sessions that already started today.
+    @Query("""
+            select a from Assignment a
+            join fetch a.session s
+            where a.rider.trainer.id = :trainerId
+              and s.status = com.equestrian.equis.entity.sessions.SessionStatus.SCHEDULED
+              and s.sessionDate >= :today
+            order by s.sessionDate, s.startTime
+            """)
+    List<Assignment> findFromDateForTrainer(@Param("trainerId") UUID trainerId, @Param("today") LocalDate today);
+
     // One query for a whole list of sessions, with each rider loaded, so listing seats is not N+1.
     @Query("""
             select a from Assignment a
