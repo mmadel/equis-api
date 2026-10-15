@@ -13,6 +13,17 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AssignmentRepository extends JpaRepository<Assignment, UUID> {
+    // The rider's seats on or after from, with session, template and level loaded, by date and start (uses ix_assignment_rider).
+    @Query("""
+            select a from Assignment a
+            join fetch a.session s
+            join fetch s.template t
+            left join fetch t.level
+            where a.rider.id = :riderId and s.sessionDate >= :from
+            order by s.sessionDate, s.startTime
+            """)
+    List<Assignment> findFromDateByRiderId(@Param("riderId") UUID riderId, @Param("from") LocalDate from);
+
     // One query for a whole list of sessions, with each rider loaded, so listing seats is not N+1.
     @Query("""
             select a from Assignment a

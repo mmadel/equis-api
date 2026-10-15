@@ -43,7 +43,8 @@ public class AssignmentRules {
                     "This session is cancelled or has already started.");
         }
 
-        Map<UUID, Rider> found = riders.findAllById(riderIds).stream()
+        // FOR SHARE: waits for a level change on these riders, so a rider is never seated in the level they just left.
+        Map<UUID, Rider> found = riders.findAllForShareByIdIn(riderIds).stream()
                 .collect(Collectors.toMap(Rider::getId, Function.identity()));
 
         // An unknown id is answered like someone else's rider, so ids cannot be probed.
