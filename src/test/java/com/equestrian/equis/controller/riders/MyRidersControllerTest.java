@@ -15,6 +15,7 @@ import com.equestrian.equis.dto.riders.UpcomingSeat;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.service.accounts.JwtService;
+import com.equestrian.equis.service.riders.LevelChangeService;
 import com.equestrian.equis.service.riders.MyRidersQueryService;
 import com.equestrian.equis.service.riders.RiderLevelQueryService;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +61,8 @@ public class MyRidersControllerTest {
     MyRidersQueryService query;
     @MockitoBean
     RiderLevelQueryService riderLevels;
+    @MockitoBean
+    LevelChangeService levelChanges;
     @MockitoBean
     TrainerRepository trainerRepository;
 
