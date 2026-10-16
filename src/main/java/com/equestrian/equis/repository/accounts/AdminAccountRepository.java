@@ -13,6 +13,8 @@ import java.util.UUID;
 public interface AdminAccountRepository extends JpaRepository<AdminAccount, UUID> {
     Optional<AdminAccount> findByEmail(String email);
 
+    boolean existsByEmail(String email);
+
     // Row lock for sign-in, so two wrong guesses at the same moment cannot both read the same counter.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from AdminAccount a where a.email = :email")

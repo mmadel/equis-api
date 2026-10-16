@@ -21,10 +21,13 @@ public class ErrorCodes {
     public static final String SLOT_NOT_FOUND     = "slot_not_found";     // 404
     public static final String BOOKING_NOT_FOUND  = "booking_not_found";  // 404
     public static final String RIDER_NOT_FOUND    = "rider_not_found";    // 404
+    public static final String TRAINER_NOT_FOUND  = "trainer_not_found";  // 404
     public static final String SEAT_TAKEN        = "seat_taken";         // 409
     public static final String CAPACITY_EXCEEDED  = "capacity_exceeded";  // 409
     public static final String ALREADY_BOOKED     = "already_booked";     // 409
     public static final String PHONE_TAKEN        = "phone_taken";        // 409
+    public static final String EMAIL_TAKEN        = "email_taken";        // 409
+    public static final String INVALID_TRAINER_STATUS = "invalid_trainer_status"; // 409
     public static final String SESSION_CLOSED     = "session_closed";     // 409
     public static final String SLOT_CLOSED        = "slot_closed";        // 409
     public static final String SLOT_FULL          = "slot_full";          // 409

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 
 @Service
 public class AccountLinkService {
@@ -34,6 +35,12 @@ public class AccountLinkService {
     // Returns the raw token for the email. Only its hash is stored, so it cannot be read back later.
     @Transactional
     public String create(Trainer trainer, InvitePurpose purpose) {
+        return issue(trainer, purpose).rawToken();
+    }
+
+    // Like create, plus when the link expires, for the email.
+    @Transactional
+    public IssuedLink issue(Trainer trainer, InvitePurpose purpose) {
         // Only the newest link works.
         invites.deleteByTrainerIdAndAcceptedAtIsNull(trainer.getId());
 
@@ -46,7 +53,7 @@ public class AccountLinkService {
         invite.setPurpose(purpose);
         invite.setExpiresAt(clock.instant().plus(ttl));
         invites.save(invite);
-        return generated.raw();
+        return new IssuedLink(generated.raw(), invite.getExpiresAt());
     }
 
     // Every failure gives the same answer, so a caller cannot learn why a link was refused.
@@ -67,6 +74,14 @@ public class AccountLinkService {
     @Transactional
     public void markUsed(Invite invite) {
         invite.setAcceptedAt(clock.instant());
+    }
+
+    public record IssuedLink(String rawToken, Instant expiresAt) {
+        // Keeps the token out of logs if the record is ever printed.
+        @Override
+        public String toString() {
+            return "IssuedLink[expiresAt=" + expiresAt + "]";
+        }
     }
 
     private static ApiException invalidLink() {

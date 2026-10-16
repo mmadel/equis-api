@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Collection;
@@ -52,6 +53,21 @@ public interface AssessmentBookingRepository extends JpaRepository<AssessmentBoo
             group by b.session.id
             """)
     List<SlotBookedCount> countActiveBySessionIdIn(@Param("sessionIds") Collection<UUID> sessionIds);
+
+    // Results each assessor recorded (placed or no-show) with from <= recordedAt < to; assessors without any are
+    // absent. Don't call with an empty list.
+    @Query("""
+            select b.assessor.id as assessorId, count(b) as recorded
+            from AssessmentBooking b
+            where b.assessor.id in :assessorIds
+              and b.status in (com.equestrian.equis.entity.assessment.BookingStatus.PLACED,
+                               com.equestrian.equis.entity.assessment.BookingStatus.NOSHOW)
+              and b.recordedAt >= :from and b.recordedAt < :to
+            group by b.assessor.id
+            """)
+    List<AssessorCount> countRecordedByAssessorIdsBetween(@Param("assessorIds") Collection<UUID> assessorIds,
+                                                          @Param("from") Instant from,
+                                                          @Param("to") Instant to);
 
     long countBySessionIdAndStatus(UUID sessionId, BookingStatus status);
 

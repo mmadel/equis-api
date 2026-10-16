@@ -65,6 +65,10 @@ public class AuthTokenService {
             throw new ApiException(HttpStatus.FORBIDDEN, ErrorCodes.ACCOUNT_DISABLED,
                     "This account has been disabled.");
         }
+        // With "keep me signed in" a trainer may not sign in for weeks, so each refresh counts as being active.
+        if (role == Role.TRAINER) {
+            trainerRepository.findById(old.getSubjectId()).ifPresent(t -> t.setLastActiveAt(now));
+        }
 
         // The new token starts a fresh lifetime of the same kind the person chose at sign-in.
         Issued issued = create(role, old.getSubjectId(), old.isRememberMe());
