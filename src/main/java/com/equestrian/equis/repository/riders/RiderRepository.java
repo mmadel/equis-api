@@ -26,6 +26,8 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
 
     long countByTrainerId(UUID trainerId);
 
+    boolean existsByTrainerId(UUID trainerId);
+
     // The one definition of "needs reassignment": no trainer, or a disabled one. Computed, never stored,
     // so enabling the trainer clears it. W3 (E7) uses it.
     @Query("""

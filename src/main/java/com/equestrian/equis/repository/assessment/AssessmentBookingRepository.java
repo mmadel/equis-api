@@ -74,6 +74,9 @@ public interface AssessmentBookingRepository extends JpaRepository<AssessmentBoo
     // With UPCOMING: the assessor's bookings without a result yet (upcoming or waiting for result).
     long countByAssessorIdAndStatus(UUID assessorId, BookingStatus status);
 
+    // Any booking at all, whatever its status.
+    boolean existsByAssessorId(UUID assessorId);
+
     // With UPCOMING there is at most one: a member has one active booking.
     Optional<AssessmentBooking> findByMemberIdAndStatus(UUID memberId, BookingStatus status);
 

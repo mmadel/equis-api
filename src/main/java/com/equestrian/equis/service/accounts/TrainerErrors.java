@@ -37,4 +37,9 @@ public final class TrainerErrors {
                 "Cannot " + action + " a trainer who is " + status + ".",
                 Map.of("status", status, "action", action));
     }
+
+    public static ApiException inUse(Trainer trainer) {
+        return new ApiException(HttpStatus.CONFLICT, ErrorCodes.TRAINER_IN_USE,
+                "This trainer already has riders or assessments. Disable them instead.");
+    }
 }
