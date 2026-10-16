@@ -85,6 +85,15 @@ public interface AssessmentBookingRepository extends JpaRepository<AssessmentBoo
             """)
     List<AssessmentBooking> findLatestPerMember();
 
+    // Whether the member has a booking newer than this one, by the same rule as findLatestPerMember.
+    @Query("""
+            select count(b) > 0 from AssessmentBooking b
+            where b.member.id = :memberId
+              and (b.createdAt > :createdAt or (b.createdAt = :createdAt and b.id > :id))
+            """)
+    boolean existsNewerForMember(@Param("memberId") UUID memberId, @Param("createdAt") Instant createdAt,
+                                 @Param("id") UUID id);
+
     long countBySessionIdAndStatus(UUID sessionId, BookingStatus status);
 
     // With UPCOMING: the assessor's bookings without a result yet (upcoming or waiting for result).

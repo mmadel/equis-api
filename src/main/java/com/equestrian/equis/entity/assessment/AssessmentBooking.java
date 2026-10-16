@@ -42,13 +42,14 @@ public class AssessmentBooking {
     @JoinColumn(name = "member_id", nullable = false, updatable = false)
     private Member member;
 
-    // Always an assessment slot; the service checks that.
+    // Always an assessment slot; the service checks that. Changed only by a reschedule.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "session_id", nullable = false, updatable = false)
+    @JoinColumn(name = "session_id", nullable = false)
     private Session session;
 
+    // Changed only by the admin (W2).
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "assessor_id", nullable = false, updatable = false)
+    @JoinColumn(name = "assessor_id", nullable = false)
     private Trainer assessor;
 
     @Column(name = "status", nullable = false, length = 16)
@@ -118,6 +119,20 @@ public class AssessmentBooking {
         requireUpcoming("cancel");
         this.status = BookingStatus.CANCELLED;
         this.cancelledAt = now;
+    }
+
+    // Reschedule: the same booking, in another slot. The service checks the slot and its seats.
+    public void moveTo(Session slot) {
+        requireUpcoming("reschedule");
+        this.session = Objects.requireNonNull(slot, "slot");
+    }
+
+    // Allowed until a result places the member; a no-show or cancelled booking keeps its assessor for a rebook.
+    public void changeAssessor(Trainer trainer) {
+        if (status == BookingStatus.PLACED) {
+            throw new IllegalStateException("Cannot change the assessor of a placed booking");
+        }
+        this.assessor = Objects.requireNonNull(trainer, "trainer");
     }
 
     // The slot has started but no result is recorded yet.

@@ -9,6 +9,7 @@ public class ErrorCodes {
     public static final String INVALID_LINK       = "invalid_link";       // 400
     public static final String INVALID_RANGE      = "invalid_range";      // 400
     public static final String INVALID_STATUS     = "invalid_status";     // 400 field error
+    public static final String NOTHING_TO_CHANGE  = "nothing_to_change";  // 400 field error
     public static final String UNAUTHORIZED       = "unauthorized";          // 401
     public static final String INVALID_REFRESH_TOKEN = "invalid_refresh_token"; // 401
     public static final String INVALID_CREDENTIALS   = "invalid_credentials";   // 401
@@ -39,6 +40,10 @@ public class ErrorCodes {
     public static final String MEMBER_ALREADY_BOOKED   = "member_already_booked";   // 409
     public static final String BOOKING_CANCELLED       = "booking_cancelled";       // 409
     public static final String RESULT_ALREADY_RECORDED = "result_already_recorded"; // 409
+    public static final String BOOKING_CLOSED     = "booking_closed";     // 409
+    public static final String BOOKING_SUPERSEDED = "booking_superseded"; // 409
+    public static final String SLOT_STARTED       = "slot_started";       // 409
+    public static final String TRAINER_NOT_ACTIVE = "trainer_not_active"; // 409
     public static final String LEVEL_CHANGED      = "level_changed";      // 409
     public static final String LEVEL_AT_TOP       = "level_at_top";       // 409
     public static final String LEVEL_AT_BOTTOM    = "level_at_bottom";    // 409
