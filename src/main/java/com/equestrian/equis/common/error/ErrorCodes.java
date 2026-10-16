@@ -8,6 +8,7 @@ public class ErrorCodes {
     public static final String LEVEL_NOT_ALLOWED  = "level_not_allowed";  // 400 field error
     public static final String INVALID_LINK       = "invalid_link";       // 400
     public static final String INVALID_RANGE      = "invalid_range";      // 400
+    public static final String INVALID_STATUS     = "invalid_status";     // 400 field error
     public static final String UNAUTHORIZED       = "unauthorized";          // 401
     public static final String INVALID_REFRESH_TOKEN = "invalid_refresh_token"; // 401
     public static final String INVALID_CREDENTIALS   = "invalid_credentials";   // 401

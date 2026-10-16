@@ -69,6 +69,22 @@ public interface AssessmentBookingRepository extends JpaRepository<AssessmentBoo
                                                           @Param("from") Instant from,
                                                           @Param("to") Instant to);
 
+    // Every member's latest booking (newest createdAt, id breaking ties) with member, slot, assessor and level: W2.
+    // Older bookings, such as a no-show that was rebooked, stay in the table as history.
+    @Query("""
+            select b from AssessmentBooking b
+            join fetch b.member m
+            join fetch b.session s
+            join fetch b.assessor a
+            left join fetch b.level
+            where not exists (
+                select 1 from AssessmentBooking b2
+                where b2.member = b.member
+                  and (b2.createdAt > b.createdAt
+                       or (b2.createdAt = b.createdAt and b2.id > b.id)))
+            """)
+    List<AssessmentBooking> findLatestPerMember();
+
     long countBySessionIdAndStatus(UUID sessionId, BookingStatus status);
 
     // With UPCOMING: the assessor's bookings without a result yet (upcoming or waiting for result).
