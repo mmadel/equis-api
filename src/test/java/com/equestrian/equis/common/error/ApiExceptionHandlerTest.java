@@ -15,9 +15,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -61,6 +63,9 @@ public class ApiExceptionHandlerTest {
         void denied() {
             throw new AccessDeniedException("needs ROLE_ADMIN");
         }
+
+        @GetMapping("/test/typed")
+        void typed(@RequestParam UUID trainer) {}
     }
 
     record Body(@NotBlank String name) {}
@@ -90,6 +95,16 @@ public class ApiExceptionHandlerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("validation_failed"))
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("name"));
+    }
+
+    @Test
+    void wrongTypeParam_returnsValidationFailedWithTheParamAsField() throws Exception {
+        mvc.perform(get("/test/typed").param("trainer", "abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value("validation_failed"))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("trainer"))
+                .andExpect(jsonPath("$.fieldErrors[0].message").value("invalid_value"));
     }
 
     @Test

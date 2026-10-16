@@ -9,6 +9,8 @@ public class ErrorCodes {
     public static final String INVALID_LINK       = "invalid_link";       // 400
     public static final String INVALID_RANGE      = "invalid_range";      // 400
     public static final String INVALID_STATUS     = "invalid_status";     // 400 field error
+    public static final String INVALID_LEVEL      = "invalid_level";      // 400 field error
+    public static final String INVALID_VALUE      = "invalid_value";      // 400 field error: wrong type, e.g. not a UUID
     public static final String NOTHING_TO_CHANGE  = "nothing_to_change";  // 400 field error
     public static final String UNAUTHORIZED       = "unauthorized";          // 401
     public static final String INVALID_REFRESH_TOKEN = "invalid_refresh_token"; // 401
