@@ -1,5 +1,6 @@
 package com.equestrian.equis.repository.riders;
 
+import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.riders.Rider;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,6 +23,22 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
             order by r.level.id, lower(r.name)
             """)
     List<Rider> findMine(@Param("trainerId") UUID trainerId);
+
+    long countByTrainerId(UUID trainerId);
+
+    // The one definition of "needs reassignment": no trainer, or a disabled one. Computed, never stored,
+    // so enabling the trainer clears it. W3 (E7) uses it.
+    @Query("""
+            select r from Rider r
+            left join r.trainer t
+            where t is null or t.status = :disabled
+            order by r.name
+            """)
+    List<Rider> findNeedingReassignment(@Param("disabled") TrainerStatus disabled);
+
+    default List<Rider> findNeedingReassignment() {
+        return findNeedingReassignment(TrainerStatus.DISABLED);
+    }
 
     // Whether the member was already placed as a rider.
     boolean existsByMemberId(UUID memberId);
