@@ -82,6 +82,19 @@ public class Rider {
         this.level = to;
     }
 
+    // The admin gives the rider to another trainer (W3). False when it is already that trainer, so nothing changes.
+    // Reads only the current trainer's id, so the lazy trainer is never loaded.
+    public boolean assignTrainer(Trainer to) {
+        if (to == null) {
+            throw new IllegalArgumentException("A rider is assigned to a trainer, never to nobody");
+        }
+        if (trainer != null && trainer.getId().equals(to.getId())) {
+            return false;
+        }
+        this.trainer = to;
+        return true;
+    }
+
     // First letters of the first and last name, e.g. "Sara Adel Hassan" -> "SH"; a single name gives one letter.
     public String initials() {
         if (name == null || name.isBlank()) {

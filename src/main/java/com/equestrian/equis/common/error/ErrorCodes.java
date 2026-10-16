@@ -12,6 +12,7 @@ public class ErrorCodes {
     public static final String INVALID_LEVEL      = "invalid_level";      // 400 field error
     public static final String INVALID_VALUE      = "invalid_value";      // 400 field error: wrong type, e.g. not a UUID
     public static final String NOTHING_TO_CHANGE  = "nothing_to_change";  // 400 field error
+    public static final String TRAINER_OR_RESET_REQUIRED = "trainer_or_reset_required"; // 400 field error
     public static final String UNAUTHORIZED       = "unauthorized";          // 401
     public static final String INVALID_REFRESH_TOKEN = "invalid_refresh_token"; // 401
     public static final String INVALID_CREDENTIALS   = "invalid_credentials";   // 401
@@ -46,6 +47,7 @@ public class ErrorCodes {
     public static final String BOOKING_SUPERSEDED = "booking_superseded"; // 409
     public static final String SLOT_STARTED       = "slot_started";       // 409
     public static final String TRAINER_NOT_ACTIVE = "trainer_not_active"; // 409
+    public static final String NO_ACTIVE_ASSESSOR = "no_active_assessor"; // 409
     public static final String RESULT_NOT_OVERDUE = "result_not_overdue"; // 409
     public static final String LEVEL_CHANGED      = "level_changed";      // 409
     public static final String LEVEL_AT_TOP       = "level_at_top";       // 409

@@ -107,6 +107,12 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
     @Query("select r from Rider r where r.id = :id")
     Optional<Rider> findByIdForUpdate(@Param("id") UUID id);
 
+    // W3 trainer changes: row locks taken in id order, so two overlapping bulk changes cannot deadlock. No join on
+    // trainer, for the same reason as findByIdForUpdate.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Rider r where r.id in :ids order by r.id")
+    List<Rider> findAllByIdInForUpdate(@Param("ids") Collection<UUID> ids);
+
     // FOR SHARE: a seat save waits for a level change on the same riders, and reads their new level.
     @Lock(LockModeType.PESSIMISTIC_READ)
     @Query("select r from Rider r where r.id in :ids")
