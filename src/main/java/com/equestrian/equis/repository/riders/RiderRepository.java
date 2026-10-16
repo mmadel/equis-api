@@ -45,6 +45,14 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
     // Whether the member was already placed as a rider.
     boolean existsByMemberId(UUID memberId);
 
+    // The riders these members became; members never placed are absent. Don't call with an empty list.
+    @Query("""
+            select new com.equestrian.equis.repository.riders.MemberRider(r.memberId, r.id)
+            from Rider r
+            where r.memberId in :memberIds
+            """)
+    List<MemberRider> findMemberRiderIds(@Param("memberIds") Collection<UUID> memberIds);
+
     // One row per level the trainer has riders in; levels without riders are absent.
     @Query("""
             select r.level.id as levelId, count(r) as riderCount
