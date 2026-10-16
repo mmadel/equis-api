@@ -9,7 +9,10 @@ import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.assessment.AssessmentBooking;
 import com.equestrian.equis.entity.assessment.BookingStatus;
 import com.equestrian.equis.entity.assessment.Member;
+import com.equestrian.equis.entity.notices.NoticeType;
 import com.equestrian.equis.entity.sessions.Session;
+import com.equestrian.equis.repository.notices.NoticeRepository;
+import com.equestrian.equis.repository.notices.RefTime;
 import com.equestrian.equis.repository.riders.MemberRider;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,16 +28,18 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 // The one place W2 rows are built. The bookings come with member, slot and assessor loaded;
-// one more query finds the riders of the placed members.
+// one more query finds the riders of the placed members and one more the latest reminder per booking.
 @Component
 public class AdminBookingRowAssembler {
     private final RiderRepository riders;
+    private final NoticeRepository notices;
     private final Clock clock;
     private final ZoneId schoolZone;
 
-    public AdminBookingRowAssembler(RiderRepository riders, Clock clock,
+    public AdminBookingRowAssembler(RiderRepository riders, NoticeRepository notices, Clock clock,
                                     @Value("${app.time-zone}") ZoneId schoolZone) {
         this.riders = riders;
+        this.notices = notices;
         this.clock = clock;
         this.schoolZone = schoolZone;
     }
@@ -47,8 +52,10 @@ public class AdminBookingRowAssembler {
         Map<UUID, UUID> riderIds = placedMembers.isEmpty() ? Map.of()
                 : riders.findMemberRiderIds(placedMembers).stream()
                         .collect(Collectors.toMap(MemberRider::memberId, MemberRider::riderId));
-        // Empty until the remind task stores reminders.
-        Map<UUID, Instant> reminders = Map.of();
+        List<UUID> bookingIds = bookings.stream().map(AssessmentBooking::getId).toList();
+        Map<UUID, Instant> reminders = bookingIds.isEmpty() ? Map.of()
+                : notices.findLatestByRefIds(bookingIds, NoticeType.RESULT_OVERDUE).stream()
+                        .collect(Collectors.toMap(RefTime::refId, RefTime::at));
 
         return bookings.stream()
                 .map(b -> row(b, riderIds.get(b.getMember().getId()), reminders.get(b.getId()), now))

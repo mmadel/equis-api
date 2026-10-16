@@ -20,17 +20,12 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 // One method per rule; each throws the ApiException the client sees.
 @Component
 public class AssessmentRules {
-    // "Sat 18 Oct, 10:00", as A3 shows a slot.
-    private static final DateTimeFormatter SLOT_FORMAT = DateTimeFormatter.ofPattern("EEE d MMM, HH:mm", Locale.ENGLISH);
-
     private final AssessmentBookingRepository bookings;
     private final MemberRepository members;
     private final RiderRepository riders;
@@ -141,7 +136,7 @@ public class AssessmentRules {
 
     public ApiException memberAlreadyBooked(Session slot) {
         return new ApiException(HttpStatus.CONFLICT, ErrorCodes.MEMBER_ALREADY_BOOKED,
-                "Booked " + slot.startsAt(schoolZone).format(SLOT_FORMAT));
+                "Booked " + SlotLabels.describe(slot));
     }
 
     private static ApiException invalidField(String field, String message) {

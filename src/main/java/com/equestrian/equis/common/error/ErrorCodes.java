@@ -44,6 +44,7 @@ public class ErrorCodes {
     public static final String BOOKING_SUPERSEDED = "booking_superseded"; // 409
     public static final String SLOT_STARTED       = "slot_started";       // 409
     public static final String TRAINER_NOT_ACTIVE = "trainer_not_active"; // 409
+    public static final String RESULT_NOT_OVERDUE = "result_not_overdue"; // 409
     public static final String LEVEL_CHANGED      = "level_changed";      // 409
     public static final String LEVEL_AT_TOP       = "level_at_top";       // 409
     public static final String LEVEL_AT_BOTTOM    = "level_at_bottom";    // 409
