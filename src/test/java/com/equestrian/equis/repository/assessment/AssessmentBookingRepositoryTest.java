@@ -112,10 +112,12 @@ public class AssessmentBookingRepositoryTest {
 
     @Test
     void everyMoveSatisfiesTheResultCheck() {
-        AssessmentBooking placed = bookingRepository.saveAndFlush(AssessmentBooking.book(omar, slot(MONDAY), sara));
+        // One session per template and date, so both results share the Monday slot.
+        Session monday = slot(MONDAY);
+        AssessmentBooking placed = bookingRepository.saveAndFlush(AssessmentBooking.book(omar, monday, sara));
         placed.recordAttended(levelRepository.getReferenceById(LEVEL_1), "Steady", NOW);
         bookingRepository.saveAndFlush(placed);
-        AssessmentBooking noShow = bookingRepository.saveAndFlush(AssessmentBooking.book(hana, slot(MONDAY), sara));
+        AssessmentBooking noShow = bookingRepository.saveAndFlush(AssessmentBooking.book(hana, monday, sara));
         noShow.recordNoShow(null, NOW);
         bookingRepository.saveAndFlush(noShow);
         AssessmentBooking cancelled = bookingRepository.saveAndFlush(

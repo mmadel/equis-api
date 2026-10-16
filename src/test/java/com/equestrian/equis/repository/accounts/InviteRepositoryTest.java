@@ -45,9 +45,11 @@ public class InviteRepositoryTest {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    // V4 seeds dev trainers and an invite; clear them so each test starts from empty tables (rolled back afterwards).
+    // V4 seeds dev trainers and an invite, and V12 sample riders of trainer 1; clear them so each test starts from
+    // empty tables (rolled back afterwards). Riders go first: they point at their trainer.
     @BeforeEach
     void clearSeededTrainers() {
+        jdbcTemplate.update("DELETE FROM rider");
         jdbcTemplate.update("DELETE FROM trainer");
     }
 
