@@ -50,4 +50,13 @@ public class Trainer {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    // A new trainer has no password until they open their invite link.
+    public static Trainer invite(String name, String phone, String email) {
+        Trainer trainer = new Trainer();
+        trainer.name = name;
+        trainer.phone = phone;
+        trainer.email = email;
+        trainer.status = TrainerStatus.INVITED;
+        return trainer;
+    }
 }

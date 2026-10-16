@@ -36,6 +36,15 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
             """)
     List<LevelRiderCount> countByTrainerPerLevel(@Param("trainerId") UUID trainerId);
 
+    // One row per trainer and level they have riders in; empty pairs are absent. Don't call with an empty list.
+    @Query("""
+            select r.trainer.id as trainerId, r.level.id as levelId, count(r) as riderCount
+            from Rider r
+            where r.trainer.id in :trainerIds
+            group by r.trainer.id, r.level.id
+            """)
+    List<TrainerLevelCount> countByTrainerIdsAndLevel(@Param("trainerIds") Collection<UUID> trainerIds);
+
     // Row lock held until the transaction ends, so two level changes, or a level change and a seat save, cannot cross.
     // No join on level: after waiting for the lock, PostgreSQL re-checks a join against the old level row and
     // would drop the rider; and Hibernate cannot lock the immutable Level. Callers only need the level's id.
