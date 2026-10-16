@@ -24,4 +24,10 @@ public interface InviteRepository extends JpaRepository<Invite, UUID> {
     @Transactional
     @Query("delete from Invite i where i.trainer.id = :trainerId and i.acceptedAt is null")
     int deleteByTrainerIdAndAcceptedAtIsNull(@Param("trainerId") UUID trainerId);
+
+    // Every link of the trainer, used or not: cancelling an invite removes the trainer.
+    @Modifying
+    @Transactional
+    @Query("delete from Invite i where i.trainer.id = :trainerId")
+    int deleteByTrainerId(@Param("trainerId") UUID trainerId);
 }

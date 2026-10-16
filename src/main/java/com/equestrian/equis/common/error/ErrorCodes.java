@@ -29,6 +29,7 @@ public class ErrorCodes {
     public static final String EMAIL_TAKEN        = "email_taken";        // 409
     public static final String INVALID_TRAINER_STATUS = "invalid_trainer_status"; // 409
     public static final String CONFIRM_REQUIRED   = "confirm_required";   // 409
+    public static final String TRAINER_IN_USE     = "trainer_in_use";     // 409
     public static final String SESSION_CLOSED     = "session_closed";     // 409
     public static final String SLOT_CLOSED        = "slot_closed";        // 409
     public static final String SLOT_FULL          = "slot_full";          // 409

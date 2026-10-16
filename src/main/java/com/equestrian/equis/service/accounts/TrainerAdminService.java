@@ -9,7 +9,10 @@ import com.equestrian.equis.entity.accounts.InvitePurpose;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.repository.accounts.AdminAccountRepository;
+import com.equestrian.equis.repository.accounts.InviteRepository;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.AccountLinkService.IssuedLink;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,8 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-// W4: the admin's trainer list and invites.
+// W4: the admin's trainer list, invites and row actions.
 @Service
 public class TrainerAdminService {
     private static final Map<TrainerStatus, Integer> STATUS_ORDER =
@@ -34,14 +38,24 @@ public class TrainerAdminService {
     private final AccountLinkService links;
     private final TrainerRowAssembler rows;
     private final ApplicationEventPublisher events;
+    private final TrainerAccessService access;
+    private final RiderRepository riders;
+    private final AssessmentBookingRepository bookings;
+    private final InviteRepository invites;
 
     public TrainerAdminService(TrainerRepository trainers, AdminAccountRepository admins, AccountLinkService links,
-                               TrainerRowAssembler rows, ApplicationEventPublisher events) {
+                               TrainerRowAssembler rows, ApplicationEventPublisher events,
+                               TrainerAccessService access, RiderRepository riders,
+                               AssessmentBookingRepository bookings, InviteRepository invites) {
         this.trainers = trainers;
         this.admins = admins;
         this.links = links;
         this.rows = rows;
         this.events = events;
+        this.access = access;
+        this.riders = riders;
+        this.bookings = bookings;
+        this.invites = invites;
     }
 
     @Transactional(readOnly = true)
@@ -83,6 +97,52 @@ public class TrainerAdminService {
         }
         sendLink(trainer, InvitePurpose.INVITE);
         return rows.row(trainer);
+    }
+
+    // A new 72-hour invite link; issuing it deletes the old one, so the earlier email stops working.
+    @Transactional
+    public TrainerRow resendInvite(UUID id) {
+        Trainer t = trainers.findByIdForUpdate(id).orElseThrow(TrainerErrors::notFound);
+        if (t.getStatus() != TrainerStatus.INVITED) {
+            throw TrainerErrors.invalidStatus(t, "resend-invite");
+        }
+        sendLink(t, InvitePurpose.INVITE);
+        return rows.row(t);
+    }
+
+    // Only a 24-hour set-password link: no token is revoked and the old password works until the link is used.
+    @Transactional
+    public TrainerRow resetPassword(UUID id) {
+        Trainer t = trainers.findByIdForUpdate(id).orElseThrow(TrainerErrors::notFound);
+        if (t.getStatus() != TrainerStatus.ACTIVE) {
+            throw TrainerErrors.invalidStatus(t, "reset-password");
+        }
+        sendLink(t, InvitePurpose.RESET);
+        return rows.row(t);
+    }
+
+    @Transactional
+    public TrainerRow disable(UUID id, boolean confirm) {
+        return rows.row(access.disable(id, confirm));
+    }
+
+    @Transactional
+    public TrainerRow enable(UUID id) {
+        return rows.row(access.enable(id));
+    }
+
+    // Removes the trainer so their phone and email are free for a corrected invite.
+    @Transactional
+    public void cancelInvite(UUID id) {
+        Trainer t = trainers.findByIdForUpdate(id).orElseThrow(TrainerErrors::notFound);
+        if (t.getStatus() != TrainerStatus.INVITED) {
+            throw TrainerErrors.invalidStatus(t, "cancel-invite");
+        }
+        if (riders.existsByTrainerId(id) || bookings.existsByAssessorId(id)) {
+            throw TrainerErrors.inUse(t);
+        }
+        invites.deleteByTrainerId(id); // explicit, so no Invite stays in the persistence context
+        trainers.delete(t);
     }
 
     // Also used by the row actions (resend, reset password).
