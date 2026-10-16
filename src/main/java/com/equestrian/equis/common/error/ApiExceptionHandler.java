@@ -1,5 +1,6 @@
 package com.equestrian.equis.common.error;
 
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.*;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -7,7 +8,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import java.util.List;
 
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
@@ -47,6 +51,18 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 .map(f -> new ApiFieldError(f.getField(), f.getDefaultMessage()))
                 .toList());
         return handleExceptionInternal(ex, pd, headers, status, request);
+    }
+
+    // A path variable or query parameter of the wrong type, e.g. ?trainer=abc for a UUID.
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException ex, HttpHeaders headers,
+            HttpStatusCode status, WebRequest request) {
+        String field = ex instanceof MethodArgumentTypeMismatchException m ? m.getName() : ex.getPropertyName();
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Some fields are not valid.");
+        pd.setProperty("code", ErrorCodes.VALIDATION_FAILED);
+        pd.setProperty("fieldErrors", List.of(new ApiFieldError(field, ErrorCodes.INVALID_VALUE)));
+        return handleExceptionInternal(ex, pd, headers, HttpStatus.BAD_REQUEST, request);
     }
 
     @ExceptionHandler(Exception.class)

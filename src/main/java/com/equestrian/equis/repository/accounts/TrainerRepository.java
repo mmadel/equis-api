@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,6 +23,9 @@ public interface TrainerRepository extends JpaRepository<Trainer, UUID> {
     boolean existsByPhone(String phone);
 
     boolean existsByIdAndStatus(UUID id, TrainerStatus status);
+
+    // W3's trainer cards: the active and disabled trainers.
+    List<Trainer> findByStatusIn(Collection<TrainerStatus> statuses);
 
     // Row lock held until the transaction ends, so a disable and an enable, or a disable and a reset link,
     // run one after the other.

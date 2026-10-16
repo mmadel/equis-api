@@ -1,6 +1,7 @@
 package com.equestrian.equis.repository.riders;
 
 import com.equestrian.equis.entity.accounts.TrainerStatus;
+import com.equestrian.equis.entity.assessment.BookingStatus;
 import com.equestrian.equis.entity.riders.Rider;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -41,6 +42,33 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
     default List<Rider> findNeedingReassignment() {
         return findNeedingReassignment(TrainerStatus.DISABLED);
     }
+
+    // W3: every rider with their trainer and the assessor of their placed booking, in one query. A member has at
+    // most one placed booking (a placed member can't be rebooked), so each rider gives one row. Unordered.
+    @Query("""
+            select new com.equestrian.equis.repository.riders.AdminRiderView(
+                r.id, r.name, r.phone, r.level.id, r.createdAt,
+                t.id, t.name, t.status, a.id, a.name, a.status)
+            from Rider r
+            left join r.trainer t
+            left join AssessmentBooking b on b.member.id = r.memberId and b.status = :placed
+            left join b.assessor a
+            """)
+    List<AdminRiderView> findAdminView(@Param("placed") BookingStatus placed);
+
+    // The same rows for these riders only. Don't call with an empty list.
+    @Query("""
+            select new com.equestrian.equis.repository.riders.AdminRiderView(
+                r.id, r.name, r.phone, r.level.id, r.createdAt,
+                t.id, t.name, t.status, a.id, a.name, a.status)
+            from Rider r
+            left join r.trainer t
+            left join AssessmentBooking b on b.member.id = r.memberId and b.status = :placed
+            left join b.assessor a
+            where r.id in :ids
+            """)
+    List<AdminRiderView> findAdminViewByIds(@Param("placed") BookingStatus placed,
+                                            @Param("ids") Collection<UUID> ids);
 
     // Whether the member was already placed as a rider.
     boolean existsByMemberId(UUID memberId);
