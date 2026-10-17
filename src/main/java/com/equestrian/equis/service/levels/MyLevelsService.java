@@ -3,10 +3,10 @@ package com.equestrian.equis.service.levels;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.common.time.DateRanges;
+import com.equestrian.equis.common.time.SchoolWeek;
 import com.equestrian.equis.dto.levels.LevelRef;
 import com.equestrian.equis.dto.levels.LevelSessionsResponse;
 import com.equestrian.equis.dto.levels.LevelSessionsResponse.Day;
-import com.equestrian.equis.dto.levels.LevelSessionsResponse.Seat;
 import com.equestrian.equis.dto.levels.LevelSessionsResponse.SessionSlot;
 import com.equestrian.equis.dto.levels.MyLevelSummary;
 import com.equestrian.equis.entity.levels.Level;
@@ -19,6 +19,8 @@ import com.equestrian.equis.repository.sessions.AssignmentRepository;
 import com.equestrian.equis.repository.sessions.LevelSeatCount;
 import com.equestrian.equis.repository.sessions.LevelSessionCount;
 import com.equestrian.equis.repository.sessions.SessionRepository;
+import com.equestrian.equis.service.sessions.SessionSeatAssembler;
+import com.equestrian.equis.service.sessions.SessionSeats;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -26,13 +28,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +43,6 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 public class MyLevelsService {
-    // The school week runs Saturday to Friday.
-    private static final DayOfWeek WEEK_START = DayOfWeek.SATURDAY;
     private static final int MAX_RANGE_DAYS = 56;
 
     private final LevelRepository levels;
@@ -67,9 +64,8 @@ public class MyLevelsService {
 
     // Every level, in order, with this week's numbers. Three grouped queries, merged here; not one per level.
     public List<MyLevelSummary> summaries(UUID trainerId) {
-        LocalDate from = clock.instant().atZone(schoolZone).toLocalDate()
-                .with(TemporalAdjusters.previousOrSame(WEEK_START));
-        LocalDate to = from.plusDays(6);
+        LocalDate from = SchoolWeek.saturdayOf(clock.instant().atZone(schoolZone).toLocalDate());
+        LocalDate to = SchoolWeek.fridayOf(from);
 
         Map<Short, LevelSessionCount> sessionCounts = sessions.countScheduledPerLevel(from, to).stream()
                 .collect(Collectors.toMap(LevelSessionCount::getLevelId, Function.identity()));
@@ -104,27 +100,16 @@ public class MyLevelsService {
         Instant now = clock.instant();
         Map<LocalDate, List<SessionSlot>> byDate = new LinkedHashMap<>();
         for (Session session : inRange) {
-            List<Assignment> seats = seatsBySession.getOrDefault(session.getId(), List.of());
+            SessionSeats seats = SessionSeatAssembler.seats(session,
+                    seatsBySession.getOrDefault(session.getId(), List.of()), trainerId, now, schoolZone);
             byDate.computeIfAbsent(session.getSessionDate(), date -> new ArrayList<>())
                     .add(new SessionSlot(session.getId(), session.getStartTime(), session.getEndTime(),
-                            session.getCapacity(), seats.size(), !session.isUpcoming(now, schoolZone),
-                            seats(seats, trainerId)));
+                            seats.capacity(), seats.booked(), seats.past(), seats.seats()));
         }
 
         List<Day> days = byDate.entrySet().stream()
                 .map(entry -> new Day(entry.getKey(), entry.getValue()))
                 .toList();
         return new LevelSessionsResponse(LevelRef.of(level), from, to, days);
-    }
-
-    // The caller's seats first, by initials; then one anonymous seat per rider of another trainer.
-    private static List<Seat> seats(List<Assignment> seats, UUID trainerId) {
-        return seats.stream()
-                .map(seat -> seat.getAssignedBy().getId().equals(trainerId)
-                        ? new Seat(true, seat.getRider().getId(), seat.getRider().initials())
-                        : Seat.other())
-                .sorted(Comparator.comparing(Seat::mine).reversed()
-                        .thenComparing(Seat::initials, Comparator.nullsLast(Comparator.naturalOrder())))
-                .toList();
     }
 }
