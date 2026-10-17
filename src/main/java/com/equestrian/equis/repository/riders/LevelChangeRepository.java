@@ -1,6 +1,7 @@
 package com.equestrian.equis.repository.riders;
 
 import com.equestrian.equis.entity.riders.LevelChange;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,4 +18,14 @@ public interface LevelChangeRepository extends JpaRepository<LevelChange, UUID> 
             order by c.createdAt desc
             """)
     List<LevelChange> findHistory(@Param("riderId") UUID riderId);
+
+    // The latest promotions and demotions of any rider, with rider and trainer, newest first. Every row has a
+    // fromLevel (the column is not null): placements live on assessment_booking. The levels are read by id only.
+    @Query("""
+            select c from LevelChange c
+            join fetch c.rider
+            join fetch c.byTrainer
+            order by c.createdAt desc, c.id
+            """)
+    List<LevelChange> findRecentChanges(Pageable page);
 }
