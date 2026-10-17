@@ -3,6 +3,8 @@ package com.equestrian.equis.repository.assessment;
 import com.equestrian.equis.entity.assessment.AssessmentBooking;
 import com.equestrian.equis.entity.assessment.BookingStatus;
 import jakarta.persistence.LockModeType;
+import com.equestrian.equis.repository.sessions.SeatHolder;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -53,6 +55,27 @@ public interface AssessmentBookingRepository extends JpaRepository<AssessmentBoo
             group by b.session.id
             """)
     List<SlotBookedCount> countActiveBySessionIdIn(@Param("sessionIds") Collection<UUID> sessionIds);
+
+    // One row per booking that isn't cancelled in these slots, with its assessor's name. Don't call with an empty list.
+    @Query("""
+            select new com.equestrian.equis.repository.sessions.SeatHolder(b.session.id, a.name)
+            from AssessmentBooking b
+            join b.assessor a
+            where b.session.id in :sessionIds
+              and b.status <> com.equestrian.equis.entity.assessment.BookingStatus.CANCELLED
+            """)
+    List<SeatHolder> seatHolders(@Param("sessionIds") Collection<UUID> sessionIds);
+
+    // The latest recorded results (placed or no-show) with member and assessor, newest first; the level is a
+    // reference, read by id only.
+    @Query("""
+            select b from AssessmentBooking b
+            join fetch b.member
+            join fetch b.assessor
+            where b.recordedAt is not null
+            order by b.recordedAt desc, b.id
+            """)
+    List<AssessmentBooking> findRecentResults(Pageable page);
 
     // Results each assessor recorded (placed or no-show) with from <= recordedAt < to; assessors without any are
     // absent. Don't call with an empty list.

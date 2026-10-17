@@ -18,6 +18,16 @@ public interface InviteRepository extends JpaRepository<Invite, UUID> {
     // The open (unused) link of each trainer, at most one each. Don't call with an empty list.
     List<Invite> findByTrainerIdInAndAcceptedAtIsNull(Collection<UUID> trainerIds);
 
+    // The open (unused) link of every trainer still invited, with the trainer, oldest link first.
+    @Query("""
+            select i from Invite i
+            join fetch i.trainer t
+            where t.status = com.equestrian.equis.entity.accounts.TrainerStatus.INVITED
+              and i.acceptedAt is null
+            order by i.createdAt, i.id
+            """)
+    List<Invite> findOpenForInvitedTrainers();
+
     // Bulk delete so the row is gone before the replacement invite is inserted;
     // a derived delete is flushed after inserts and would trip uq_invite_open_per_trainer.
     @Modifying

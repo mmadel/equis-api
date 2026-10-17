@@ -58,7 +58,7 @@ public class AdminRiderService {
             throw new ApiException(HttpStatus.BAD_REQUEST, ErrorCodes.VALIDATION_FAILED, "Some fields are not valid.",
                     Map.of("fieldErrors", List.of(new ApiFieldError("level", ErrorCodes.INVALID_LEVEL))));
         }
-        List<AdminRiderRow> all = riders.findAdminView(BookingStatus.PLACED).stream().map(rows::row).toList();
+        List<AdminRiderRow> all = allRows();
 
         Map<String, Long> byHow = all.stream()
                 .collect(Collectors.groupingBy(AdminRiderRow::howAssigned, Collectors.counting()));
@@ -66,7 +66,7 @@ public class AdminRiderService {
                 byHow.getOrDefault(HowAssigned.FROM_ASSESSMENT.value(), 0L),
                 byHow.getOrDefault(HowAssigned.CHANGED_MANUALLY.value(), 0L),
                 byHow.getOrDefault(HowAssigned.SET_MANUALLY.value(), 0L),
-                byHow.getOrDefault(UNASSIGNED, 0L));
+                all.stream().filter(AdminRiderService::needsTrainer).count());
 
         Map<UUID, Long> perTrainer = all.stream()
                 .filter(r -> r.trainer() != null)
@@ -81,11 +81,25 @@ public class AdminRiderService {
         List<AdminRiderRow> shown = all.stream()
                 .filter(r -> level == null || r.levelId() == level)
                 .filter(r -> trainer == null || (r.trainer() != null && r.trainer().id().equals(trainer)))
-                .filter(r -> !Boolean.TRUE.equals(unassigned) || r.howAssigned().equals(UNASSIGNED))
+                .filter(r -> !Boolean.TRUE.equals(unassigned) || needsTrainer(r))
                 .filter(matches(q))
                 .sorted(LIST_ORDER)
                 .toList();
         return new AdminRiderList(totals, cards, shown);
+    }
+
+    // W3's "needs a trainer" total (totals.unassigned), for the admin Overview. One query.
+    @Transactional(readOnly = true)
+    public long countNeedingTrainer() {
+        return allRows().stream().filter(AdminRiderService::needsTrainer).count();
+    }
+
+    private List<AdminRiderRow> allRows() {
+        return riders.findAdminView(BookingStatus.PLACED).stream().map(rows::row).toList();
+    }
+
+    private static boolean needsTrainer(AdminRiderRow r) {
+        return r.howAssigned().equals(UNASSIGNED);
     }
 
     // The name contains q, ignoring case; or, when q has digits, the phone contains those digits (as W2).
