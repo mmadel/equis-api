@@ -355,6 +355,33 @@ public class SessionTemplateServiceTest {
     }
 
     @Test
+    void deleteOfAnAssessmentSlotCancelsAStartedSessionWithNoBookings() {
+        // 09:00 today is before the fixed 13:00, so today's slot has started.
+        SessionTemplate slot = service.create(input(null, DayOfWeek.MONDAY, "09:00", "10:00", 4, VALID_FROM))
+                .template();
+
+        assertThat(service.delete(slot.getId())).isEqualTo(new DeleteImpact(HORIZON_WEEKS - 1, 0));
+
+        assertThat(sessionsOf(slot)).hasSize(HORIZON_WEEKS)
+                .allSatisfy(session -> assertThat(session.getStatus()).isEqualTo(SessionStatus.CANCELLED));
+    }
+
+    @Test
+    void deleteOfAnAssessmentSlotKeepsAStartedSessionWithBookings() {
+        SessionTemplate slot = service.create(input(null, DayOfWeek.MONDAY, "09:00", "10:00", 4, VALID_FROM))
+                .template();
+        Session today = sessionsOf(slot).getFirst();
+        AssessmentBooking omar = book("Omar Khaled", today, trainer());
+
+        assertThat(service.delete(slot.getId())).isEqualTo(new DeleteImpact(HORIZON_WEEKS - 1, 0));
+
+        assertThat(sessionRepository.findById(today.getId())).get()
+                .extracting(Session::getStatus).isEqualTo(SessionStatus.SCHEDULED);
+        assertThat(bookingRepository.findById(omar.getId())).get()
+                .extracting(AssessmentBooking::getStatus).isNotEqualTo(BookingStatus.CANCELLED);
+    }
+
+    @Test
     void updateOfAnAssessmentSlotCannotDropCapacityBelowItsBookings() {
         SessionTemplate slot = service.create(input(null, DayOfWeek.MONDAY, "16:00", "17:00", 4, VALID_FROM))
                 .template();
