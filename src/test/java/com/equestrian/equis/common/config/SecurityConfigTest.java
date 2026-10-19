@@ -41,7 +41,7 @@ public class SecurityConfigTest {
     @RestController
     static class TestController {
 
-        @GetMapping({"/auth/ping", "/admin/ping", "/assessment/ping", "/other/ping"})
+        @GetMapping({"/auth/ping", "/admin/ping", "/assessment/ping", "/other/ping", "/actuator/health"})
         String ping() {
             return "pong";
         }
@@ -60,6 +60,13 @@ public class SecurityConfigTest {
     @Test
     void authPathsIgnoreABadToken() throws Exception {
         mvc.perform(get("/auth/ping").header(HttpHeaders.AUTHORIZATION, "Bearer not-a-token"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void healthIsOpenWithoutATokenAndIgnoresABadOne() throws Exception {
+        mvc.perform(get("/actuator/health")).andExpect(status().isOk());
+        mvc.perform(get("/actuator/health").header(HttpHeaders.AUTHORIZATION, "Bearer not-a-token"))
                 .andExpect(status().isOk());
     }
 
