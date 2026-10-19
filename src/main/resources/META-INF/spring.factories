@@ -1,0 +1,2 @@
+org.springframework.boot.EnvironmentPostProcessor=\
+com.equestrian.equis.common.config.ProdEnvironmentCheck

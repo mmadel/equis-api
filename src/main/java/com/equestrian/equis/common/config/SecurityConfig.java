@@ -24,6 +24,8 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 @EnableWebSecurity
 public class SecurityConfig {
     private static final String PUBLIC_PATHS = "/auth/**";
+    // Used by the Docker healthcheck; prod shows only {"status":"UP"} (show-details=never).
+    private static final String HEALTH_PATH = "/actuator/health";
 
     @Bean
     public AuthUserConverter authUserConverter(TrainerRepository trainerRepository) {
@@ -46,7 +48,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_PATHS).permitAll()
+                        .requestMatchers(PUBLIC_PATHS, HEALTH_PATH).permitAll()
                         .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                         .requestMatchers("/me/**", "/assessment/**").hasRole(Role.TRAINER.name())
                         .anyRequest().denyAll())
@@ -64,8 +66,9 @@ public class SecurityConfig {
     // The app calls refresh exactly when its access token has expired. If the old token were read here,
     // the filter would answer 401 before permitAll is reached.
     private static BearerTokenResolver bearerTokenResolver() {
-        RequestMatcher publicPaths = PathPatternRequestMatcher.withDefaults().matcher(PUBLIC_PATHS);
+        RequestMatcher authPaths = PathPatternRequestMatcher.withDefaults().matcher(PUBLIC_PATHS);
+        RequestMatcher healthPath = PathPatternRequestMatcher.withDefaults().matcher(HEALTH_PATH);
         BearerTokenResolver delegate = new DefaultBearerTokenResolver();
-        return request -> publicPaths.matches(request) ? null : delegate.resolve(request);
+        return request -> authPaths.matches(request) || healthPath.matches(request) ? null : delegate.resolve(request);
     }
 }
