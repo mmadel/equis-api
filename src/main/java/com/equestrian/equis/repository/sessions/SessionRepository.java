@@ -27,6 +27,21 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
                                          @Param("today") LocalDate today,
                                          @Param("nowTime") LocalTime nowTime);
 
+    // Scheduled sessions of the template that have already started and hold no live booking.
+    @Query("""
+            select s from Session s
+            where s.template.id = :templateId
+              and s.status = com.equestrian.equis.entity.sessions.SessionStatus.SCHEDULED
+              and (s.sessionDate < :today or (s.sessionDate = :today and s.startTime <= :nowTime))
+              and not exists (
+                  select b from AssessmentBooking b
+                  where b.session = s
+                    and b.status <> com.equestrian.equis.entity.assessment.BookingStatus.CANCELLED)
+            """)
+    List<Session> findStartedWithoutBookingsByTemplate(@Param("templateId") UUID templateId,
+                                                       @Param("today") LocalDate today,
+                                                       @Param("nowTime") LocalTime nowTime);
+
     // Row lock held until the transaction ends, so two trainers cannot fill the last seats at once.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from Session s where s.id = :id")

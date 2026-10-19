@@ -99,6 +99,8 @@ public class SessionTemplateService {
     }
 
     // Soft delete: past sessions keep pointing at the template.
+    // An assessment slot that has started but has no bookings has no results to record, so it goes too;
+    // otherwise trainers would keep seeing it. It is not counted in the impact, which is about upcoming sessions.
     @Transactional
     public DeleteImpact delete(UUID id) {
         SessionTemplate template = load(id);
@@ -108,6 +110,9 @@ public class SessionTemplateService {
         int bookings = bookedSeats.bookingsInUpcoming(id);
         List<Session> cancelled = upcoming(id, now);
         cancelled.forEach(session -> session.cancel(now));
+        if (template.isAssessment()) {
+            startedWithoutBookings(id, now).forEach(session -> session.cancel(now));
+        }
 
         template.setDeletedAt(now);
         templates.saveAndFlush(template);
@@ -125,6 +130,12 @@ public class SessionTemplateService {
     private List<Session> upcoming(UUID templateId, Instant now) {
         ZonedDateTime schoolNow = now.atZone(schoolZone);
         return sessions.findUpcomingByTemplate(templateId, schoolNow.toLocalDate(), schoolNow.toLocalTime());
+    }
+
+    private List<Session> startedWithoutBookings(UUID templateId, Instant now) {
+        ZonedDateTime schoolNow = now.atZone(schoolZone);
+        return sessions.findStartedWithoutBookingsByTemplate(templateId, schoolNow.toLocalDate(),
+                schoolNow.toLocalTime());
     }
 
     // The rules have already checked that the level exists.
