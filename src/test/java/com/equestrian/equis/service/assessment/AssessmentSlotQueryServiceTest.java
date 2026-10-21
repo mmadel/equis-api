@@ -18,6 +18,7 @@ import com.equestrian.equis.repository.assessment.MemberRepository;
 import com.equestrian.equis.repository.levels.LevelRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.support.TestMembers;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -304,7 +305,7 @@ public class AssessmentSlotQueryServiceTest {
     }
 
     private AssessmentBooking book(Session slot, Trainer assessor, String name, String phone) {
-        Member member = memberRepository.saveAndFlush(Member.register(name, phone));
+        Member member = memberRepository.saveAndFlush(TestMembers.member(name, phone));
         AssessmentBooking booking = bookingRepository.saveAndFlush(AssessmentBooking.book(member, slot, assessor));
         em.createNativeQuery("update assessment_booking set created_at = :at where id = :id")
                 .setParameter("at", NOW.minusSeconds(3600).plusSeconds(bookingsMade++))

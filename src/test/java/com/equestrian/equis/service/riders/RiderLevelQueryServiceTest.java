@@ -25,6 +25,7 @@ import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.repository.sessions.AssignmentRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.support.TestMembers;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.BeforeEach;
@@ -262,7 +263,7 @@ public class RiderLevelQueryServiceTest {
 
     // A member assessed and placed by the assessor at recordedAt, and the rider made from them.
     private Rider placedRider(String name, short levelId, Trainer assessor, Instant recordedAt) {
-        Member member = memberRepository.saveAndFlush(Member.register(name, null));
+        Member member = memberRepository.saveAndFlush(TestMembers.member(name));
         AssessmentBooking booking = bookingRepository.saveAndFlush(
                 AssessmentBooking.book(member, session(null, LocalDate.of(2026, 10, 11), LocalTime.of(10, 0)),
                         assessor));

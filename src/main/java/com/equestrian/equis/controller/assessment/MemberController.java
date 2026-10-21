@@ -1,29 +1,19 @@
 package com.equestrian.equis.controller.assessment;
 
-import com.equestrian.equis.common.security.AuthUser;
-import com.equestrian.equis.dto.assessment.BookingCreated;
-import com.equestrian.equis.dto.assessment.NewMemberRequest;
-import com.equestrian.equis.service.assessment.MemberBookingService;
-import jakarta.validation.Valid;
+import com.equestrian.equis.common.error.ApiException;
+import com.equestrian.equis.common.error.ErrorCodes;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-// The business rules live in AssessmentRules; this only binds, validates the shape and maps the result.
+// Release 2: the admin records new people in the web console, so the trainer's walk-in (A1) is gone.
+// The body is not read, so any request answers 410. This class is deleted in a later E11 task.
 @RestController
 public class MemberController {
-    private final MemberBookingService booking;
-
-    public MemberController(MemberBookingService booking) {
-        this.booking = booking;
-    }
 
     @PostMapping("/me/members")
-    @ResponseStatus(HttpStatus.CREATED)
-    BookingCreated register(@AuthenticationPrincipal AuthUser me, @Valid @RequestBody NewMemberRequest req) {
-        return BookingCreated.of(booking.registerAndBook(me.id(), req));
+    void register() {
+        throw new ApiException(HttpStatus.GONE, ErrorCodes.ENDPOINT_REMOVED,
+                "Trainers no longer register new people; the admin does this in the web console.");
     }
 }

@@ -22,6 +22,7 @@ import com.equestrian.equis.service.accounts.AuthTokenService;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.accounts.TokenGenerator;
 import com.equestrian.equis.support.MutableClock;
+import com.equestrian.equis.support.TestMembers;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
@@ -479,7 +480,7 @@ public class AdminTrainerApiTest {
             template.setValidFrom(LocalDate.of(2026, 9, 1));
             template = sessionTemplateRepository.save(template);
             Session slot = sessionRepository.save(Session.of(template, LocalDate.of(2026, 10, 5)));
-            Member member = memberRepository.save(Member.register("Walk-in", null));
+            Member member = memberRepository.save(TestMembers.member("Walk-in"));
             AssessmentBooking booking = AssessmentBooking.book(member, slot, assessor);
             result.accept(booking);
             bookingRepository.save(booking);

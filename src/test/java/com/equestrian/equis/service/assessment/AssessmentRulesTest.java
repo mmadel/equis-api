@@ -20,6 +20,7 @@ import com.equestrian.equis.repository.levels.LevelRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.support.TestMembers;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -129,7 +130,7 @@ public class AssessmentRulesTest {
     void duplicatePhoneIsReportedByItsConstraintName() {
         member("01011111111");
 
-        assertThatThrownBy(() -> memberRepository.saveAndFlush(Member.register("Hady", "01011111111")))
+        assertThatThrownBy(() -> memberRepository.saveAndFlush(TestMembers.member("Hady", "01011111111")))
                 .isInstanceOfSatisfying(DataIntegrityViolationException.class,
                         ex -> assertThat(Constraints.nameOf(ex)).contains("uq_member_phone"));
     }
@@ -218,7 +219,7 @@ public class AssessmentRulesTest {
     }
 
     private Member member(String phone) {
-        return memberRepository.saveAndFlush(Member.register("Mona Hassan", phone));
+        return memberRepository.saveAndFlush(TestMembers.member("Mona Hassan", phone));
     }
 
     // An assessment template: no level.

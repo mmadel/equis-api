@@ -21,6 +21,7 @@ import com.equestrian.equis.repository.sessions.AssignmentRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
 import com.equestrian.equis.support.MutableClock;
+import com.equestrian.equis.support.TestMembers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -425,7 +426,7 @@ class TrainerAccessServiceTest {
         new TransactionTemplate(transactionManager).executeWithoutResult(s -> {
             LocalDate date = LocalDate.of(2026, 10, 5);
             Session slot = sessionRepository.save(Session.of(template(date), date));
-            Member member = memberRepository.save(Member.register("Walk-in", null));
+            Member member = memberRepository.save(TestMembers.member("Walk-in"));
             AssessmentBooking booking = AssessmentBooking.book(member, slot, assessor);
             result.accept(booking);
             bookingRepository.save(booking);

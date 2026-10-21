@@ -16,6 +16,7 @@ import com.equestrian.equis.repository.assessment.MemberRepository;
 import com.equestrian.equis.repository.levels.LevelRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.support.TestMembers;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,7 +83,7 @@ public class MemberBookingServiceTest {
         Session slot = slot(null, TODAY, 4);
 
         AssessmentBooking booking = service.registerAndBook(sara.getId(),
-                new NewMemberRequest("  Mona Hassan ", "01012345678", slot.getId()));
+                new NewMemberRequest("  Mona Hassan ", "01012345678", " Mona@Mail.com ", slot.getId()));
 
         assertThat(booking.getId()).isNotNull();
         assertThat(booking.getStatus()).isEqualTo(BookingStatus.UPCOMING);
@@ -91,17 +92,7 @@ public class MemberBookingServiceTest {
         Member member = memberRepository.findById(booking.getMember().getId()).orElseThrow();
         assertThat(member.getName()).isEqualTo("Mona Hassan");
         assertThat(member.getPhone()).isEqualTo("01012345678");
-    }
-
-    @Test
-    void blankPhoneIsStoredAsNoPhoneSoSeveralMembersMayHaveNone() {
-        Session slot = slot(null, TODAY, 4);
-
-        AssessmentBooking first = service.registerAndBook(sara.getId(), new NewMemberRequest("Mona", "  ", slot.getId()));
-        AssessmentBooking second = service.registerAndBook(sara.getId(), new NewMemberRequest("Hady", null, slot.getId()));
-
-        assertThat(first.getMember().getPhone()).isNull();
-        assertThat(second.getMember().getPhone()).isNull();
+        assertThat(member.getEmail()).isEqualTo("mona@mail.com");
     }
 
     @Test
@@ -150,8 +141,10 @@ public class MemberBookingServiceTest {
                 });
     }
 
+    // A null phone gets a made-up unique one; the email is always made up.
     private AssessmentBooking book(UUID slotId, String phone) {
-        return service.registerAndBook(sara.getId(), new NewMemberRequest("Mona Hassan", phone, slotId));
+        return service.registerAndBook(sara.getId(), new NewMemberRequest("Mona Hassan",
+                phone != null ? phone : TestMembers.nextPhone(), TestMembers.nextEmail(), slotId));
     }
 
     private void assertRefused(Runnable call, HttpStatus status, String code) {

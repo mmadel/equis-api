@@ -341,9 +341,11 @@ public class AdminRiderApiTest {
                 status.equals("invited") ? null : "not-a-real-hash");
     }
 
+    // Every member needs a phone and an email; a null phone gets a made-up unique one.
     private UUID member(String name, String phone) {
-        return jdbc.queryForObject("insert into member (name, phone) values (?, ?) returning id",
-                UUID.class, name, phone);
+        seq++;
+        return jdbc.queryForObject("insert into member (name, phone, email) values (?, ?, ?) returning id",
+                UUID.class, name, phone != null ? phone : "0155555%04d".formatted(seq), "member%d@mail.eg".formatted(seq));
     }
 
     // A member placed by this assessor.

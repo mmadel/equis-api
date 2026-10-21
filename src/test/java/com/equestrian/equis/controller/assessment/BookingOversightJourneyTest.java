@@ -245,12 +245,12 @@ class BookingOversightJourneyTest {
             fx.bookMember(ahmed, "Seat Taker " + i, fx.nextPhone(), tue20);
         }
         String walkInPhone = fx.nextPhone();
-        fx.token(mona);
         fx.accounts().adminToken();
 
-        List<String> outcomes = AdminOversightFixture.race(
-                () -> fx.patchBooking(sara, "{ \"slotId\": \"%s\" }".formatted(tue20)).andReturn(),
-                () -> fx.bookMemberRequest(mona, "Walk In", walkInPhone, tue20).andReturn());
+        List<String> outcomes = AdminOversightFixture.raceOutcomes(
+                () -> AdminOversightFixture.outcome(
+                        fx.patchBooking(sara, "{ \"slotId\": \"%s\" }".formatted(tue20)).andReturn()),
+                () -> fx.bookMemberOutcome(mona, "Walk In", walkInPhone, tue20));
 
         assertThat(outcomes).containsExactlyInAnyOrder("ok", "slot_full");
         assertThat(fx.upcomingIn(tue20)).isEqualTo(4);

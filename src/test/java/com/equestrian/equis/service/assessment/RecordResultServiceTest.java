@@ -20,6 +20,7 @@ import com.equestrian.equis.repository.levels.LevelRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.support.TestMembers;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -188,7 +189,7 @@ public class RecordResultServiceTest {
     // A booking in an assessment slot that started a week ago, assessed by Sara.
     private AssessmentBooking startedBooking(String phone) {
         Session slot = sessionRepository.saveAndFlush(Session.of(assessmentTemplate(), TODAY.minusWeeks(1)));
-        Member member = memberRepository.saveAndFlush(Member.register("Mona Hassan", phone));
+        Member member = memberRepository.saveAndFlush(TestMembers.member("Mona Hassan", phone));
         return bookingRepository.saveAndFlush(AssessmentBooking.book(member, slot, sara));
     }
 

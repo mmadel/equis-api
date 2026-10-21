@@ -5,18 +5,25 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class MemberTest {
+    // Case 3 (cleaning part)
     @Test
-    void registerTrimsTheName() {
-        Member member = Member.register("  Omar Khaled ", "01012345678");
+    void registerTrimsAllThreeAndLowercasesTheEmail() {
+        Member member = Member.register("  Sara ", " 01011112222 ", " Sara@Mail.COM ");
 
-        assertThat(member.getName()).isEqualTo("Omar Khaled");
-        assertThat(member.getPhone()).isEqualTo("01012345678");
+        assertThat(member.getName()).isEqualTo("Sara");
+        assertThat(member.getPhone()).isEqualTo("01011112222");
+        assertThat(member.getEmail()).isEqualTo("sara@mail.com");
     }
 
+    // Case 7 (cleaning part)
     @Test
-    void aBlankOrMissingPhoneIsStoredAsNull() {
-        assertThat(Member.register("Omar", "   ").getPhone()).isNull();
-        assertThat(Member.register("Omar", "").getPhone()).isNull();
-        assertThat(Member.register("Omar", null).getPhone()).isNull();
+    void updateDetailsCleansLikeRegister() {
+        Member member = Member.register("Sara", "01011112222", "sara@mail.com");
+
+        member.updateDetails(" Sara Ali ", " 01233334444 ", " SARA.ALI@Mail.com ");
+
+        assertThat(member.getName()).isEqualTo("Sara Ali");
+        assertThat(member.getPhone()).isEqualTo("01233334444");
+        assertThat(member.getEmail()).isEqualTo("sara.ali@mail.com");
     }
 }

@@ -211,7 +211,14 @@ public class TrainerAccountsFixture {
     // A walk-in booked into tomorrow's assessment slot with this trainer as assessor.
     public UUID addUpcomingBooking(UUID assessorId) {
         UUID slot = addUpcomingSession(null);
-        UUID member = jdbc.queryForObject("insert into member (name) values ('Walk-in') returning id", UUID.class);
+        // Phone and email are required and unique: the next free '09…' number and a random address.
+        UUID member = jdbc.queryForObject("""
+                insert into member (name, phone, email)
+                select 'Walk-in',
+                       '0' || (coalesce(max(phone) filter (where phone like '09%'), '09000000000')::bigint + 1),
+                       'walk-in-' || gen_random_uuid() || '@mail.eg'
+                from member
+                returning id""", UUID.class);
         return jdbc.queryForObject(
                 "insert into assessment_booking (member_id, session_id, assessor_id) values (?, ?, ?) returning id",
                 UUID.class, member, slot, assessorId);

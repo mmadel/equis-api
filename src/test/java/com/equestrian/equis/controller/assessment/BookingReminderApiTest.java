@@ -356,8 +356,8 @@ public class BookingReminderApiTest {
 
     private UUID member(String name) {
         seq++;
-        return jdbc.queryForObject("insert into member (name, phone) values (?, ?) returning id",
-                UUID.class, name, "0128888%04d".formatted(seq));
+        return jdbc.queryForObject("insert into member (name, phone, email) values (?, ?, ?) returning id",
+                UUID.class, name, "0128888%04d".formatted(seq), "member%d@mail.eg".formatted(seq));
     }
 
     // An assessment slot on that date, one hour long. Saved through JPA, as the app saves them,
