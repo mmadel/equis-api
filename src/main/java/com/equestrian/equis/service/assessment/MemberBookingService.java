@@ -53,7 +53,7 @@ public class MemberBookingService {
         // saveAndFlush, so a unique-key clash fails here and is mapped; with save it would fail at commit as a 500.
         // After a clash the Hibernate session is unusable, which is fine: the method only throws from there.
         try {
-            Member member = members.saveAndFlush(Member.register(req.name(), req.phone()));
+            Member member = members.saveAndFlush(Member.register(req.name(), req.phone(), req.email()));
             return bookings.saveAndFlush(AssessmentBooking.book(member, slot, trainers.getReferenceById(trainerId)));
         } catch (DataIntegrityViolationException e) {
             throw switch (Constraints.nameOf(e).orElse("")) {

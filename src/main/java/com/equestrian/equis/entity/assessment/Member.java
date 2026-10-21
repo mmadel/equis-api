@@ -13,9 +13,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.UUID;
 
-// A walk-in registered by a trainer, not placed in a level yet.
+// A person the admin recorded to join the school, not placed in a level yet.
 @Entity
 @Table(name = "member")
 @Getter
@@ -29,9 +30,13 @@ public class Member {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    // Unique when present; several members may have none.
-    @Column(name = "phone", length = 11)
+    // Unique among all members, closed ones included.
+    @Column(name = "phone", nullable = false, length = 11)
     private String phone;
+
+    // Unique among all members and stored lowercase; the rider app will log in with it.
+    @Column(name = "email", nullable = false, length = 254)
+    private String email;
 
     @CreationTimestamp
     @Column(name = "joined_at", nullable = false, updatable = false)
@@ -41,12 +46,22 @@ public class Member {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    // A blank phone is stored as null so it never clashes on the unique key.
-    public static Member register(String name, String phone) {
+    public static Member register(String name, String phone, String email) {
         Member member = new Member();
-        member.name = name.trim();
-        member.phone = phone == null || phone.isBlank() ? null : phone.trim();
+        member.setDetails(name, phone, email);
         return member;
+    }
+
+    // updated_at moves on the next flush (@UpdateTimestamp).
+    public void updateDetails(String name, String phone, String email) {
+        setDetails(name, phone, email);
+    }
+
+    // Trims all three and lowercases the email, so "Sara@Mail.com" and "sara@mail.com" are one address.
+    private void setDetails(String name, String phone, String email) {
+        this.name = name.trim();
+        this.phone = phone.trim();
+        this.email = email.trim().toLowerCase(Locale.ROOT);
     }
 
     @Override

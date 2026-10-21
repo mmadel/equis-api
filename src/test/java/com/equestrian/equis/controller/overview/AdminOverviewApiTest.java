@@ -444,7 +444,9 @@ public class AdminOverviewApiTest {
     }
 
     private UUID member(String name) {
-        return jdbc.queryForObject("insert into member (name) values (?) returning id", UUID.class, name);
+        seq++;
+        return jdbc.queryForObject("insert into member (name, phone, email) values (?, ?, ?) returning id",
+                UUID.class, name, "0128888%04d".formatted(seq), "member%d@mail.eg".formatted(seq));
     }
 
     // status "upcoming", "placed", "noshow" or "cancelled"; level only for placed; recordedAt for placed and no-show.

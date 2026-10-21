@@ -437,7 +437,9 @@ public class RiderReassignApiTest {
 
     // A member placed by this assessor in the assessment slot.
     private UUID placedMember(String name, UUID assessor) {
-        UUID member = jdbc.queryForObject("insert into member (name) values (?) returning id", UUID.class, name);
+        seq++;
+        UUID member = jdbc.queryForObject("insert into member (name, phone, email) values (?, ?, ?) returning id",
+                UUID.class, name, "0128888%04d".formatted(seq), "member%d@mail.eg".formatted(seq));
         jdbc.update("""
                         insert into assessment_booking
                             (member_id, session_id, assessor_id, status, attended, level_id, recorded_at)

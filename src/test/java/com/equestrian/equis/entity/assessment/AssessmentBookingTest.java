@@ -4,6 +4,7 @@ import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.levels.Level;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
+import com.equestrian.equis.support.TestMembers;
 import org.junit.jupiter.api.Test;
 
 import java.time.DayOfWeek;
@@ -26,7 +27,7 @@ class AssessmentBookingTest {
 
     @Test
     void bookStartsUpcoming() {
-        Member member = Member.register("Omar", null);
+        Member member = TestMembers.member("Omar");
         Trainer assessor = new Trainer();
         Session slot = slot();
 
@@ -129,7 +130,7 @@ class AssessmentBookingTest {
     }
 
     private AssessmentBooking booking() {
-        return AssessmentBooking.book(Member.register("Omar", null), slot(), new Trainer());
+        return AssessmentBooking.book(TestMembers.member("Omar"), slot(), new Trainer());
     }
 
     private Session slot() {

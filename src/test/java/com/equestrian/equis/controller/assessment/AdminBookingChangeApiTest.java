@@ -1,6 +1,8 @@
 package com.equestrian.equis.controller.assessment;
 
+import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.security.AuthUser;
+import com.equestrian.equis.dto.assessment.NewMemberRequest;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
@@ -10,6 +12,7 @@ import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.assessment.BookingAction;
 import com.equestrian.equis.service.assessment.BookingActions;
+import com.equestrian.equis.service.assessment.MemberBookingService;
 import com.equestrian.equis.support.MutableClock;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,6 +105,8 @@ public class AdminBookingChangeApiTest {
     SessionRepository sessionRepository;
     @Autowired
     LevelRepository levelRepository;
+    @Autowired
+    MemberBookingService memberBooking;
 
     private UUID ahmed;
     private UUID mona;
@@ -399,13 +404,18 @@ public class AdminBookingChangeApiTest {
         UUID lastSeat = slot(TUE_20, TEN, 2);
         booking(member("Seat Taker"), lastSeat, ahmed, "upcoming");
 
-        List<String> outcomes = race(
-                () -> change(sara, "{ \"slotId\": \"%s\" }".formatted(lastSeat)).andReturn(),
-                () -> mvc.perform(asTrainer(post("/me/members"), mona)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{ \"name\": \"Walk In\", \"phone\": \"01077778888\", \"slotId\": \"%s\" }"
-                                .formatted(lastSeat)))
-                        .andReturn());
+        // Release 2 removed the trainer's POST /me/members, so the booking goes through the service it used.
+        List<String> outcomes = raceOutcomes(
+                () -> outcome(change(sara, "{ \"slotId\": \"%s\" }".formatted(lastSeat)).andReturn()),
+                () -> {
+                    try {
+                        memberBooking.registerAndBook(mona,
+                                new NewMemberRequest("Walk In", "01077778888", "walk.in@mail.eg", lastSeat));
+                        return "ok";
+                    } catch (ApiException e) {
+                        return e.code();
+                    }
+                });
 
         assertThat(outcomes).containsExactlyInAnyOrder("ok", "slot_full");
         assertThat(upcomingIn(lastSeat)).isEqualTo(2);
@@ -500,16 +510,21 @@ public class AdminBookingChangeApiTest {
 
     // Starts both calls at once; each result is "ok" or the code the API answered with.
     private static List<String> race(Callable<MvcResult> first, Callable<MvcResult> second) throws Exception {
+        return raceOutcomes(() -> outcome(first.call()), () -> outcome(second.call()));
+    }
+
+    // Like race, for calls that report their own outcome ("ok" or a code).
+    private static List<String> raceOutcomes(Callable<String> first, Callable<String> second) throws Exception {
         CountDownLatch start = new CountDownLatch(1);
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
             Future<String> a = pool.submit(() -> {
                 start.await(10, TimeUnit.SECONDS);
-                return outcome(first.call());
+                return first.call();
             });
             Future<String> b = pool.submit(() -> {
                 start.await(10, TimeUnit.SECONDS);
-                return outcome(second.call());
+                return second.call();
             });
             start.countDown();
             return List.of(a.get(20, TimeUnit.SECONDS), b.get(20, TimeUnit.SECONDS));
@@ -585,8 +600,8 @@ public class AdminBookingChangeApiTest {
 
     private UUID member(String name) {
         seq++;
-        return jdbc.queryForObject("insert into member (name, phone) values (?, ?) returning id",
-                UUID.class, name, "0128888%04d".formatted(seq));
+        return jdbc.queryForObject("insert into member (name, phone, email) values (?, ?, ?) returning id",
+                UUID.class, name, "0128888%04d".formatted(seq), "member%d@mail.eg".formatted(seq));
     }
 
     // An assessment slot (no level) on that date, one hour long. Saved through JPA, as the app saves them,

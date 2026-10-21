@@ -22,6 +22,7 @@ import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
 import com.equestrian.equis.service.assessment.BookingCancellationListener;
 import com.equestrian.equis.service.assessment.BookingSeatCounts;
+import com.equestrian.equis.support.TestMembers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -422,7 +423,7 @@ public class SessionTemplateServiceTest {
     }
 
     private AssessmentBooking book(String name, Session slot, Trainer assessor) {
-        Member member = memberRepository.saveAndFlush(Member.register(name, null));
+        Member member = memberRepository.saveAndFlush(TestMembers.member(name));
         return bookingRepository.saveAndFlush(AssessmentBooking.book(member, slot, assessor));
     }
 

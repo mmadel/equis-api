@@ -1,9 +1,12 @@
 package com.equestrian.equis.support;
 
 import com.equestrian.equis.dto.accounts.AuthTokens;
+import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.dto.accounts.TrainerRow;
+import com.equestrian.equis.dto.assessment.NewMemberRequest;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.repository.sessions.SessionRepository;
+import com.equestrian.equis.service.assessment.MemberBookingService;
 import com.jayway.jsonpath.JsonPath;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -61,16 +64,18 @@ public class AdminOversightFixture {
     private final JdbcTemplate jdbc;
     private final SessionRepository sessions;
     private final MutableClock clock;
+    private final MemberBookingService memberBooking;
     private final Map<UUID, AuthTokens> tokens = new HashMap<>();
     private final Map<UUID, Instant> tokenExpiry = new HashMap<>();
     private int seq;
 
     AdminOversightFixture(TrainerAccountsFixture accounts, JdbcTemplate jdbc, SessionRepository sessions,
-                          MutableClock clock) {
+                          MutableClock clock, MemberBookingService memberBooking) {
         this.accounts = accounts;
         this.jdbc = jdbc;
         this.sessions = sessions;
         this.clock = clock;
+        this.memberBooking = memberBooking;
     }
 
     @TestConfiguration
@@ -78,8 +83,9 @@ public class AdminOversightFixture {
     public static class Config {
         @Bean
         AdminOversightFixture adminOversightFixture(TrainerAccountsFixture accounts, JdbcTemplate jdbc,
-                                                    SessionRepository sessions, Clock clock) {
-            return new AdminOversightFixture(accounts, jdbc, sessions, (MutableClock) clock);
+                                                    SessionRepository sessions, Clock clock,
+                                                    MemberBookingService memberBooking) {
+            return new AdminOversightFixture(accounts, jdbc, sessions, (MutableClock) clock, memberBooking);
         }
     }
 
@@ -171,16 +177,25 @@ public class AdminOversightFixture {
 
     // ---- The trainer app
 
-    // A1: a new member booked into the slot by this trainer, whatever the answer.
-    public ResultActions bookMemberRequest(Coach coach, String name, String phone, UUID slotId) throws Exception {
-        return asCoach(coach, post("/me/members").contentType(MediaType.APPLICATION_JSON).content("""
-                { "name": "%s", "phone": "%s", "slotId": "%s" }""".formatted(name, phone, slotId)));
+    // A new member booked into the slot with this trainer as assessor. Release 2 removed the trainer's
+    // POST /me/members (A1), so this calls the booking service directly until the admin intake replaces it.
+    public UUID bookMember(Coach coach, String name, String phone, UUID slotId) {
+        return memberBooking.registerAndBook(coach.id(), memberRequest(name, phone, slotId)).getId();
     }
 
-    // A1, expected to work; the booking id.
-    public UUID bookMember(Coach coach, String name, String phone, UUID slotId) throws Exception {
-        return UUID.fromString(read(bookMemberRequest(coach, name, phone, slotId)
-                .andExpect(status().isCreated()), "$.bookingId"));
+    // The same, for a race: "ok" or the refusal code.
+    public String bookMemberOutcome(Coach coach, String name, String phone, UUID slotId) {
+        try {
+            bookMember(coach, name, phone, slotId);
+            return "ok";
+        } catch (ApiException e) {
+            return e.code();
+        }
+    }
+
+    private NewMemberRequest memberRequest(String name, String phone, UUID slotId) {
+        seq++;
+        return new NewMemberRequest(name, phone, "member%d@mail.eg".formatted(seq), slotId);
     }
 
     // A5: a null levelId with attended false is a no-show.
@@ -372,16 +387,21 @@ public class AdminOversightFixture {
     // Starts both calls at once and waits for both; each result is "ok" or the code the API answered with.
     // A deadlock would surface as a 500 or a timeout. Sign everyone in first: the calls share the cached tokens.
     public static List<String> race(Callable<MvcResult> first, Callable<MvcResult> second) throws Exception {
+        return raceOutcomes(() -> outcome(first.call()), () -> outcome(second.call()));
+    }
+
+    // Like race, for calls that report their own outcome ("ok" or a code), e.g. bookMemberOutcome.
+    public static List<String> raceOutcomes(Callable<String> first, Callable<String> second) throws Exception {
         CountDownLatch start = new CountDownLatch(1);
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
             Future<String> a = pool.submit(() -> {
                 start.await(10, TimeUnit.SECONDS);
-                return outcome(first.call());
+                return first.call();
             });
             Future<String> b = pool.submit(() -> {
                 start.await(10, TimeUnit.SECONDS);
-                return outcome(second.call());
+                return second.call();
             });
             start.countDown();
             return List.of(a.get(30, TimeUnit.SECONDS), b.get(30, TimeUnit.SECONDS));
@@ -390,7 +410,7 @@ public class AdminOversightFixture {
         }
     }
 
-    private static String outcome(MvcResult result) throws Exception {
+    public static String outcome(MvcResult result) throws Exception {
         int status = result.getResponse().getStatus();
         assertThat(status).as("never a 500").isLessThan(500);
         return status < 300 ? "ok" : JsonPath.read(result.getResponse().getContentAsString(), "$.code");

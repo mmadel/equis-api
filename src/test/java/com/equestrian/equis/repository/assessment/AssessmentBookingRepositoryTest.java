@@ -12,6 +12,7 @@ import com.equestrian.equis.repository.levels.LevelRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.support.TestMembers;
 import jakarta.persistence.EntityManager;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,8 +78,8 @@ public class AssessmentBookingRepositoryTest {
     @BeforeEach
     void setUp() {
         sara = trainerRepository.saveAndFlush(trainer());
-        omar = memberRepository.saveAndFlush(Member.register("Omar Khaled", "01012345678"));
-        hana = memberRepository.saveAndFlush(Member.register("Hana Samy", null));
+        omar = memberRepository.saveAndFlush(TestMembers.member("Omar Khaled", "01012345678"));
+        hana = memberRepository.saveAndFlush(TestMembers.member("Hana Samy"));
         template = template();
     }
 
@@ -87,16 +88,6 @@ public class AssessmentBookingRepositoryTest {
         assertThat(omar.getId()).isNotNull();
         assertThat(omar.getJoinedAt()).isNotNull();
         assertThat(omar.getUpdatedAt()).isNotNull();
-    }
-
-    @Test
-    void severalMembersMayHaveNoPhoneButAPhoneIsUnique() {
-        memberRepository.saveAndFlush(Member.register("Mona Adel", " "));
-
-        assertThat(memberRepository.existsByPhone("01012345678")).isTrue();
-        assertThat(memberRepository.existsByPhone("01099999999")).isFalse();
-        assertThatThrownBy(() -> memberRepository.saveAndFlush(Member.register("Other Omar", "01012345678")))
-                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
@@ -167,7 +158,7 @@ public class AssessmentBookingRepositoryTest {
         AssessmentBooking first = bookingRepository.saveAndFlush(AssessmentBooking.book(omar, slot, sara));
         AssessmentBooking second = bookingRepository.saveAndFlush(AssessmentBooking.book(hana, slot, sara));
         bookingRepository.saveAndFlush(AssessmentBooking.book(
-                memberRepository.saveAndFlush(Member.register("Mona Adel", null)), slot(MONDAY.plusWeeks(1)), sara));
+                memberRepository.saveAndFlush(TestMembers.member("Mona Adel")), slot(MONDAY.plusWeeks(1)), sara));
         entityManager.clear();
 
         List<AssessmentBooking> found = bookingRepository.findBySessionId(slot.getId());
@@ -203,9 +194,9 @@ public class AssessmentBookingRepositoryTest {
         cancelledSlot.cancel(NOW);
         sessionRepository.saveAndFlush(cancelledSlot);
         slot(MONDAY.plusWeeks(3));
-        Member mona = memberRepository.saveAndFlush(Member.register("Mona Adel", null));
-        Member laila = memberRepository.saveAndFlush(Member.register("Laila Nour", null));
-        Member nour = memberRepository.saveAndFlush(Member.register("Nour Adel", null));
+        Member mona = memberRepository.saveAndFlush(TestMembers.member("Mona Adel"));
+        Member laila = memberRepository.saveAndFlush(TestMembers.member("Laila Nour"));
+        Member nour = memberRepository.saveAndFlush(TestMembers.member("Nour Adel"));
         bookingRepository.saveAndFlush(AssessmentBooking.book(omar, past, sara));
         bookingRepository.saveAndFlush(AssessmentBooking.book(hana, today, sara));
         bookingRepository.saveAndFlush(AssessmentBooking.book(mona, nextWeek, sara));

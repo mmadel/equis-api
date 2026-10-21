@@ -179,8 +179,8 @@ public class AdminBookingApiTest {
 
     // Case 6
     @Test
-    void aMemberWithoutAPhoneIsNotMatchedByDigits() throws Exception {
-        UUID nour = member("Nour", null);
+    void aMemberWhosePhoneDoesNotHoldTheDigitsIsNotMatched() throws Exception {
+        UUID nour = member("Nour", "01299998888");
         booking(nour, slot(LocalDate.of(2026, 10, 17), LocalTime.of(10, 0)), ahmed, "upcoming", null, null);
 
         list("q", "0101")
@@ -374,9 +374,11 @@ public class AdminBookingApiTest {
                 status.equals("invited") ? null : "not-a-real-hash");
     }
 
+    // Every member needs a phone and an email; a null phone gets a made-up unique one.
     private UUID member(String name, String phone) {
-        return jdbc.queryForObject("insert into member (name, phone) values (?, ?) returning id",
-                UUID.class, name, phone);
+        seq++;
+        return jdbc.queryForObject("insert into member (name, phone, email) values (?, ?, ?) returning id",
+                UUID.class, name, phone != null ? phone : "0155555%04d".formatted(seq), "member%d@mail.eg".formatted(seq));
     }
 
     // An assessment slot (no level) on that date, one hour long. Saved through JPA, as the app saves them,
