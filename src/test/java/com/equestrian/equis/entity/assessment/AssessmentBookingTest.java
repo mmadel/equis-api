@@ -104,6 +104,76 @@ class AssessmentBookingTest {
         assertThatThrownBy(() -> cancelled.recordNoShow(null, NOW)).isInstanceOf(IllegalStateException.class);
     }
 
+    // Cancel reason, case 2 (entity part)
+    @Test
+    void cancelWithReasonStoresTheReason() {
+        AssessmentBooking booking = booking();
+
+        booking.cancelWithReason(CancelReason.PERSON_UNWELL, null, NOW);
+
+        assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELLED);
+        assertThat(booking.getCancelReason()).isEqualTo(CancelReason.PERSON_UNWELL);
+        assertThat(booking.getCancelReasonText()).isNull();
+        assertThat(booking.getCancelledAt()).isEqualTo(NOW);
+    }
+
+    // Cancel reason, case 3
+    @Test
+    void cancelForAnotherReasonTrimsTheText() {
+        AssessmentBooking booking = booking();
+
+        booking.cancelWithReason(CancelReason.OTHER, "  Family travel ", NOW);
+
+        assertThat(booking.getCancelReason()).isEqualTo(CancelReason.OTHER);
+        assertThat(booking.getCancelReasonText()).isEqualTo("Family travel");
+    }
+
+    // Cancel reason, case 4
+    @Test
+    void textMustMatchTheReason() {
+        AssessmentBooking booking = booking();
+
+        assertThatThrownBy(() -> booking.cancelWithReason(CancelReason.OTHER, null, NOW))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> booking.cancelWithReason(CancelReason.OTHER, "   ", NOW))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> booking.cancelWithReason(CancelReason.WEATHER, "Storm", NOW))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(booking.getStatus()).isEqualTo(BookingStatus.UPCOMING);
+        assertThat(booking.getCancelReason()).isNull();
+        assertThat(booking.getCancelReasonText()).isNull();
+        assertThat(booking.getCancelledAt()).isNull();
+    }
+
+    // Cancel reason, case 5
+    @Test
+    void cancelWithReasonOnlyFromUpcoming() {
+        AssessmentBooking placed = booking();
+        placed.recordAttended(level, null, NOW);
+        AssessmentBooking noShow = booking();
+        noShow.recordNoShow(null, NOW);
+        AssessmentBooking cancelled = booking();
+        cancelled.cancel(NOW);
+
+        for (AssessmentBooking booking : new AssessmentBooking[] {placed, noShow, cancelled}) {
+            assertThatThrownBy(() -> booking.cancelWithReason(CancelReason.WEATHER, null, NOW))
+                    .isInstanceOf(IllegalStateException.class);
+            assertThat(booking.getCancelReason()).isNull();
+        }
+    }
+
+    // Cancel reason, case 6 (entity part): the slot-delete cancel stores no reason.
+    @Test
+    void plainCancelLeavesTheReasonEmpty() {
+        AssessmentBooking booking = booking();
+
+        booking.cancel(NOW);
+
+        assertThat(booking.getCancelReason()).isNull();
+        assertThat(booking.getCancelReasonText()).isNull();
+    }
+
     @Test
     void anUpcomingBookingIsWaitingOnceTheSlotStarts() {
         AssessmentBooking booking = booking();

@@ -350,6 +350,9 @@ public class SessionTemplateServiceTest {
         assertThat(bookingRepository.findAllById(List.of(omar.getId(), hana.getId()))).allSatisfy(booking -> {
             assertThat(booking.getStatus()).isEqualTo(BookingStatus.CANCELLED);
             assertThat(booking.getCancelledAt()).isEqualTo(NOW);
+            // E11 cancel reason, case 6: a deleted slot leaves no reason.
+            assertThat(booking.getCancelReason()).isNull();
+            assertThat(booking.getCancelReasonText()).isNull();
         });
         assertThat(bookingRepository.findById(placed.getId())).get()
                 .extracting(AssessmentBooking::getStatus).isEqualTo(BookingStatus.PLACED);

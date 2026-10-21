@@ -73,6 +73,14 @@ public class AssessmentBooking {
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
 
+    // Set only by the admin's cancel; null on a cancel caused by a deleted slot.
+    @Column(name = "cancel_reason", length = 32)
+    private CancelReason cancelReason;
+
+    // Only for OTHER, where it is required.
+    @Column(name = "cancel_reason_text", length = 200)
+    private String cancelReasonText;
+
     @Version
     @Column(name = "version", nullable = false)
     private long version;
@@ -119,6 +127,24 @@ public class AssessmentBooking {
         requireUpcoming("cancel");
         this.status = BookingStatus.CANCELLED;
         this.cancelledAt = now;
+    }
+
+    // The admin's cancel (W2). OTHER needs a typed explanation; every other reason takes none.
+    // The text is checked before anything changes, so a refused cancel leaves the booking as it was.
+    public void cancelWithReason(CancelReason reason, String text, Instant now) {
+        requireUpcoming("cancel");
+        Objects.requireNonNull(reason, "reason");
+        String trimmed = text == null ? null : text.trim();
+        if (reason == CancelReason.OTHER && (trimmed == null || trimmed.isEmpty())) {
+            throw new IllegalArgumentException("A cancel for another reason needs an explanation");
+        }
+        if (reason != CancelReason.OTHER && text != null) {
+            throw new IllegalArgumentException("Only a cancel for another reason takes an explanation");
+        }
+        this.status = BookingStatus.CANCELLED;
+        this.cancelledAt = now;
+        this.cancelReason = reason;
+        this.cancelReasonText = trimmed;
     }
 
     // Reschedule: the same booking, in another slot. The service checks the slot and its seats.

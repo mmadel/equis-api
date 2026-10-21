@@ -3,6 +3,7 @@ package com.equestrian.equis.repository.assessment;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.assessment.AssessmentBooking;
 import com.equestrian.equis.entity.assessment.BookingStatus;
+import com.equestrian.equis.entity.assessment.CancelReason;
 import com.equestrian.equis.entity.assessment.Member;
 import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.entity.sessions.Session;
@@ -17,6 +18,8 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -211,6 +214,62 @@ public class AssessmentBookingRepositoryTest {
         // A slot starting exactly now is no longer upcoming.
         assertThat(bookingRepository.countUpcomingPerUpcomingSession(template.getId(), MONDAY, LocalTime.of(16, 0)))
                 .containsExactly(2L);
+    }
+
+    // E11 cancel reason, case 1: the columns exist (the context only starts if validate accepts the entity).
+    @Test
+    void cancelReasonColumnsExist() {
+        assertThat(jdbcTemplate.queryForList("""
+                select column_name from information_schema.columns
+                where table_name = 'assessment_booking' and column_name like 'cancel_reason%'""", String.class))
+                .containsExactlyInAnyOrder("cancel_reason", "cancel_reason_text");
+    }
+
+    // E11 cancel reason, cases 2 and 3: stored as cancelled, with the reason and the trimmed text.
+    @Test
+    void cancelWithReasonIsStored() {
+        Session monday = slot(MONDAY);
+        AssessmentBooking unwell = bookingRepository.saveAndFlush(AssessmentBooking.book(omar, monday, sara));
+        unwell.cancelWithReason(CancelReason.PERSON_UNWELL, null, NOW);
+        bookingRepository.saveAndFlush(unwell);
+        AssessmentBooking other = bookingRepository.saveAndFlush(AssessmentBooking.book(hana, monday, sara));
+        other.cancelWithReason(CancelReason.OTHER, "  Family travel ", NOW);
+        bookingRepository.saveAndFlush(other);
+        entityManager.clear();
+
+        assertThat(jdbcTemplate.queryForMap(
+                "SELECT status, cancel_reason, cancel_reason_text FROM assessment_booking WHERE id = ?", unwell.getId()))
+                .containsEntry("status", "cancelled")
+                .containsEntry("cancel_reason", "person_unwell")
+                .containsEntry("cancel_reason_text", null);
+        assertThat(bookingRepository.findById(unwell.getId())).get().satisfies(b -> {
+            assertThat(b.getCancelReason()).isEqualTo(CancelReason.PERSON_UNWELL);
+            assertThat(b.getCancelledAt()).isEqualTo(NOW);
+        });
+        assertThat(bookingRepository.findById(other.getId())).get().satisfies(b -> {
+            assertThat(b.getCancelReason()).isEqualTo(CancelReason.OTHER);
+            assertThat(b.getCancelReasonText()).isEqualTo("Family travel");
+        });
+    }
+
+    // E11 cancel reason, case 7: the database refuses a reason that doesn't fit.
+    @ParameterizedTest
+    @CsvSource(nullValues = "NULL", value = {
+            "upcoming,  weather, NULL,          ck_assessment_booking_cancel_status",
+            "cancelled, sick,    NULL,          ck_assessment_booking_cancel_reason",
+            "cancelled, other,   NULL,          ck_assessment_booking_cancel_text",
+            "cancelled, other,   '  ',          ck_assessment_booking_cancel_text",
+            "cancelled, weather, Stormy,        ck_assessment_booking_cancel_text"})
+    void reasonsThatDoNotFitAreRefused(String status, String reason, String text, String constraint) {
+        Session slot = slot(MONDAY);
+
+        assertThatThrownBy(() -> jdbcTemplate.update("""
+                INSERT INTO assessment_booking (member_id, session_id, assessor_id, status, cancelled_at,
+                                                cancel_reason, cancel_reason_text, created_at, updated_at)
+                VALUES (?, ?, ?, ?, CASE WHEN ?::text = 'cancelled' THEN now() END, ?, ?, now(), now())""",
+                omar.getId(), slot.getId(), sara.getId(), status, status, reason, text))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining(constraint);
     }
 
     @Test
