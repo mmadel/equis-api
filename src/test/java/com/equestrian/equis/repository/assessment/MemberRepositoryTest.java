@@ -48,6 +48,29 @@ public class MemberRepositoryTest {
                 where table_name = 'member' and column_name = 'phone'""", String.class)).isEqualTo("NO");
     }
 
+    // Status task, case 1 (V17): member.closed_at exists (nullable) and is stored and cleared.
+    @Test
+    void closedAtIsStoredAndCleared() {
+        assertThat(jdbc.queryForObject("""
+                select is_nullable from information_schema.columns
+                where table_name = 'member' and column_name = 'closed_at'""", String.class)).isEqualTo("YES");
+
+        Member saved = memberRepository.saveAndFlush(Member.register("Omar", "01011112222", "omar@mail.com"));
+        assertThat(saved.getClosedAt()).isNull();
+
+        Instant closedOn = Instant.parse("2026-10-20T09:00:00Z");
+        saved.close(closedOn);
+        memberRepository.saveAndFlush(saved);
+        entityManager.clear();
+        assertThat(memberRepository.findById(saved.getId()).orElseThrow().getClosedAt()).isEqualTo(closedOn);
+
+        Member read = memberRepository.findById(saved.getId()).orElseThrow();
+        read.reopen(Instant.parse("2026-12-01T09:00:00Z"));
+        memberRepository.saveAndFlush(read);
+        entityManager.clear();
+        assertThat(memberRepository.findById(saved.getId()).orElseThrow().isClosed()).isFalse();
+    }
+
     // Case 3
     @Test
     void registerStoresCleanedDetails() {
