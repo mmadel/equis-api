@@ -46,6 +46,10 @@ public class Member {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    // Set while the admin has closed the person; null otherwise. The other statuses are worked out (MemberStatus).
+    @Column(name = "closed_at")
+    private Instant closedAt;
+
     public static Member register(String name, String phone, String email) {
         Member member = new Member();
         member.setDetails(name, phone, email);
@@ -55,6 +59,28 @@ public class Member {
     // updated_at moves on the next flush (@UpdateTimestamp).
     public void updateDetails(String name, String phone, String email) {
         setDetails(name, phone, email);
+    }
+
+    public boolean isClosed() {
+        return closedAt != null;
+    }
+
+    // Hides the person from the active lists; their bookings stay. Who may be closed is checked by the close rules.
+    public void close(Instant now) {
+        if (isClosed()) {
+            throw new IllegalStateException("Member is already closed");
+        }
+        this.closedAt = now;
+        this.updatedAt = now;
+    }
+
+    // The person comes back with the status of their last assessment.
+    public void reopen(Instant now) {
+        if (!isClosed()) {
+            throw new IllegalStateException("Member is not closed");
+        }
+        this.closedAt = null;
+        this.updatedAt = now;
     }
 
     // Trims all three and lowercases the email, so "Sara@Mail.com" and "sara@mail.com" are one address.
