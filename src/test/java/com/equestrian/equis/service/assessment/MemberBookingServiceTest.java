@@ -3,8 +3,9 @@ package com.equestrian.equis.service.assessment;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ApiFieldError;
 import com.equestrian.equis.common.error.ErrorCodes;
-import com.equestrian.equis.dto.assessment.NewMemberRequest;
+import com.equestrian.equis.dto.assessment.AdminNewMemberRequest;
 import com.equestrian.equis.entity.accounts.Trainer;
+import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.assessment.AssessmentBooking;
 import com.equestrian.equis.entity.assessment.BookingStatus;
 import com.equestrian.equis.entity.assessment.Member;
@@ -79,11 +80,12 @@ public class MemberBookingServiceTest {
     }
 
     @Test
-    void registersTheMemberAndBooksThemWithTheTrainerAsAssessor() {
+    void registersTheMemberAndBooksThemWithTheChosenAssessor() {
         Session slot = slot(null, TODAY, 4);
 
-        AssessmentBooking booking = service.registerAndBook(sara.getId(),
-                new NewMemberRequest("  Mona Hassan ", "01012345678", " Mona@Mail.com ", slot.getId()));
+        AssessmentBooking booking = service.registerAndBook(
+                new AdminNewMemberRequest("  Mona Hassan ", "01012345678", " Mona@Mail.com ",
+                        slot.getId(), sara.getId()));
 
         assertThat(booking.getId()).isNotNull();
         assertThat(booking.getStatus()).isEqualTo(BookingStatus.UPCOMING);
@@ -127,9 +129,9 @@ public class MemberBookingServiceTest {
     }
 
     @Test
-    void registeredPhoneIsTakenWithAFieldError() {
+    void registeredPhoneIsTakenWithAFieldErrorAndTheExistingPerson() {
         Session slot = slot(null, TODAY, 4);
-        book(slot.getId(), "01012345678");
+        Member existing = book(slot.getId(), "01012345678").getMember();
 
         assertThatThrownBy(() -> book(slot.getId(), " 01012345678 "))
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
@@ -138,13 +140,17 @@ public class MemberBookingServiceTest {
                     assertThat(ex.properties().get("fieldErrors"))
                             .asInstanceOf(InstanceOfAssertFactories.list(ApiFieldError.class))
                             .containsExactly(new ApiFieldError("phone", ErrorCodes.PHONE_TAKEN));
+                    assertThat(ex.properties())
+                            .containsEntry("existingMemberId", existing.getId())
+                            .containsEntry("existingMemberName", "Mona Hassan")
+                            .containsEntry("existingClosed", false);
                 });
     }
 
     // A null phone gets a made-up unique one; the email is always made up.
     private AssessmentBooking book(UUID slotId, String phone) {
-        return service.registerAndBook(sara.getId(), new NewMemberRequest("Mona Hassan",
-                phone != null ? phone : TestMembers.nextPhone(), TestMembers.nextEmail(), slotId));
+        return service.registerAndBook(new AdminNewMemberRequest("Mona Hassan",
+                phone != null ? phone : TestMembers.nextPhone(), TestMembers.nextEmail(), slotId, sara.getId()));
     }
 
     private void assertRefused(Runnable call, HttpStatus status, String code) {
@@ -175,6 +181,8 @@ public class MemberBookingServiceTest {
         trainer.setName("Sara Ali");
         trainer.setPhone("01999990001");
         trainer.setEmail("member-booking-test-sara@example.com");
+        trainer.setStatus(TrainerStatus.ACTIVE);
+        trainer.setPasswordHash("not-a-real-hash");
         return trainer;
     }
 

@@ -76,10 +76,12 @@ public class AdminBookingRowAssembler {
                 .map(BookingAction::value)
                 .toList();
         return new AdminBookingRow(b.getId(),
-                new MemberRef(m.getId(), m.getName(), m.getPhone()),
+                new MemberRef(m.getId(), m.getName(), m.getPhone(), m.getEmail()),
                 new SlotRef(s.getId(), s.getSessionDate(), s.getStartTime(), s.getEndTime()),
                 new TrainerRef(a.getId(), a.getName(), a.getStatus().name().toLowerCase(Locale.ROOT)),
                 status,
+                // A W2 row is the person's latest booking, so its status decides the person's.
+                MemberStatusResolver.resolve(m.isClosed(), riderId != null, status),
                 b.getLevel() == null ? null : b.getLevel().getId().intValue(),
                 b.getNotes(),
                 b.getRecordedAt(),

@@ -1,12 +1,9 @@
 package com.equestrian.equis.support;
 
 import com.equestrian.equis.dto.accounts.AuthTokens;
-import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.dto.accounts.TrainerRow;
-import com.equestrian.equis.dto.assessment.NewMemberRequest;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.repository.sessions.SessionRepository;
-import com.equestrian.equis.service.assessment.MemberBookingService;
 import com.jayway.jsonpath.JsonPath;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -64,18 +61,16 @@ public class AdminOversightFixture {
     private final JdbcTemplate jdbc;
     private final SessionRepository sessions;
     private final MutableClock clock;
-    private final MemberBookingService memberBooking;
     private final Map<UUID, AuthTokens> tokens = new HashMap<>();
     private final Map<UUID, Instant> tokenExpiry = new HashMap<>();
     private int seq;
 
     AdminOversightFixture(TrainerAccountsFixture accounts, JdbcTemplate jdbc, SessionRepository sessions,
-                          MutableClock clock, MemberBookingService memberBooking) {
+                          MutableClock clock) {
         this.accounts = accounts;
         this.jdbc = jdbc;
         this.sessions = sessions;
         this.clock = clock;
-        this.memberBooking = memberBooking;
     }
 
     @TestConfiguration
@@ -83,9 +78,8 @@ public class AdminOversightFixture {
     public static class Config {
         @Bean
         AdminOversightFixture adminOversightFixture(TrainerAccountsFixture accounts, JdbcTemplate jdbc,
-                                                    SessionRepository sessions, Clock clock,
-                                                    MemberBookingService memberBooking) {
-            return new AdminOversightFixture(accounts, jdbc, sessions, (MutableClock) clock, memberBooking);
+                                                    SessionRepository sessions, Clock clock) {
+            return new AdminOversightFixture(accounts, jdbc, sessions, (MutableClock) clock);
         }
     }
 
@@ -177,25 +171,21 @@ public class AdminOversightFixture {
 
     // ---- The trainer app
 
-    // A new member booked into the slot with this trainer as assessor. Release 2 removed the trainer's
-    // POST /me/members (A1), so this calls the booking service directly until the admin intake replaces it.
-    public UUID bookMember(Coach coach, String name, String phone, UUID slotId) {
-        return memberBooking.registerAndBook(coach.id(), memberRequest(name, phone, slotId)).getId();
+    // W2's New person: a new member booked into the slot with this trainer as assessor. The booking id.
+    public UUID bookMember(Coach coach, String name, String phone, UUID slotId) throws Exception {
+        return UUID.fromString(read(newPerson(coach, name, phone, slotId).andExpect(status().isCreated()), "$.id"));
     }
 
     // The same, for a race: "ok" or the refusal code.
-    public String bookMemberOutcome(Coach coach, String name, String phone, UUID slotId) {
-        try {
-            bookMember(coach, name, phone, slotId);
-            return "ok";
-        } catch (ApiException e) {
-            return e.code();
-        }
+    public String bookMemberOutcome(Coach coach, String name, String phone, UUID slotId) throws Exception {
+        return outcome(newPerson(coach, name, phone, slotId).andReturn());
     }
 
-    private NewMemberRequest memberRequest(String name, String phone, UUID slotId) {
+    public ResultActions newPerson(Coach coach, String name, String phone, UUID slotId) throws Exception {
         seq++;
-        return new NewMemberRequest(name, phone, "member%d@mail.eg".formatted(seq), slotId);
+        return accounts.admin(post("/admin/members").contentType(MediaType.APPLICATION_JSON).content("""
+                { "name": "%s", "phone": "%s", "email": "member%d@mail.eg", "slotId": "%s", "assessorId": "%s" }"""
+                .formatted(name, phone, seq, slotId, coach.id())));
     }
 
     // A5: a null levelId with attended false is a no-show.

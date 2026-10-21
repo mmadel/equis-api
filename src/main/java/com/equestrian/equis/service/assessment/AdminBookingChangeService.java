@@ -7,11 +7,9 @@ import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.dto.assessment.AdminBookingRow;
 import com.equestrian.equis.dto.assessment.ChangeBookingRequest;
 import com.equestrian.equis.entity.accounts.Trainer;
-import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.assessment.AssessmentBooking;
 import com.equestrian.equis.entity.assessment.BookingStatus;
 import com.equestrian.equis.entity.sessions.Session;
-import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,18 +34,16 @@ public class AdminBookingChangeService {
 
     private final AssessmentBookingRepository bookings;
     private final SessionRepository sessions;
-    private final TrainerRepository trainers;
     private final AssessmentRules rules;
     private final AdminBookingRowAssembler rows;
     private final Clock clock;
     private final ZoneId schoolZone;
 
     public AdminBookingChangeService(AssessmentBookingRepository bookings, SessionRepository sessions,
-                                     TrainerRepository trainers, AssessmentRules rules, AdminBookingRowAssembler rows,
+                                     AssessmentRules rules, AdminBookingRowAssembler rows,
                                      Clock clock, @Value("${app.time-zone}") ZoneId schoolZone) {
         this.bookings = bookings;
         this.sessions = sessions;
-        this.trainers = trainers;
         this.rules = rules;
         this.rows = rows;
         this.clock = clock;
@@ -76,7 +72,7 @@ public class AdminBookingChangeService {
                     "This member already has a newer booking.");
         }
 
-        Trainer newAssessor = req.assessorId() == null ? null : activeTrainer(req.assessorId());
+        Trainer newAssessor = req.assessorId() == null ? null : rules.requireActiveAssessor(req.assessorId());
         if (req.slotId() == null) {
             b.changeAssessor(newAssessor);
             return rows.row(b);
@@ -100,7 +96,7 @@ public class AdminBookingChangeService {
         // Rebook a no-show or cancelled booking.
         Session slot = lockBookableSlot(req.slotId(), now);
         rules.requireCanBook(b.getMember());
-        Trainer assessor = newAssessor != null ? newAssessor : requireActive(b.getAssessor());
+        Trainer assessor = newAssessor != null ? newAssessor : rules.requireActive(b.getAssessor());
         // uq_assessment_booking_active_member is only a backstop behind requireCanBook; if it fires it is the
         // same 409, never a 500.
         try {
@@ -121,22 +117,6 @@ public class AdminBookingChangeService {
         rules.requireBookable(slot, now);
         rules.requireSeat(slot);
         return slot;
-    }
-
-    private Trainer activeTrainer(UUID trainerId) {
-        Trainer trainer = trainers.findById(trainerId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,
-                ErrorCodes.TRAINER_NOT_FOUND, "Trainer not found.",
-                Map.of("fieldErrors", List.of(new ApiFieldError("assessorId", ErrorCodes.TRAINER_NOT_FOUND)))));
-        return requireActive(trainer);
-    }
-
-    private static Trainer requireActive(Trainer trainer) {
-        if (trainer.getStatus() != TrainerStatus.ACTIVE) {
-            throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.TRAINER_NOT_ACTIVE,
-                    trainer.getName() + " is not an active trainer. Choose another assessor.",
-                    Map.of("fieldErrors", List.of(new ApiFieldError("assessorId", ErrorCodes.TRAINER_NOT_ACTIVE))));
-        }
-        return trainer;
     }
 
     // Answered in the same 400 shape as a failed @Valid.

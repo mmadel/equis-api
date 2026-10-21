@@ -2,7 +2,7 @@ package com.equestrian.equis.controller.assessment;
 
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.security.AuthUser;
-import com.equestrian.equis.dto.assessment.NewMemberRequest;
+import com.equestrian.equis.dto.assessment.AdminNewMemberRequest;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
@@ -404,13 +404,13 @@ public class AdminBookingChangeApiTest {
         UUID lastSeat = slot(TUE_20, TEN, 2);
         booking(member("Seat Taker"), lastSeat, ahmed, "upcoming");
 
-        // Release 2 removed the trainer's POST /me/members, so the booking goes through the service it used.
+        // The admin's New person, through the service behind POST /admin/members.
         List<String> outcomes = raceOutcomes(
                 () -> outcome(change(sara, "{ \"slotId\": \"%s\" }".formatted(lastSeat)).andReturn()),
                 () -> {
                     try {
-                        memberBooking.registerAndBook(mona,
-                                new NewMemberRequest("Walk In", "01077778888", "walk.in@mail.eg", lastSeat));
+                        memberBooking.registerAndBook(new AdminNewMemberRequest(
+                                "Walk In", "01077778888", "walk.in@mail.eg", lastSeat, mona));
                         return "ok";
                     } catch (ApiException e) {
                         return e.code();
