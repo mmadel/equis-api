@@ -9,8 +9,8 @@ import jakarta.validation.constraints.Size;
 import java.util.Locale;
 import java.util.UUID;
 
-// No longer sent by any endpoint (POST /me/members answers 410); kept for MemberBookingService until the
-// admin intake replaces both. The constructor cleans the input before validation runs.
+// No longer sent by any endpoint (POST /me/members answers 410) or used by any service; deleted in a later E11
+// task with the trainer endpoint. The constructor cleans the input before validation runs.
 public record NewMemberRequest(@NotBlank @Size(max = 100) String name,
                                @NotBlank @Pattern(regexp = "^0[0-9]{10}$") String phone,
                                @NotBlank @Email @Size(max = 254) String email,
