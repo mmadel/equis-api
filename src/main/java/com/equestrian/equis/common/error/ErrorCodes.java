@@ -27,6 +27,7 @@ public class ErrorCodes {
     public static final String BOOKING_NOT_FOUND  = "booking_not_found";  // 404
     public static final String RIDER_NOT_FOUND    = "rider_not_found";    // 404
     public static final String TRAINER_NOT_FOUND  = "trainer_not_found";  // 404
+    public static final String MEMBER_NOT_FOUND   = "member_not_found";   // 404
     public static final String ENDPOINT_REMOVED   = "endpoint_removed";   // 410
     public static final String SEAT_TAKEN        = "seat_taken";         // 409
     public static final String CAPACITY_EXCEEDED  = "capacity_exceeded";  // 409
@@ -41,6 +42,7 @@ public class ErrorCodes {
     public static final String SLOT_FULL          = "slot_full";          // 409
     public static final String SLOT_NOT_STARTED   = "slot_not_started";   // 409
     public static final String MEMBER_PLACED      = "member_placed";      // 409
+    public static final String MEMBER_IS_RIDER    = "member_is_rider";    // 409
     public static final String MEMBER_ALREADY_BOOKED   = "member_already_booked";   // 409
     public static final String BOOKING_CANCELLED       = "booking_cancelled";       // 409
     public static final String RESULT_ALREADY_RECORDED = "result_already_recorded"; // 409

@@ -8,7 +8,8 @@ public enum BookingAction {
     REBOOK,
     CHANGE_ASSESSOR,
     REMIND,
-    VIEW_RIDER;
+    VIEW_RIDER,
+    EDIT;
 
     // The form sent to the console: "reschedule", "change_assessor", ...
     public String value() {

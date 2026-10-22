@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 import static com.equestrian.equis.service.assessment.BookingAction.CHANGE_ASSESSOR;
+import static com.equestrian.equis.service.assessment.BookingAction.EDIT;
 import static com.equestrian.equis.service.assessment.BookingAction.REBOOK;
 import static com.equestrian.equis.service.assessment.BookingAction.REMIND;
 import static com.equestrian.equis.service.assessment.BookingAction.RESCHEDULE;
@@ -15,11 +16,13 @@ public final class BookingActions {
     private BookingActions() {}
 
     // displayStatus is AssessmentBooking.displayStatus(...). Remind needs an active assessor to remind.
+    // Edit is on every row but placed: a rider's details live on the rider.
     public static Set<BookingAction> allowed(String displayStatus, boolean assessorActive) {
         return switch (displayStatus) {
-            case "upcoming" -> EnumSet.of(RESCHEDULE, CHANGE_ASSESSOR);
-            case "waiting" -> assessorActive ? EnumSet.of(CHANGE_ASSESSOR, REMIND) : EnumSet.of(CHANGE_ASSESSOR);
-            case "noshow", "cancelled" -> EnumSet.of(REBOOK, CHANGE_ASSESSOR);
+            case "upcoming" -> EnumSet.of(RESCHEDULE, CHANGE_ASSESSOR, EDIT);
+            case "waiting" -> assessorActive ? EnumSet.of(CHANGE_ASSESSOR, REMIND, EDIT)
+                    : EnumSet.of(CHANGE_ASSESSOR, EDIT);
+            case "noshow", "cancelled" -> EnumSet.of(REBOOK, CHANGE_ASSESSOR, EDIT);
             case "placed" -> EnumSet.of(VIEW_RIDER);
             default -> throw new IllegalArgumentException("Unknown booking status: " + displayStatus);
         };
