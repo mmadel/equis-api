@@ -108,6 +108,22 @@ public interface AssessmentBookingRepository extends JpaRepository<AssessmentBoo
             """)
     List<AssessmentBooking> findLatestPerMember();
 
+    // One member's latest booking, by the same rule as findLatestPerMember, with the same things loaded.
+    @Query("""
+            select b from AssessmentBooking b
+            join fetch b.member m
+            join fetch b.session s
+            join fetch b.assessor a
+            left join fetch b.level
+            where m.id = :memberId
+              and not exists (
+                select 1 from AssessmentBooking b2
+                where b2.member = b.member
+                  and (b2.createdAt > b.createdAt
+                       or (b2.createdAt = b.createdAt and b2.id > b.id)))
+            """)
+    Optional<AssessmentBooking> findLatestForMember(@Param("memberId") UUID memberId);
+
     // Whether the member has a booking newer than this one, by the same rule as findLatestPerMember.
     @Query("""
             select count(b) > 0 from AssessmentBooking b

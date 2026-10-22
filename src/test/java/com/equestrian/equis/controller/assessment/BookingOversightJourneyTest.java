@@ -96,7 +96,7 @@ class BookingOversightJourneyTest {
                 .andExpect(jsonPath("$.bookings[0].id").value(sara.toString()))
                 .andExpect(jsonPath("$.bookings[0].status").value("upcoming"))
                 .andExpect(jsonPath("$.bookings[0].assessor.id").value(ahmed.id().toString()))
-                .andExpect(jsonPath("$.bookings[0].actions", containsInAnyOrder("reschedule", "change_assessor")))
+                .andExpect(jsonPath("$.bookings[0].actions", containsInAnyOrder("reschedule", "change_assessor", "edit")))
                 .andExpect(jsonPath("$.totals.upcoming").value(1));
     }
 
@@ -108,7 +108,7 @@ class BookingOversightJourneyTest {
 
         fx.w2()
                 .andExpect(jsonPath("$.bookings[0].status").value("waiting"))
-                .andExpect(jsonPath("$.bookings[0].actions", containsInAnyOrder("change_assessor", "remind")))
+                .andExpect(jsonPath("$.bookings[0].actions", containsInAnyOrder("change_assessor", "remind", "edit")))
                 .andExpect(jsonPath("$.totals.waiting").value(1))
                 .andExpect(jsonPath("$.totals.upcoming").value(0));
         fx.w2("waiting", null)

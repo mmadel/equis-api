@@ -213,12 +213,12 @@ public class AdminBookingApiTest {
         onePerStatus();
 
         list()
-                .andExpect(jsonPath(row("Sara Ali", "actions") + "[*]", contains("reschedule", "change_assessor")))
-                .andExpect(jsonPath(row("Waleed Waiting", "actions") + "[*]", contains("change_assessor", "remind")))
+                .andExpect(jsonPath(row("Sara Ali", "actions") + "[*]", contains("reschedule", "change_assessor", "edit")))
+                .andExpect(jsonPath(row("Waleed Waiting", "actions") + "[*]", contains("change_assessor", "remind", "edit")))
                 .andExpect(jsonPath(row("Pakinam Placed", "actions") + "[*]", contains("view_rider")))
-                .andExpect(jsonPath(row("Nader Noshow", "actions") + "[*]", contains("rebook", "change_assessor")))
+                .andExpect(jsonPath(row("Nader Noshow", "actions") + "[*]", contains("rebook", "change_assessor", "edit")))
                 .andExpect(jsonPath(row("Camelia Cancelled", "actions") + "[*]",
-                        contains("rebook", "change_assessor")));
+                        contains("rebook", "change_assessor", "edit")));
     }
 
     // Case 9
@@ -232,7 +232,7 @@ public class AdminBookingApiTest {
                 .andExpect(jsonPath("$.bookings[0].status").value("waiting"))
                 .andExpect(jsonPath("$.bookings[0].assessor.name").value("Hany Gone"))
                 .andExpect(jsonPath("$.bookings[0].assessor.status").value("disabled"))
-                .andExpect(jsonPath("$.bookings[0].actions", contains("change_assessor")));
+                .andExpect(jsonPath("$.bookings[0].actions", contains("change_assessor", "edit")));
     }
 
     // Case 10

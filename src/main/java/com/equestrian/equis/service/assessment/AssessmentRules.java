@@ -77,17 +77,31 @@ public class AssessmentRules {
 
     // Among all members, closed ones included, so someone who comes back is reopened, not entered twice.
     public void requirePhoneFree(String phone) {
-        members.findByPhone(phone).ifPresent(existing -> {
-            throw phoneTaken(existing);
-        });
+        requirePhoneFree(phone, null);
+    }
+
+    // For an edit: the person's own phone is not a clash.
+    public void requirePhoneFree(String phone, UUID exceptMemberId) {
+        members.findByPhone(phone)
+                .filter(existing -> !existing.getId().equals(exceptMemberId))
+                .ifPresent(existing -> {
+                    throw phoneTaken(existing);
+                });
     }
 
     // The email becomes the rider's login later, so it must not be a trainer's or the admin's either.
     // Pass it lowercase, as it is stored.
     public void requireEmailFree(String email) {
-        members.findByEmail(email).ifPresent(existing -> {
-            throw emailTaken(existing);
-        });
+        requireEmailFree(email, null);
+    }
+
+    // For an edit: the person's own email is not a clash.
+    public void requireEmailFree(String email, UUID exceptMemberId) {
+        members.findByEmail(email)
+                .filter(existing -> !existing.getId().equals(exceptMemberId))
+                .ifPresent(existing -> {
+                    throw emailTaken(existing);
+                });
         if (trainers.existsByEmail(email) || admins.existsByEmail(email)) {
             throw emailTaken(null);
         }
