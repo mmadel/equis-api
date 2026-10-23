@@ -16,8 +16,11 @@ public final class BookingActions {
     private BookingActions() {}
 
     // displayStatus is AssessmentBooking.displayStatus(...). Remind needs an active assessor to remind.
-    // Edit is on every row but placed: a rider's details live on the rider.
-    public static Set<BookingAction> allowed(String displayStatus, boolean assessorActive) {
+    // Edit is on every row but placed: a rider's details live on the rider. A closed person's row only allows edit.
+    public static Set<BookingAction> allowed(String displayStatus, boolean assessorActive, boolean memberClosed) {
+        if (memberClosed) {
+            return EnumSet.of(EDIT);
+        }
         return switch (displayStatus) {
             case "upcoming" -> EnumSet.of(RESCHEDULE, CHANGE_ASSESSOR, EDIT);
             case "waiting" -> assessorActive ? EnumSet.of(CHANGE_ASSESSOR, REMIND, EDIT)

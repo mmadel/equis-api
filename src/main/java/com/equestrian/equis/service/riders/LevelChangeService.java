@@ -62,7 +62,7 @@ public class LevelChangeService {
         Level toLevel = levels.getReferenceById((short) to);
         rider.moveToLevel(toLevel);
         LevelChange change = changes.save(
-                LevelChange.of(rider, from, toLevel, req.reason(), trainers.getReferenceById(trainerId)));
+                LevelChange.of(rider, from, toLevel, req.reason(), trainers.getReferenceById(trainerId), now));
 
         return new LevelChanged(rider.getId(), from.getId(), to, change.getReason(), now,
                 freed.stream().map(a -> UpcomingSeat.of(a.getSession())).toList());

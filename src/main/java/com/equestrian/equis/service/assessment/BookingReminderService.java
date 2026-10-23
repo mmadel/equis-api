@@ -53,6 +53,7 @@ public class BookingReminderService {
 
         // The lock runs two clicks one after the other, and against the assessor recording the result.
         AssessmentBooking b = bookings.findByIdForUpdate(bookingId).orElseThrow(rules::bookingNotFound);
+        rules.requireNotClosed(b.getMember());
         if (!b.isWaiting(now, schoolZone)) {
             throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.RESULT_NOT_OVERDUE,
                     "Only bookings waiting for a result can be reminded.");
