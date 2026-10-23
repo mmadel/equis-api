@@ -20,6 +20,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
@@ -199,6 +200,8 @@ class BookingOversightJourneyTest {
                 .andExpect(jsonPath(rowOf(sara) + ".status").value("cancelled"))
                 .andExpect(jsonPath(rowOf(sara) + ".actions[*]", hasItem("rebook")));
 
+        // A few minutes later, so the new booking is the newer one; at the same instant W2 would pick by id.
+        fx.at(LocalDate.of(2026, 10, 16), LocalTime.of(10, 5));
         String fresh = read(fx.patchBooking(sara, "{ \"slotId\": \"%s\" }".formatted(tue20))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("upcoming"))

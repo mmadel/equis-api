@@ -19,6 +19,7 @@ import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.sessions.AssignmentService;
+import com.equestrian.equis.support.MutableClock;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,11 +43,11 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +82,7 @@ public class LevelChangeFlowTest {
     private static final short LEVEL_3 = 3;
     private static final short LEVEL_4 = 4;
     private static final ZoneId CAIRO = ZoneId.of("Africa/Cairo");
-    // The clock is fixed on Thursday 15 Oct 2026 at 10:00 school time.
+    // Every test starts on Thursday 15 Oct 2026 at 10:00 school time.
     private static final Instant NOW = ZonedDateTime.of(2026, 10, 15, 10, 0, 0, 0, CAIRO).toInstant();
     private static final LocalDate TODAY = LocalDate.of(2026, 10, 15);
     // Saturday starts the next school week.
@@ -91,11 +92,13 @@ public class LevelChangeFlowTest {
     @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
 
+    static final MutableClock CLOCK = new MutableClock(NOW);
+
     @TestBean
     Clock clock;
 
     static Clock clock() {
-        return Clock.fixed(NOW, ZoneOffset.UTC);
+        return CLOCK;
     }
 
     @Autowired
@@ -135,6 +138,7 @@ public class LevelChangeFlowTest {
 
     @BeforeEach
     void setUp() {
+        CLOCK.set(NOW);
         trainerIds.clear();
         riderIds.clear();
         templateIds.clear();
@@ -168,6 +172,8 @@ public class LevelChangeFlowTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("level_at_bottom"));
         for (int from = 1; from <= 5; from++) {
+            // A minute apart, so the history has a clear newest-first order; at the same instant it has none.
+            CLOCK.advance(Duration.ofMinutes(1));
             changeLevel(hana.getId(), ahmed, "up", from)
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.fromLevelId").value(from))
