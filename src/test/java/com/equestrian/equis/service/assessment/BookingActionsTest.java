@@ -12,7 +12,7 @@ class BookingActionsTest {
     @Test
     void eachStatusHasItsActions() {
         assertThat(BookingActions.allowed("upcoming", true, false)).containsExactly(
-                BookingAction.RESCHEDULE, BookingAction.CHANGE_ASSESSOR, BookingAction.EDIT);
+                BookingAction.RESCHEDULE, BookingAction.CANCEL, BookingAction.CHANGE_ASSESSOR, BookingAction.EDIT);
         assertThat(BookingActions.allowed("waiting", true, false)).containsExactly(
                 BookingAction.CHANGE_ASSESSOR, BookingAction.REMIND, BookingAction.EDIT);
         assertThat(BookingActions.allowed("waiting", false, false)).containsExactly(
@@ -38,6 +38,18 @@ class BookingActionsTest {
     void aClosedPersonsRowOnlyAllowsEdit(String status) {
         assertThat(BookingActions.allowed(status, true, true)).containsExactly(BookingAction.EDIT);
         assertThat(BookingActions.allowed(status, false, true)).containsExactly(BookingAction.EDIT);
+    }
+
+    // E11 · Admin manages an assessment: cancel only before the slot starts, and not for a closed person.
+    @Test
+    void onlyAnUpcomingRowCanBeCancelled() {
+        assertThat(BookingActions.allowed("upcoming", true, false)).contains(BookingAction.CANCEL);
+        assertThat(BookingActions.allowed("upcoming", false, false)).contains(BookingAction.CANCEL);
+        for (String status : new String[] {"waiting", "noshow", "cancelled", "placed"}) {
+            assertThat(BookingActions.allowed(status, true, false)).as(status).doesNotContain(BookingAction.CANCEL);
+        }
+        assertThat(BookingActions.allowed("upcoming", true, true)).doesNotContain(BookingAction.CANCEL);
+        assertThat(BookingAction.CANCEL.value()).isEqualTo("cancel");
     }
 
     @Test
