@@ -62,6 +62,7 @@ public class AdminBookingChangeService {
 
         // The lock serialises this with the assessor recording a result on the same booking.
         AssessmentBooking b = bookings.findByIdForUpdate(bookingId).orElseThrow(rules::bookingNotFound);
+        rules.requireNotClosed(b.getMember());
         if (b.getStatus() == BookingStatus.PLACED) {
             throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.BOOKING_CLOSED, "A placed booking can't be changed.");
         }

@@ -72,7 +72,8 @@ public class AdminBookingRowAssembler {
         Session s = b.getSession();
         Trainer a = b.getAssessor();
         String status = b.displayStatus(now, schoolZone);
-        List<String> actions = BookingActions.allowed(status, a.getStatus() == TrainerStatus.ACTIVE).stream()
+        List<String> actions = BookingActions.allowed(status, a.getStatus() == TrainerStatus.ACTIVE, m.isClosed())
+                .stream()
                 .map(BookingAction::value)
                 .toList();
         return new AdminBookingRow(b.getId(),
@@ -82,6 +83,8 @@ public class AdminBookingRowAssembler {
                 status,
                 // A W2 row is the person's latest booking, so its status decides the person's.
                 MemberStatusResolver.resolve(m.isClosed(), riderId != null, status),
+                b.getCancelReason(),
+                b.getCancelReasonText(),
                 b.getLevel() == null ? null : b.getLevel().getId().intValue(),
                 b.getNotes(),
                 b.getRecordedAt(),

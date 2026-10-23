@@ -14,9 +14,9 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 // One promotion or demotion of a rider. History only: rows are never updated or deleted.
@@ -52,11 +52,12 @@ public class LevelChange {
     @JoinColumn(name = "by_trainer_id", nullable = false, updatable = false)
     private Trainer byTrainer;
 
-    @CreationTimestamp
+    // From the app clock, not @CreationTimestamp: the history is ordered by it, and the VM clock behind
+    // @CreationTimestamp ticks only every ~15 ms on Windows, so two quick changes could tie.
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    public static LevelChange of(Rider rider, Level from, Level to, String reason, Trainer by) {
+    public static LevelChange of(Rider rider, Level from, Level to, String reason, Trainer by, Instant at) {
         if (!isOneStep(from, to)) {
             throw new IllegalArgumentException("A level change must move exactly one level");
         }
@@ -70,6 +71,7 @@ public class LevelChange {
         change.toLevel = to;
         change.reason = trimmed;
         change.byTrainer = by;
+        change.createdAt = Objects.requireNonNull(at, "at");
         return change;
     }
 

@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,6 +42,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -296,12 +299,18 @@ public class AdminBookingApiTest {
                     status.equals("placed") || status.equals("noshow") ? cairo(2026, 10, 9, 11, 0) : null);
             if (status.equals("placed")) {
                 rider(m, "Member %02d".formatted(i));
+            } else if (i % 5 == 0) {
+                // Some closed people too: the closed tab and totals cost no extra query.
+                close(m, cairo(2026, 10, 15, i % 24, 0));
             }
         }
-        list().andExpect(jsonPath("$.bookings.length()").value(20));
+        // Members 10 and 15 are closed (5 is placed).
+        list().andExpect(jsonPath("$.bookings.length()").value(18))
+                .andExpect(jsonPath("$.totals.closed").value(2));
         long withTwenty = statementsFor(this::list);
 
         assertThat(withTwenty).isEqualTo(withOne);
+        assertThat(statementsFor(() -> list("status", "closed"))).isEqualTo(withOne);
     }
 
     // Case 13
@@ -315,6 +324,147 @@ public class AdminBookingApiTest {
         mvc.perform(get(PATH).header(HttpHeaders.AUTHORIZATION, asTrainer))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("forbidden"));
+    }
+
+    // ---- E11: email, person status, cancel reason, closed people ----
+
+    // Case 14: Omar is a closed no-show. All leaves him out, and only totals.closed counts him.
+    @Test
+    void closedPeopleAreLeftOutOfAllAndTheFiveTotals() throws Exception {
+        onePerStatus();
+        UUID omar = member("Omar Closed", "01277778888");
+        booking(omar, slot(LocalDate.of(2026, 10, 13), LocalTime.of(10, 0)), ahmed, "noshow", null,
+                cairo(2026, 10, 13, 11, 0));
+        close(omar, cairo(2026, 10, 15, 9, 0));
+
+        list()
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookings.length()").value(5))
+                .andExpect(jsonPath(row("Omar Closed", "id")).isEmpty())
+                .andExpect(jsonPath("$.totals.upcoming").value(1))
+                .andExpect(jsonPath("$.totals.waiting").value(1))
+                .andExpect(jsonPath("$.totals.placed").value(1))
+                .andExpect(jsonPath("$.totals.noshow").value(1))
+                .andExpect(jsonPath("$.totals.cancelled").value(1))
+                .andExpect(jsonPath("$.totals.closed").value(1));
+        list("status", "noshow")
+                .andExpect(jsonPath("$.bookings[*].member.name", contains("Nader Noshow")));
+    }
+
+    // Case 15
+    @Test
+    void theClosedTabListsOnlyClosedPeopleWithOnlyEdit() throws Exception {
+        onePerStatus();
+        UUID omar = member("Omar Closed", "01277778888");
+        booking(omar, slot(LocalDate.of(2026, 10, 13), LocalTime.of(10, 0)), ahmed, "noshow", null,
+                cairo(2026, 10, 13, 11, 0));
+        close(omar, cairo(2026, 10, 15, 9, 0));
+
+        list("status", "closed")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookings.length()").value(1))
+                .andExpect(jsonPath("$.bookings[0].member.name").value("Omar Closed"))
+                .andExpect(jsonPath("$.bookings[0].memberStatus").value("closed"))
+                .andExpect(jsonPath("$.bookings[0].status").value("noshow"))
+                .andExpect(jsonPath("$.bookings[0].actions", contains("edit")))
+                .andExpect(jsonPath("$.totals.closed").value(1))
+                .andExpect(jsonPath("$.totals.noshow").value(1));
+    }
+
+    // Case 16: any part of the email, ignoring case. Every other member's email is on mail.eg.
+    @Test
+    void searchFindsByPartOfTheEmail() throws Exception {
+        onePerStatus();
+        UUID salma = member("Salma Mostafa", "01088889999", "salma.m@mail.com");
+        booking(salma, slot(LocalDate.of(2026, 10, 19), LocalTime.of(10, 0)), ahmed, "upcoming", null, null);
+
+        list("q", "MAIL.COM")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookings[*].member.name", contains("Salma Mostafa")))
+                .andExpect(jsonPath("$.bookings[0].member.email").value("salma.m@mail.com"));
+        list("q", "a.m@")
+                .andExpect(jsonPath("$.bookings[*].member.name", contains("Salma Mostafa")));
+        list("q", "@mail.eg")
+                .andExpect(jsonPath("$.bookings.length()").value(5));
+    }
+
+    // Case 17: Camelia's slot was deleted (no reason); the admin cancelled the other two.
+    @Test
+    void aCancelledRowCarriesTheAdminsReason() throws Exception {
+        onePerStatus();
+        UUID hala = member("Hala Unwell", "01212121212");
+        cancelWithReason(booking(hala, slot(LocalDate.of(2026, 10, 19), LocalTime.of(10, 0)), ahmed, "cancelled",
+                null, null), "person_unwell", null);
+        UUID tarek = member("Tarek Other", "01213131313");
+        cancelWithReason(booking(tarek, slot(LocalDate.of(2026, 10, 20), LocalTime.of(10, 0)), ahmed, "cancelled",
+                null, null), "other", "Moved to Alexandria");
+
+        list("status", "cancelled")
+                .andExpect(jsonPath(row("Hala Unwell", "cancelReason"), contains("person_unwell")))
+                .andExpect(jsonPath(row("Hala Unwell", "cancelReasonText"), contains((Object) null)))
+                .andExpect(jsonPath(row("Tarek Other", "cancelReason"), contains("other")))
+                .andExpect(jsonPath(row("Tarek Other", "cancelReasonText"), contains("Moved to Alexandria")))
+                .andExpect(jsonPath(row("Camelia Cancelled", "cancelReason"), contains((Object) null)));
+        list("status", "upcoming")
+                .andExpect(jsonPath("$.bookings[0].cancelReason").isEmpty());
+    }
+
+    // Case 18
+    @Test
+    void eachRowCarriesThePersonsStatus() throws Exception {
+        onePerStatus();
+
+        list()
+                .andExpect(jsonPath(row("Pakinam Placed", "memberStatus"), contains("rider")))
+                .andExpect(jsonPath(row("Sara Ali", "memberStatus"), contains("pending_assessment")))
+                .andExpect(jsonPath(row("Waleed Waiting", "memberStatus"), contains("pending_assessment")))
+                .andExpect(jsonPath(row("Nader Noshow", "memberStatus"), contains("no_show")))
+                .andExpect(jsonPath(row("Camelia Cancelled", "memberStatus"), contains("pending_assessment")));
+    }
+
+    // Case 19
+    @Test
+    void theMostRecentlyClosedComesFirst() throws Exception {
+        UUID early = member("Early Closed", "01214141414");
+        booking(early, slot(LocalDate.of(2026, 10, 12), LocalTime.of(10, 0)), ahmed, "noshow", null,
+                cairo(2026, 10, 12, 11, 0));
+        close(early, cairo(2026, 10, 13, 9, 0));
+        UUID late = member("Late Closed", "01215151515");
+        booking(late, slot(LocalDate.of(2026, 10, 18), LocalTime.of(10, 0)), ahmed, "upcoming", null, null);
+        close(late, cairo(2026, 10, 15, 9, 0));
+
+        list("status", "closed")
+                .andExpect(jsonPath("$.bookings[*].member.name", contains("Late Closed", "Early Closed")))
+                .andExpect(jsonPath("$.totals.closed").value(2))
+                .andExpect(jsonPath("$.totals.upcoming").value(0));
+        list("status", "closed").andExpect(jsonPath("$.bookings[0].status").value("upcoming"));
+        list("q", "closed").andExpect(jsonPath("$.bookings").isEmpty());
+    }
+
+    // Case 20: the row only offers edit, and the actions it no longer offers are refused.
+    @Test
+    void aClosedPersonsRowCannotBeChangedOrReminded() throws Exception {
+        UUID nader = member("Nader Closed", "01216161616");
+        UUID noshow = booking(nader, slot(LocalDate.of(2026, 10, 14), LocalTime.of(10, 0)), ahmed, "noshow", null,
+                cairo(2026, 10, 14, 11, 0));
+        close(nader, cairo(2026, 10, 15, 9, 0));
+        UUID waleed = member("Waleed Closed", "01217171717");
+        UUID waiting = booking(waleed, slot(LocalDate.of(2026, 10, 16), LocalTime.of(10, 0)), ahmed, "upcoming",
+                null, null);
+        close(waleed, cairo(2026, 10, 15, 10, 0));
+        UUID saturday = slot(LocalDate.of(2026, 10, 24), LocalTime.of(10, 0));
+
+        mvc.perform(asAdmin(patch(PATH + "/" + noshow).contentType(MediaType.APPLICATION_JSON)
+                        .content("{ \"slotId\": \"%s\" }".formatted(saturday))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("member_closed"));
+        mvc.perform(asAdmin(post(PATH + "/" + waiting + "/remind")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("member_closed"));
+
+        assertThat(jdbc.queryForObject("select count(*) from assessment_booking where member_id = ?", Long.class,
+                nader)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from notice", Long.class)).isZero();
     }
 
     // Sara upcoming tomorrow, Waleed waiting since 10:00 today, Pakinam placed yesterday (with her rider),
@@ -376,9 +526,24 @@ public class AdminBookingApiTest {
 
     // Every member needs a phone and an email; a null phone gets a made-up unique one.
     private UUID member(String name, String phone) {
+        return member(name, phone, null);
+    }
+
+    private UUID member(String name, String phone, String email) {
         seq++;
         return jdbc.queryForObject("insert into member (name, phone, email) values (?, ?, ?) returning id",
-                UUID.class, name, phone != null ? phone : "0155555%04d".formatted(seq), "member%d@mail.eg".formatted(seq));
+                UUID.class, name, phone != null ? phone : "0155555%04d".formatted(seq),
+                email != null ? email : "member%d@mail.eg".formatted(seq));
+    }
+
+    private void close(UUID member, Instant at) {
+        jdbc.update("update member set closed_at = ? where id = ?", Timestamp.from(at), member);
+    }
+
+    // The admin's cancel, as cancelWithReason stores it.
+    private void cancelWithReason(UUID booking, String reason, String text) {
+        jdbc.update("update assessment_booking set cancel_reason = ?, cancel_reason_text = ? where id = ?",
+                reason, text, booking);
     }
 
     // An assessment slot (no level) on that date, one hour long. Saved through JPA, as the app saves them,

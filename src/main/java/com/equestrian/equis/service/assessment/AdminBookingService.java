@@ -6,6 +6,8 @@ import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.dto.assessment.AdminBookingList;
 import com.equestrian.equis.dto.assessment.AdminBookingRow;
 import com.equestrian.equis.dto.assessment.BookingTotals;
+import com.equestrian.equis.entity.assessment.AssessmentBooking;
+import com.equestrian.equis.entity.assessment.Member;
 import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,13 +21,18 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 // W2: every member's latest assessment booking. Status and search are applied here, not in SQL,
 // because "waiting" depends on the clock.
 @Service
 public class AdminBookingService {
-    private static final Set<String> STATUSES = Set.of("upcoming", "waiting", "placed", "noshow", "cancelled");
+    private static final String CLOSED = "closed";
+    // "closed" is a person's status, not a booking's: that tab lists closed people, and every other tab leaves them out.
+    private static final Set<String> STATUSES =
+            Set.of("upcoming", "waiting", "placed", "noshow", "cancelled", CLOSED);
     // Waiting first (they need action), then upcoming, then no-show and cancelled, then placed.
     private static final Map<String, Integer> GROUP =
             Map.of("waiting", 0, "upcoming", 1, "noshow", 2, "cancelled", 2, "placed", 3);
@@ -51,20 +58,35 @@ public class AdminBookingService {
         this.clock = clock;
     }
 
-    // status: null or blank = all. q: part of the name, or digits of the phone; blank = no search.
-    // The totals always cover every row, whatever the filter.
+    // status: null or blank = all open people; "closed" = only closed people. q: part of the name or email, or
+    // digits of the phone; blank = no search. The totals always cover every row, whatever the filter.
     @Transactional(readOnly = true)
     public AdminBookingList list(String status, String q) {
         String wanted = parseStatus(status);
-        List<AdminBookingRow> all = rows.rows(bookings.findLatestPerMember(), clock.instant());
+        List<AssessmentBooking> latest = bookings.findLatestPerMember();
+        Map<UUID, Instant> closedAt = latest.stream()
+                .map(AssessmentBooking::getMember)
+                .filter(Member::isClosed)
+                .collect(Collectors.toMap(Member::getId, Member::getClosedAt));
+        Map<Boolean, List<AdminBookingRow>> byClosed = rows.rows(latest, clock.instant()).stream()
+                .collect(Collectors.partitioningBy(r -> closedAt.containsKey(r.member().id())));
+        List<AdminBookingRow> open = byClosed.get(false);
+        List<AdminBookingRow> closed = byClosed.get(true);
 
-        BookingTotals totals = new BookingTotals(count(all, "upcoming"), count(all, "waiting"), count(all, "placed"),
-                count(all, "noshow"), count(all, "cancelled"));
-        List<AdminBookingRow> shown = all.stream()
-                .filter(r -> wanted == null || r.status().equals(wanted))
-                .filter(matches(q))
-                .sorted(LIST_ORDER)
-                .toList();
+        BookingTotals totals = new BookingTotals(count(open, "upcoming"), count(open, "waiting"),
+                count(open, "placed"), count(open, "noshow"), count(open, "cancelled"), closed.size());
+        List<AdminBookingRow> shown = CLOSED.equals(wanted)
+                ? closed.stream()
+                        .filter(matches(q))
+                        .sorted(Comparator.<AdminBookingRow, Instant>comparing(r -> closedAt.get(r.member().id()))
+                                .reversed()
+                                .thenComparing(r -> r.member().name(), String.CASE_INSENSITIVE_ORDER))
+                        .toList()
+                : open.stream()
+                        .filter(r -> wanted == null || r.status().equals(wanted))
+                        .filter(matches(q))
+                        .sorted(LIST_ORDER)
+                        .toList();
         return new AdminBookingList(totals, shown);
     }
 
@@ -79,7 +101,8 @@ public class AdminBookingService {
         return status;
     }
 
-    // The name contains q, ignoring case; or, when q has digits, the phone contains those digits.
+    // The name or the email contains q, ignoring case (emails are stored lowercase); or, when q has digits,
+    // the phone contains those digits.
     private static Predicate<AdminBookingRow> matches(String q) {
         if (q == null || q.isBlank()) {
             return r -> true;
@@ -87,6 +110,7 @@ public class AdminBookingService {
         String text = q.trim().toLowerCase(Locale.ROOT);
         String digits = q.replaceAll("\\D", "");
         return r -> r.member().name().toLowerCase(Locale.ROOT).contains(text)
+                || (r.member().email() != null && r.member().email().contains(text))
                 || (!digits.isEmpty() && r.member().phone() != null && r.member().phone().contains(digits));
     }
 

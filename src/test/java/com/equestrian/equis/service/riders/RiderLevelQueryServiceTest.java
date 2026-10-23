@@ -275,9 +275,8 @@ public class RiderLevelQueryServiceTest {
 
     // The change row only; the rider's level is set by the test's rider helper.
     private void change(Rider rider, short from, short to, String reason, Trainer by, Instant at) {
-        LevelChange change = levelChangeRepository.saveAndFlush(LevelChange.of(rider,
-                levelRepository.getReferenceById(from), levelRepository.getReferenceById(to), reason, by));
-        jdbc.update("UPDATE level_change SET created_at = ? WHERE id = ?", Timestamp.from(at), change.getId());
+        levelChangeRepository.saveAndFlush(LevelChange.of(rider,
+                levelRepository.getReferenceById(from), levelRepository.getReferenceById(to), reason, by, at));
     }
 
     private void setCreatedAt(Rider rider, Instant at) {

@@ -448,7 +448,7 @@ public class AdminBookingChangeApiTest {
     @ParameterizedTest
     @ValueSource(strings = {"upcoming", "waiting", "noshow", "cancelled", "placed"})
     void theChecksAgreeWithBookingActions(String shown) throws Exception {
-        Set<BookingAction> allowed = BookingActions.allowed(shown, true);
+        Set<BookingAction> allowed = BookingActions.allowed(shown, true, false);
         UUID open = slot(SAT_24, TEN, 6);
 
         UUID forSlot = bookingShown(shown, "Slot Change");

@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class LevelChangeRepositoryTest {
     private static final short LEVEL_3 = 3;
     private static final short LEVEL_4 = 4;
+    private static final Instant AT = Instant.parse("2026-10-15T07:00:00Z");
 
     @Container
     @ServiceConnection
@@ -71,7 +72,7 @@ public class LevelChangeRepositoryTest {
     @Test
     void savesAndReadsBackAChange() {
         LevelChange saved = levelChangeRepository.saveAndFlush(
-                LevelChange.of(sara, level(LEVEL_3), level(LEVEL_4), "  Ready for canter ", ahmed));
+                LevelChange.of(sara, level(LEVEL_3), level(LEVEL_4), "  Ready for canter ", ahmed, AT));
         entityManager.clear();
 
         LevelChange read = levelChangeRepository.findById(saved.getId()).orElseThrow();
@@ -123,11 +124,11 @@ public class LevelChangeRepositoryTest {
     @Test
     void findsARidersHistoryNewestFirstWithTheTrainerInOneStatement() {
         LevelChange up = levelChangeRepository.saveAndFlush(
-                LevelChange.of(sara, level(LEVEL_3), level(LEVEL_4), "Ready for canter", ahmed));
+                LevelChange.of(sara, level(LEVEL_3), level(LEVEL_4), "Ready for canter", ahmed, AT));
         LevelChange down = levelChangeRepository.saveAndFlush(
-                LevelChange.of(sara, level(LEVEL_4), level(LEVEL_3), "Lost confidence", ahmed));
+                LevelChange.of(sara, level(LEVEL_4), level(LEVEL_3), "Lost confidence", ahmed, AT));
         levelChangeRepository.saveAndFlush(
-                LevelChange.of(omar, level(LEVEL_3), level(LEVEL_4), "Ready for canter", ahmed));
+                LevelChange.of(omar, level(LEVEL_3), level(LEVEL_4), "Ready for canter", ahmed, AT));
         setCreatedAt(up, "2026-10-15T09:00:00Z");
         setCreatedAt(down, "2026-11-02T09:00:00Z");
         entityManager.clear();

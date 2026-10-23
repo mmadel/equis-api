@@ -125,6 +125,14 @@ public class AssessmentRules {
         return trainer;
     }
 
+    // W2's row actions on a closed person: only edit is allowed until they are reopened.
+    public void requireNotClosed(Member member) {
+        if (member.isClosed()) {
+            throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.MEMBER_CLOSED,
+                    "This person is closed. Reopen them first.");
+        }
+    }
+
     // For booking a member who is already registered.
     public void requireCanBook(Member member) {
         if (riders.existsByMemberId(member.getId())) {

@@ -172,8 +172,6 @@ public class LevelChangeFlowTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("level_at_bottom"));
         for (int from = 1; from <= 5; from++) {
-            // A minute apart, so the history has a clear newest-first order; at the same instant it has none.
-            CLOCK.advance(Duration.ofMinutes(1));
             changeLevel(hana.getId(), ahmed, "up", from)
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.fromLevelId").value(from))
@@ -371,12 +369,16 @@ public class LevelChangeFlowTest {
         }
     }
 
+    // The first change of a test is at NOW; the clock then moves a second, so the history (newest first, by the
+    // time of the change) has a clear order. At one instant it has none.
     private ResultActions changeLevel(UUID riderId, Trainer by, String direction, int fromLevelId) throws Exception {
-        return mvc.perform(asTrainer(post("/me/riders/" + riderId + "/level-change"), by)
+        ResultActions result = mvc.perform(asTrainer(post("/me/riders/" + riderId + "/level-change"), by)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         { "direction": "%s", "fromLevelId": %d, "reason": "Assessed in the ring" }"""
                         .formatted(direction, fromLevelId)));
+        CLOCK.advance(Duration.ofSeconds(1));
+        return result;
     }
 
     private ResultActions levelHistory(UUID riderId, Trainer by) throws Exception {
