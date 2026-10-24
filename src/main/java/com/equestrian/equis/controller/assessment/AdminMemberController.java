@@ -5,6 +5,7 @@ import com.equestrian.equis.dto.assessment.AdminNewMemberRequest;
 import com.equestrian.equis.dto.assessment.UpdateMemberRequest;
 import com.equestrian.equis.service.assessment.AdminBookingRowAssembler;
 import com.equestrian.equis.service.assessment.MemberBookingService;
+import com.equestrian.equis.service.assessment.MemberCloseService;
 import com.equestrian.equis.service.assessment.MemberDetailsService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,12 +25,14 @@ import java.util.UUID;
 public class AdminMemberController {
     private final MemberBookingService booking;
     private final MemberDetailsService details;
+    private final MemberCloseService closing;
     private final AdminBookingRowAssembler rows;
 
     public AdminMemberController(MemberBookingService booking, MemberDetailsService details,
-                                 AdminBookingRowAssembler rows) {
+                                 MemberCloseService closing, AdminBookingRowAssembler rows) {
         this.booking = booking;
         this.details = details;
+        this.closing = closing;
         this.rows = rows;
     }
 
@@ -45,5 +48,17 @@ public class AdminMemberController {
     @PatchMapping("/{id}")
     AdminBookingRow update(@PathVariable UUID id, @Valid @RequestBody UpdateMemberRequest req) {
         return details.update(id, req);
+    }
+
+    // Hides a person who has nothing booked from the active lists; nothing is deleted. Answers with their W2 row.
+    @PostMapping("/{id}/close")
+    AdminBookingRow close(@PathVariable UUID id) {
+        return closing.close(id);
+    }
+
+    // Brings a closed person back with their last assessment's status. Answers with their W2 row.
+    @PostMapping("/{id}/reopen")
+    AdminBookingRow reopen(@PathVariable UUID id) {
+        return closing.reopen(id);
     }
 }

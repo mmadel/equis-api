@@ -18,9 +18,9 @@ class BookingActionsTest {
         assertThat(BookingActions.allowed("waiting", false, false)).containsExactly(
                 BookingAction.CHANGE_ASSESSOR, BookingAction.EDIT);
         assertThat(BookingActions.allowed("noshow", true, false)).containsExactly(
-                BookingAction.REBOOK, BookingAction.CHANGE_ASSESSOR, BookingAction.EDIT);
+                BookingAction.REBOOK, BookingAction.CHANGE_ASSESSOR, BookingAction.CLOSE, BookingAction.EDIT);
         assertThat(BookingActions.allowed("cancelled", true, false)).containsExactly(
-                BookingAction.REBOOK, BookingAction.CHANGE_ASSESSOR, BookingAction.EDIT);
+                BookingAction.REBOOK, BookingAction.CHANGE_ASSESSOR, BookingAction.CLOSE, BookingAction.EDIT);
         assertThat(BookingActions.allowed("placed", true, false)).containsExactly(BookingAction.VIEW_RIDER);
     }
 
@@ -32,12 +32,28 @@ class BookingActionsTest {
         assertThat(BookingActions.allowed(status, false, false)).contains(BookingAction.EDIT);
     }
 
-    // E11 · Admin sees all applicants: a closed person's row only allows edit.
+    // E11 · Admin closes or reopens a person: a closed person's row only allows reopen and edit.
     @ParameterizedTest
     @ValueSource(strings = {"upcoming", "waiting", "noshow", "cancelled", "placed"})
-    void aClosedPersonsRowOnlyAllowsEdit(String status) {
-        assertThat(BookingActions.allowed(status, true, true)).containsExactly(BookingAction.EDIT);
-        assertThat(BookingActions.allowed(status, false, true)).containsExactly(BookingAction.EDIT);
+    void aClosedPersonsRowOnlyAllowsReopenAndEdit(String status) {
+        assertThat(BookingActions.allowed(status, true, true)).containsExactly(BookingAction.REOPEN, BookingAction.EDIT);
+        assertThat(BookingActions.allowed(status, false, true)).containsExactly(BookingAction.REOPEN, BookingAction.EDIT);
+    }
+
+    // E11 · Admin closes or reopens a person: close only once nothing is booked, and never a rider.
+    @Test
+    void onlyANoShowOrCancelledRowCanBeClosed() {
+        assertThat(BookingActions.allowed("noshow", false, false)).contains(BookingAction.CLOSE);
+        assertThat(BookingActions.allowed("cancelled", false, false)).contains(BookingAction.CLOSE);
+        for (String status : new String[] {"upcoming", "waiting", "placed"}) {
+            assertThat(BookingActions.allowed(status, true, false)).as(status).doesNotContain(BookingAction.CLOSE);
+        }
+        assertThat(BookingActions.allowed("noshow", true, true)).doesNotContain(BookingAction.CLOSE);
+        for (String status : new String[] {"upcoming", "waiting", "noshow", "cancelled", "placed"}) {
+            assertThat(BookingActions.allowed(status, true, false)).as(status).doesNotContain(BookingAction.REOPEN);
+        }
+        assertThat(BookingAction.CLOSE.value()).isEqualTo("close");
+        assertThat(BookingAction.REOPEN.value()).isEqualTo("reopen");
     }
 
     // E11 · Admin manages an assessment: cancel only before the slot starts, and not for a closed person.

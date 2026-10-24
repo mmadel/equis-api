@@ -133,8 +133,10 @@ public class AssessmentRules {
         }
     }
 
-    // For booking a member who is already registered.
+    // For booking a member who is already registered. Call it while the member row is locked, so a close can't
+    // slip in between these checks and the booking.
     public void requireCanBook(Member member) {
+        requireNotClosed(member);
         if (riders.existsByMemberId(member.getId())) {
             throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.MEMBER_PLACED, "This member is already a rider.");
         }
