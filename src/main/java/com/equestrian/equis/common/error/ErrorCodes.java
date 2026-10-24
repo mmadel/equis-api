@@ -11,6 +11,9 @@ public class ErrorCodes {
     public static final String INVALID_STATUS     = "invalid_status";     // 400 field error
     public static final String INVALID_LEVEL      = "invalid_level";      // 400 field error
     public static final String INVALID_VALUE      = "invalid_value";      // 400 field error: wrong type, e.g. not a UUID
+    public static final String INVALID_REASON     = "invalid_reason";     // 400 field error
+    public static final String REASON_TEXT_REQUIRED    = "reason_text_required";    // 400 field error
+    public static final String REASON_TEXT_NOT_ALLOWED = "reason_text_not_allowed"; // 400 field error
     public static final String NOTHING_TO_CHANGE  = "nothing_to_change";  // 400 field error
     public static final String TRAINER_OR_RESET_REQUIRED = "trainer_or_reset_required"; // 400 field error
     public static final String UNAUTHORIZED       = "unauthorized";          // 401
@@ -48,6 +51,7 @@ public class ErrorCodes {
     public static final String BOOKING_CANCELLED       = "booking_cancelled";       // 409
     public static final String RESULT_ALREADY_RECORDED = "result_already_recorded"; // 409
     public static final String BOOKING_CLOSED     = "booking_closed";     // 409
+    public static final String BOOKING_NOT_UPCOMING = "booking_not_upcoming"; // 409
     public static final String BOOKING_SUPERSEDED = "booking_superseded"; // 409
     public static final String SLOT_STARTED       = "slot_started";       // 409
     public static final String TRAINER_NOT_ACTIVE = "trainer_not_active"; // 409

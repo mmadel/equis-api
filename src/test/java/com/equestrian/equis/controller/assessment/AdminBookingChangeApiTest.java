@@ -55,12 +55,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// PATCH /admin/bookings/{id} (W2: reschedule, rebook, change assessor) over HTTP against a real database.
+// PATCH /admin/bookings/{id} (W2: reschedule, rebook, change assessor) and POST /admin/bookings/{id}/cancel
+// over HTTP against a real database.
 // Not @Transactional, so the race cases run in real, concurrent transactions. The container belongs to this class.
 @SpringBootTest(properties = {
         "spring.flyway.placeholders.adminEmail=booking-changes-admin@example.com",
@@ -484,6 +487,188 @@ public class AdminBookingChangeApiTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("forbidden"));
         assertThat(assessorOf(sara)).isEqualTo(ahmed);
+    }
+
+    // ---- POST /admin/bookings/{id}/cancel (E11 · BE · Admin manages an assessment) ----
+
+    // Cancel case 1
+    @Test
+    void cancelAnUpcomingBookingFreesItsSeatAndOffersRebook() throws Exception {
+        UUID saturday = slot(SAT_17, TEN, 6);
+        UUID sara = booking(member("Sara Ali"), saturday, ahmed, "upcoming");
+        booking(member("Laila Hassan"), saturday, ahmed, "upcoming");
+
+        cancel(sara, "{ \"reason\": \"person_unwell\" }")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(sara.toString()))
+                .andExpect(jsonPath("$.status").value("cancelled"))
+                .andExpect(jsonPath("$.cancelReason").value("person_unwell"))
+                .andExpect(jsonPath("$.cancelReasonText").isEmpty())
+                .andExpect(jsonPath("$.memberStatus").value("pending_assessment"))
+                .andExpect(jsonPath("$.actions", contains("rebook", "change_assessor", "edit")));
+
+        assertThat(statusOf(sara)).isEqualTo("cancelled");
+        assertThat(jdbc.queryForObject("select cancel_reason from assessment_booking where id = ?", String.class, sara))
+                .isEqualTo("person_unwell");
+        assertThat(jdbc.queryForObject("select cancelled_at from assessment_booking where id = ?", Timestamp.class,
+                sara).toInstant()).isEqualTo(FRIDAY_NOON);
+        assertThat(upcomingIn(saturday)).isEqualTo(1);
+    }
+
+    // Cancel case 2
+    @Test
+    void theReasonRulesAreChecked() throws Exception {
+        UUID saturday = slot(SAT_17, TEN, 6);
+        UUID other = booking(member("Omar Other"), saturday, ahmed, "upcoming");
+        UUID sara = booking(member("Sara Ali"), saturday, ahmed, "upcoming");
+
+        cancel(other, "{ \"reason\": \"other\", \"reasonText\": \"  Family travel \" }")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cancelReason").value("other"))
+                .andExpect(jsonPath("$.cancelReasonText").value("Family travel"));
+
+        cancel(sara, "{ \"reason\": \"other\" }")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("validation_failed"))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("reasonText"))
+                .andExpect(jsonPath("$.fieldErrors[0].message").value("reason_text_required"));
+        cancel(sara, "{ \"reason\": \"other\", \"reasonText\": \"   \" }")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[0].message").value("reason_text_required"));
+        cancel(sara, "{ \"reason\": \"weather\", \"reasonText\": \"Rain\" }")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("reasonText"))
+                .andExpect(jsonPath("$.fieldErrors[0].message").value("reason_text_not_allowed"));
+        cancel(sara, "{ \"reason\": \"other\", \"reasonText\": \"%s\" }".formatted("x".repeat(201)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("validation_failed"))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("reasonText"));
+        cancel(sara, "{ \"reason\": \"sick\" }")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("reason"))
+                .andExpect(jsonPath("$.fieldErrors[0].message").value("invalid_reason"));
+        cancel(sara, "{}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("reason"));
+
+        assertThat(statusOf(sara)).isEqualTo("upcoming");
+        assertThat(upcomingIn(saturday)).isEqualTo(1);
+    }
+
+    // Cancel case 3
+    @Test
+    void onlyAnUpcomingBookingCanBeCancelled() throws Exception {
+        String body = "{ \"reason\": \"weather\" }";
+        UUID waiting = bookingShown("waiting", "Waleed Waiting");
+        UUID placed = bookingShown("placed", "Pakinam Placed");
+        UUID noShow = bookingShown("noshow", "Nader Noshow");
+        UUID cancelled = bookingShown("cancelled", "Camelia Cancelled");
+
+        cancel(waiting, body)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("slot_started"))
+                .andExpect(jsonPath("$.detail").value("This assessment has started. Record a result or no-show first."));
+        cancel(placed, body)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("booking_closed"));
+        cancel(noShow, body)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("booking_not_upcoming"));
+        cancel(cancelled, body)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("booking_not_upcoming"));
+
+        assertThat(statusOf(waiting)).isEqualTo("upcoming");
+        assertThat(statusOf(placed)).isEqualTo("placed");
+        assertThat(statusOf(noShow)).isEqualTo("noshow");
+        assertThat(jdbc.queryForObject("select cancel_reason from assessment_booking where id = ?", String.class,
+                cancelled)).isNull();
+    }
+
+    // Cancel case 3b: a closed person's row only allows edit.
+    @Test
+    void aClosedPersonsBookingCannotBeCancelled() throws Exception {
+        UUID closed = member("Cora Closed");
+        jdbc.update("update member set closed_at = ? where id = ?", Timestamp.from(FRIDAY_NOON), closed);
+        UUID booking = booking(closed, slot(SAT_17, TEN, 6), ahmed, "upcoming");
+
+        cancel(booking, "{ \"reason\": \"weather\" }")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("member_closed"));
+        assertThat(statusOf(booking)).isEqualTo("upcoming");
+    }
+
+    // Cancel case 4
+    @Test
+    void cancelAnUnknownBookingOrAsATrainerIsRefused() throws Exception {
+        UUID sara = booking(member("Sara Ali"), slot(SAT_17, TEN, 6), ahmed, "upcoming");
+        String body = "{ \"reason\": \"weather\" }";
+
+        cancel(UUID.randomUUID(), body)
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("booking_not_found"));
+        mvc.perform(asTrainer(post(PATH + sara + "/cancel"), ahmed)
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("forbidden"));
+        mvc.perform(post(PATH + sara + "/cancel").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isUnauthorized());
+
+        assertThat(statusOf(sara)).isEqualTo("upcoming");
+    }
+
+    // Cancel case 5
+    @Test
+    void afterACancelTheAdminRebooksAndTheCancelledRowKeepsItsReason() throws Exception {
+        UUID sara = member("Sara Ali");
+        UUID cancelled = booking(sara, slot(SAT_17, TEN, 6), ahmed, "upcoming");
+        UUID sat24 = slot(SAT_24, TEN, 6);
+        cancel(cancelled, "{ \"reason\": \"trainer_unavailable\" }").andExpect(status().isOk());
+
+        String fresh = id(change(cancelled, "{ \"slotId\": \"%s\" }".formatted(sat24))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("upcoming"))
+                .andExpect(jsonPath("$.slot.id").value(sat24.toString()))
+                .andExpect(jsonPath("$.actions", hasItem("cancel"))));
+
+        assertThat(fresh).isNotEqualTo(cancelled.toString());
+        assertThat(statusOf(cancelled)).isEqualTo("cancelled");
+        assertThat(jdbc.queryForObject("select cancel_reason from assessment_booking where id = ?", String.class,
+                cancelled)).isEqualTo("trainer_unavailable");
+        assertThat(bookingsOf(sara)).isEqualTo(2);
+        assertThat(upcomingIn(sat24)).isEqualTo(1);
+    }
+
+    // Cancel case 6: at slot start the booking is waiting, so the cancel can never win; whichever order the
+    // lock gives them, the cancel gets its 409 and the result stands.
+    @Test
+    void cancellingWhileTheAssessorRecordsAtSlotStartIsSerialised() throws Exception {
+        CLOCK.set(cairo(2026, 10, 17, 10, 0));
+        UUID booking = booking(member("Sara Ali"), slot(SAT_17, TEN, 6), ahmed, "upcoming");
+
+        List<String> outcomes = race(
+                () -> recordAttended(booking, ahmed).andReturn(),
+                () -> cancel(booking, "{ \"reason\": \"weather\" }").andReturn());
+
+        assertThat(outcomes.get(0)).isEqualTo("ok");
+        assertThat(outcomes.get(1)).isIn("slot_started", "booking_closed");
+        assertThat(statusOf(booking)).isEqualTo("placed");
+    }
+
+    // Cancel case 7: the service accepts exactly what BookingActions offers on W2.
+    @ParameterizedTest
+    @ValueSource(strings = {"upcoming", "waiting", "noshow", "cancelled", "placed"})
+    void theCancelCheckAgreesWithBookingActions(String shown) throws Exception {
+        boolean offered = BookingActions.allowed(shown, true, false).contains(BookingAction.CANCEL);
+        UUID booking = bookingShown(shown, "Cancel Check");
+
+        int status = cancel(booking, "{ \"reason\": \"weather\" }").andReturn().getResponse().getStatus();
+        assertThat(status == 200).as("cancel on %s", shown).isEqualTo(offered);
+    }
+
+    private ResultActions cancel(UUID bookingId, String body) throws Exception {
+        return mvc.perform(asAdmin(post(PATH + bookingId + "/cancel"))
+                .contentType(MediaType.APPLICATION_JSON).content(body));
     }
 
     // A booking W2 shows with that status, assessed by Ahmed, for a new member.

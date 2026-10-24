@@ -216,7 +216,8 @@ public class AdminBookingApiTest {
         onePerStatus();
 
         list()
-                .andExpect(jsonPath(row("Sara Ali", "actions") + "[*]", contains("reschedule", "change_assessor", "edit")))
+                .andExpect(jsonPath(row("Sara Ali", "actions") + "[*]",
+                        contains("reschedule", "cancel", "change_assessor", "edit")))
                 .andExpect(jsonPath(row("Waleed Waiting", "actions") + "[*]", contains("change_assessor", "remind", "edit")))
                 .andExpect(jsonPath(row("Pakinam Placed", "actions") + "[*]", contains("view_rider")))
                 .andExpect(jsonPath(row("Nader Noshow", "actions") + "[*]", contains("rebook", "change_assessor", "edit")))
