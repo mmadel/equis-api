@@ -10,6 +10,8 @@ public enum BookingAction {
     CHANGE_ASSESSOR,
     REMIND,
     VIEW_RIDER,
+    CLOSE,
+    REOPEN,
     EDIT;
 
     // The form sent to the console: "reschedule", "change_assessor", ...

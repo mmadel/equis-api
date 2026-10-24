@@ -113,6 +113,19 @@ public class AssessmentRulesTest {
         });
     }
 
+    // E11 · Admin closes or reopens a person, case 6: the backstop behind W2's row actions.
+    @Test
+    void aClosedMemberCannotBook() {
+        Member member = member("01011111111");
+        AssessmentBooking old = book(member, sara);
+        old.recordNoShow(null, start);
+        bookingRepository.saveAndFlush(old);
+        member.close(start);
+        memberRepository.saveAndFlush(member);
+
+        assertRefused(() -> rules.requireCanBook(member), HttpStatus.CONFLICT, ErrorCodes.MEMBER_CLOSED);
+    }
+
     @Test
     void memberAlreadyPlacedAsARiderCannotBook() {
         Member member = member("01011111111");

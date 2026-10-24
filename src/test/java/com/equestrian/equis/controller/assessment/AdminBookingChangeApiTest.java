@@ -505,7 +505,7 @@ public class AdminBookingChangeApiTest {
                 .andExpect(jsonPath("$.cancelReason").value("person_unwell"))
                 .andExpect(jsonPath("$.cancelReasonText").isEmpty())
                 .andExpect(jsonPath("$.memberStatus").value("pending_assessment"))
-                .andExpect(jsonPath("$.actions", contains("rebook", "change_assessor", "edit")));
+                .andExpect(jsonPath("$.actions", contains("rebook", "change_assessor", "close", "edit")));
 
         assertThat(statusOf(sara)).isEqualTo("cancelled");
         assertThat(jdbc.queryForObject("select cancel_reason from assessment_booking where id = ?", String.class, sara))

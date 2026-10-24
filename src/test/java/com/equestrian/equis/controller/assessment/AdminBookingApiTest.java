@@ -220,9 +220,9 @@ public class AdminBookingApiTest {
                         contains("reschedule", "cancel", "change_assessor", "edit")))
                 .andExpect(jsonPath(row("Waleed Waiting", "actions") + "[*]", contains("change_assessor", "remind", "edit")))
                 .andExpect(jsonPath(row("Pakinam Placed", "actions") + "[*]", contains("view_rider")))
-                .andExpect(jsonPath(row("Nader Noshow", "actions") + "[*]", contains("rebook", "change_assessor", "edit")))
+                .andExpect(jsonPath(row("Nader Noshow", "actions") + "[*]", contains("rebook", "change_assessor", "close", "edit")))
                 .andExpect(jsonPath(row("Camelia Cancelled", "actions") + "[*]",
-                        contains("rebook", "change_assessor", "edit")));
+                        contains("rebook", "change_assessor", "close", "edit")));
     }
 
     // Case 9
@@ -354,7 +354,7 @@ public class AdminBookingApiTest {
 
     // Case 15
     @Test
-    void theClosedTabListsOnlyClosedPeopleWithOnlyEdit() throws Exception {
+    void theClosedTabListsOnlyClosedPeopleWithReopenAndEdit() throws Exception {
         onePerStatus();
         UUID omar = member("Omar Closed", "01277778888");
         booking(omar, slot(LocalDate.of(2026, 10, 13), LocalTime.of(10, 0)), ahmed, "noshow", null,
@@ -367,7 +367,7 @@ public class AdminBookingApiTest {
                 .andExpect(jsonPath("$.bookings[0].member.name").value("Omar Closed"))
                 .andExpect(jsonPath("$.bookings[0].memberStatus").value("closed"))
                 .andExpect(jsonPath("$.bookings[0].status").value("noshow"))
-                .andExpect(jsonPath("$.bookings[0].actions", contains("edit")))
+                .andExpect(jsonPath("$.bookings[0].actions", contains("reopen", "edit")))
                 .andExpect(jsonPath("$.totals.closed").value(1))
                 .andExpect(jsonPath("$.totals.noshow").value(1));
     }

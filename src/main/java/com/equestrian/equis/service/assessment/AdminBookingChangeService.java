@@ -12,6 +12,8 @@ import com.equestrian.equis.entity.assessment.BookingStatus;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -36,22 +38,24 @@ public class AdminBookingChangeService {
     private final SessionRepository sessions;
     private final AssessmentRules rules;
     private final AdminBookingRowAssembler rows;
+    private final EntityManager entityManager;
     private final Clock clock;
     private final ZoneId schoolZone;
 
     public AdminBookingChangeService(AssessmentBookingRepository bookings, SessionRepository sessions,
-                                     AssessmentRules rules, AdminBookingRowAssembler rows,
+                                     AssessmentRules rules, AdminBookingRowAssembler rows, EntityManager entityManager,
                                      Clock clock, @Value("${app.time-zone}") ZoneId schoolZone) {
         this.bookings = bookings;
         this.sessions = sessions;
         this.rules = rules;
         this.rows = rows;
+        this.entityManager = entityManager;
         this.clock = clock;
         this.schoolZone = schoolZone;
     }
 
-    // Lock order: the booking, then the target slot. Recording a result locks only the booking and booking a new
-    // member locks only the slot, so no lock cycle is possible. Every refusal is thrown before anything is flushed,
+    // Lock order: the booking, the target slot, then (rebook only) the member. Recording a result locks only the
+    // booking, booking a new member only the slot and closing a person only the member, so no lock cycle is possible. Every refusal is thrown before anything is flushed,
     // or rolls the transaction back, so a failed change leaves the data as it was.
     @Transactional
     public AdminBookingRow change(UUID bookingId, ChangeBookingRequest req) {
@@ -96,6 +100,9 @@ public class AdminBookingChangeService {
 
         // Rebook a no-show or cancelled booking.
         Session slot = lockBookableSlot(req.slotId(), now);
+        // Lock the member and reload it, so a close that committed meanwhile is seen. The member is already loaded
+        // here, so MemberRepository.findByIdForUpdate would lock the row but hand back the old closed state.
+        entityManager.refresh(b.getMember(), LockModeType.PESSIMISTIC_WRITE);
         rules.requireCanBook(b.getMember());
         Trainer assessor = newAssessor != null ? newAssessor : rules.requireActive(b.getAssessor());
         // uq_assessment_booking_active_member is only a backstop behind requireCanBook; if it fires it is the
