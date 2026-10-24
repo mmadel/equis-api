@@ -299,6 +299,17 @@ public class AdminMemberApiTest {
         assertThat(count("member")).isZero();
     }
 
+    // The trainer walk-in endpoint (A1) is deleted: no handler answers it, so it is not the old 410.
+    @Test
+    void theTrainerWalkInEndpointIsGone() throws Exception {
+        String body = json("Sara Ali", "01011112222", "sara@mail.com", slot(SAT_24, TEN, 4), ahmed);
+
+        mvc.perform(asTrainer(post("/me/members"), ahmed)
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(result -> assertThat(result.getResponse().getStatus()).isIn(404, 405));
+        assertThat(count("member")).isZero();
+    }
+
     // ---- helpers
 
     private ResultActions create(String name, String phone, String email, UUID slotId, UUID assessorId)
