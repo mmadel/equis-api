@@ -8,11 +8,13 @@ import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
+import com.equestrian.equis.dto.payments.BalanceDto;
 import com.equestrian.equis.dto.riders.LevelHistoryEntry;
 import com.equestrian.equis.dto.riders.MyRiderDto;
 import com.equestrian.equis.dto.riders.RiderLevelDto;
 import com.equestrian.equis.dto.riders.UpcomingSeat;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
+import com.equestrian.equis.entity.payments.RiderPaymentStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.riders.LevelChangeService;
@@ -76,8 +78,10 @@ public class MyRidersControllerTest {
         when(query.myRiders(TRAINER_ID)).thenReturn(List.of(
                 new MyRiderDto(NOUR_ID, "Nour Saleh", "NS", 2, LocalDate.of(2026, 9, 20),
                         new UpcomingSeat(SESSION_ID, LocalDate.of(2026, 10, 17), LocalTime.of(10, 0),
-                                LocalTime.of(11, 0))),
-                new MyRiderDto(OMAR_ID, "Omar Ali", "OA", 3, LocalDate.of(2026, 10, 1), null)));
+                                LocalTime.of(11, 0)),
+                        new BalanceDto(8, RiderPaymentStatus.ACTIVE, LocalDate.of(2026, 12, 31))),
+                new MyRiderDto(OMAR_ID, "Omar Ali", "OA", 3, LocalDate.of(2026, 10, 1), null,
+                        new BalanceDto(0, RiderPaymentStatus.AWAITING_PAYMENT, null))));
 
         mvc.perform(trainer(get(PATH)))
                 .andExpect(status().isOk())
@@ -93,6 +97,14 @@ public class MyRidersControllerTest {
                 .andExpect(jsonPath("$[0].nextSession.start").value("10:00"))
                 .andExpect(jsonPath("$[0].nextSession.end").value("11:00"))
                 .andExpect(jsonPath("$[0].phone").doesNotExist())
+                .andExpect(jsonPath("$[0].balance.sessionsLeft").value(8))
+                .andExpect(jsonPath("$[0].balance.status").value("active"))
+                .andExpect(jsonPath("$[0].balance.nextExpiry").value("2026-12-31"))
+                .andExpect(jsonPath("$[0].balance.length()").value(3))
+                .andExpect(jsonPath("$[1].balance.sessionsLeft").value(0))
+                .andExpect(jsonPath("$[1].balance.status").value("awaiting_payment"))
+                .andExpect(jsonPath("$[1].balance.nextExpiry").hasJsonPath())
+                .andExpect(jsonPath("$[1].balance.nextExpiry").isEmpty())
                 // Present and null, not left out.
                 .andExpect(jsonPath("$[1].nextSession").hasJsonPath())
                 .andExpect(jsonPath("$[1].nextSession").isEmpty());

@@ -1,18 +1,27 @@
 package com.equestrian.equis.service.riders;
 
+import com.equestrian.equis.dto.payments.BalanceDto;
+import com.equestrian.equis.dto.riders.AdminRiderRow;
 import com.equestrian.equis.dto.riders.MyRiderDto;
 import com.equestrian.equis.dto.riders.UpcomingSeat;
+import com.equestrian.equis.entity.accounts.AdminAccount;
 import com.equestrian.equis.entity.accounts.Trainer;
+import com.equestrian.equis.entity.payments.Payment;
+import com.equestrian.equis.entity.payments.PaymentMethod;
+import com.equestrian.equis.entity.payments.RiderPaymentStatus;
 import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.entity.sessions.Assignment;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
+import com.equestrian.equis.repository.accounts.AdminAccountRepository;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.levels.LevelRepository;
+import com.equestrian.equis.repository.payments.PaymentRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.repository.sessions.AssignmentRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.service.payments.RiderBalanceService;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,11 +39,13 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -46,16 +57,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
-@Import(MyRidersQueryService.class)
+// AdminRiderRowAssembler builds the W3 rows, so a test can check both screens show the same balance.
+@Import({MyRidersQueryService.class, RiderBalanceService.class, AdminRiderRowAssembler.class})
 public class MyRidersQueryServiceTest {
     private static final short LEVEL_2 = 2;
     private static final short LEVEL_3 = 3;
     private static final short LEVEL_5 = 5;
     private static final ZoneId CAIRO = ZoneId.of("Africa/Cairo");
-    // The clock is fixed on Thursday 15 Oct 2026 at 10:00 school time.
-    private static final Instant NOW = ZonedDateTime.of(2026, 10, 15, 10, 0, 0, 0, CAIRO).toInstant();
-    private static final LocalDate TODAY = LocalDate.of(2026, 10, 15);
-    private static final LocalDate SATURDAY = LocalDate.of(2026, 10, 17);
+    // The clock is fixed on Tuesday 3 Nov 2026 at 10:15 school time.
+    private static final Instant NOW = ZonedDateTime.of(2026, 11, 3, 10, 15, 0, 0, CAIRO).toInstant();
+    private static final LocalDate TODAY = LocalDate.of(2026, 11, 3);
+    private static final LocalDate SATURDAY = LocalDate.of(2026, 11, 7);
+    private static final Instant RECORDED_AT = Instant.parse("2026-11-01T08:00:00Z");
+    private static final YearMonth NOV = YearMonth.of(2026, 11);
+    private static final YearMonth DEC = YearMonth.of(2026, 12);
 
     @Container
     @ServiceConnection
@@ -63,6 +78,12 @@ public class MyRidersQueryServiceTest {
 
     @Autowired
     MyRidersQueryService service;
+    @Autowired
+    AdminRiderRowAssembler adminRows;
+    @Autowired
+    PaymentRepository paymentRepository;
+    @Autowired
+    AdminAccountRepository adminAccountRepository;
     @Autowired
     AssignmentRepository assignmentRepository;
     @Autowired
@@ -82,9 +103,11 @@ public class MyRidersQueryServiceTest {
 
     Trainer ahmed;
     Trainer mona;
+    AdminAccount admin;
 
     @BeforeEach
     void setUp() {
+        admin = adminAccountRepository.saveAndFlush(admin());
         ahmed = trainer("Ahmed Samir", "01999990021", "my-riders-test-ahmed@example.com");
         mona = trainer("Mona Fathy", "01999990022", "my-riders-test-mona@example.com");
     }
@@ -183,7 +206,7 @@ public class MyRidersQueryServiceTest {
     }
 
     @Test
-    void twentyRidersWithSeatsTakeTwoQueries() {
+    void twentyRidersWithSeatsAndPaymentsTakeFourQueries() {
         // Two groups of ten, each with a seat today and one on Saturday (a session holds at most 12).
         List<Session> today = List.of(session(LEVEL_3, TODAY, LocalTime.of(17, 0)),
                 session(LEVEL_3, TODAY, LocalTime.of(18, 0)));
@@ -193,6 +216,7 @@ public class MyRidersQueryServiceTest {
             Rider rider = rider("Rider " + (char) ('A' + i), LEVEL_3, ahmed);
             assign(today.get(i / 10), rider, ahmed);
             assign(saturday.get(i / 10), rider, ahmed);
+            pay(rider, NOV, 1, 8);
         }
         em.clear();
 
@@ -205,8 +229,85 @@ public class MyRidersQueryServiceTest {
         for (int i = 0; i < 20; i++) {
             assertThat(result.get(i).levelId()).isEqualTo(3);
             assertThat(result.get(i).nextSession().sessionId()).isEqualTo(today.get(i / 10).getId());
+            assertThat(result.get(i).balance())
+                    .isEqualTo(new BalanceDto(8, RiderPaymentStatus.ACTIVE, LocalDate.of(2026, 12, 31)));
         }
-        assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
+        // Riders, seats, valid payments, used sessions.
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(4);
+    }
+
+    // Case 1
+    @Test
+    void aRiderWithANovemberPackageHasItsSessionsLeft() {
+        Rider sara = rider("Sara Mahmoud", LEVEL_3, ahmed);
+        pay(sara, NOV, 1, 8);
+
+        assertThat(service.myRiders(ahmed.getId()).getFirst().balance())
+                .isEqualTo(new BalanceDto(8, RiderPaymentStatus.ACTIVE, LocalDate.of(2026, 12, 31)));
+    }
+
+    // Case 2
+    @Test
+    void aRiderWhoHasNotPaidIsAwaitingPayment() {
+        rider("Omar Ali", LEVEL_3, ahmed);
+
+        assertThat(service.myRiders(ahmed.getId()).getFirst().balance())
+                .isEqualTo(new BalanceDto(0, RiderPaymentStatus.AWAITING_PAYMENT, null));
+    }
+
+    // Case 3
+    @Test
+    void aPackageThatStartsNextMonthDoesNotCountYet() {
+        Rider nour = rider("Nour Saleh", LEVEL_3, ahmed);
+        pay(nour, DEC, 1, 8);
+
+        assertThat(service.myRiders(ahmed.getId()).getFirst().balance())
+                .isEqualTo(new BalanceDto(0, RiderPaymentStatus.AWAITING_PAYMENT, null));
+    }
+
+    // Case 4
+    @Test
+    void aVoidedPackageCountsForNothing() {
+        Rider sara = rider("Sara Mahmoud", LEVEL_3, ahmed);
+        Payment only = pay(sara, NOV, 1, 8);
+        only.voidPayment(admin.getId(), "Entered by mistake", RECORDED_AT.plusSeconds(60));
+        paymentRepository.saveAndFlush(only);
+
+        assertThat(service.myRiders(ahmed.getId()).getFirst().balance())
+                .isEqualTo(new BalanceDto(0, RiderPaymentStatus.AWAITING_PAYMENT, null));
+    }
+
+    // Case 5
+    @Test
+    void theBalanceIsTheSameTheAdminSeesOnW3() {
+        Rider sara = rider("Sara Mahmoud", LEVEL_3, ahmed);
+        Rider omar = rider("Omar Ali", LEVEL_3, ahmed);
+        pay(sara, NOV, 1, 8);
+        // Not valid until 1 December, so neither screen counts it today.
+        pay(sara, DEC, 1, 8);
+
+        List<MyRiderDto> mine = service.myRiders(ahmed.getId());
+        List<AdminRiderRow> w3 = adminRows.rowsByIds(List.of(sara.getId(), omar.getId()));
+
+        for (MyRiderDto row : mine) {
+            AdminRiderRow adminRow = w3.stream().filter(r -> r.id().equals(row.id())).findFirst().orElseThrow();
+            assertThat(row.balance()).isEqualTo(adminRow.balance());
+        }
+        assertThat(mine).extracting(MyRiderDto::balance).containsExactly(
+                new BalanceDto(0, RiderPaymentStatus.AWAITING_PAYMENT, null),
+                new BalanceDto(8, RiderPaymentStatus.ACTIVE, LocalDate.of(2026, 12, 31)));
+    }
+
+    private Payment pay(Rider rider, YearMonth start, int months, int sessions) {
+        return paymentRepository.saveAndFlush(Payment.record(rider, new BigDecimal("1200"), PaymentMethod.CASH,
+                start, months, sessions, admin.getId(), RECORDED_AT));
+    }
+
+    private AdminAccount admin() {
+        AdminAccount account = new AdminAccount();
+        account.setEmail("my-riders-test-admin@example.com");
+        account.setPasswordHash("hash");
+        return account;
     }
 
     private Assignment assign(Session session, Rider rider, Trainer by) {
