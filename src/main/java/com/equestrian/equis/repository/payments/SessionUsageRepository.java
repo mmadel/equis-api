@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.UUID;
 
 public interface SessionUsageRepository extends JpaRepository<SessionUsage, UUID> {
+    // Sessions used from one package.
+    long countByPaymentId(UUID paymentId);
+
     // Sessions used per package, in one query. Packages with no usage have no row.
     @Query("""
             select u.payment.id as paymentId, count(u) as used

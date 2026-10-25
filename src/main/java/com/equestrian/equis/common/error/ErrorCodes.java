@@ -12,6 +12,8 @@ public class ErrorCodes {
     public static final String INVALID_LEVEL      = "invalid_level";      // 400 field error
     public static final String INVALID_VALUE      = "invalid_value";      // 400 field error: wrong type, e.g. not a UUID
     public static final String INVALID_REASON     = "invalid_reason";     // 400 field error
+    public static final String REASON_REQUIRED    = "reason_required";    // 400 field error
+    public static final String REASON_TOO_LONG    = "reason_too_long";    // 400 field error
     public static final String REASON_TEXT_REQUIRED    = "reason_text_required";    // 400 field error
     public static final String REASON_TEXT_NOT_ALLOWED = "reason_text_not_allowed"; // 400 field error
     public static final String NOTHING_TO_CHANGE  = "nothing_to_change";  // 400 field error
@@ -35,6 +37,7 @@ public class ErrorCodes {
     public static final String RIDER_NOT_FOUND    = "rider_not_found";    // 404
     public static final String TRAINER_NOT_FOUND  = "trainer_not_found";  // 404
     public static final String MEMBER_NOT_FOUND   = "member_not_found";   // 404
+    public static final String PAYMENT_NOT_FOUND  = "payment_not_found";  // 404
     public static final String ENDPOINT_REMOVED   = "endpoint_removed";   // 410
     public static final String SEAT_TAKEN        = "seat_taken";         // 409
     public static final String CAPACITY_EXCEEDED  = "capacity_exceeded";  // 409
@@ -63,6 +66,8 @@ public class ErrorCodes {
     public static final String SLOT_STARTED       = "slot_started";       // 409
     public static final String TRAINER_NOT_ACTIVE = "trainer_not_active"; // 409
     public static final String NO_ACTIVE_ASSESSOR = "no_active_assessor"; // 409
+    public static final String PAYMENT_ALREADY_VOIDED = "payment_already_voided"; // 409
+    public static final String PAYMENT_HAS_USAGE  = "payment_has_usage";  // 409, details.used
     public static final String RESULT_NOT_OVERDUE = "result_not_overdue"; // 409
     public static final String LEVEL_CHANGED      = "level_changed";      // 409
     public static final String LEVEL_AT_TOP       = "level_at_top";       // 409
