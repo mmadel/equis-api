@@ -6,10 +6,12 @@ import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.dto.payments.BalanceDto;
 import com.equestrian.equis.dto.payments.PaymentResult;
 import com.equestrian.equis.dto.payments.RecordPaymentRequest;
+import com.equestrian.equis.dto.payments.VoidPaymentRequest;
 import com.equestrian.equis.entity.payments.Payment;
 import com.equestrian.equis.entity.payments.PaymentMethod;
 import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.repository.payments.PaymentRepository;
+import com.equestrian.equis.repository.payments.SessionUsageRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,14 +29,16 @@ import java.util.UUID;
 @Service
 public class AdminPaymentService {
     private final PaymentRepository payments;
+    private final SessionUsageRepository usages;
     private final RiderRepository riders;
     private final RiderBalanceService balances;
     private final PaymentEntryAssembler assembler;
     private final Clock clock;
 
-    public AdminPaymentService(PaymentRepository payments, RiderRepository riders, RiderBalanceService balances,
-                               PaymentEntryAssembler assembler, Clock clock) {
+    public AdminPaymentService(PaymentRepository payments, SessionUsageRepository usages, RiderRepository riders,
+                               RiderBalanceService balances, PaymentEntryAssembler assembler, Clock clock) {
         this.payments = payments;
+        this.usages = usages;
         this.riders = riders;
         this.balances = balances;
         this.assembler = assembler;
@@ -60,6 +64,31 @@ public class AdminPaymentService {
         Payment p = payments.save(Payment.record(rider, req.amountEgp(), method, start, req.months(), sessions,
                 adminId, clock.instant()));
         return new PaymentResult(assembler.entry(p, today), BalanceDto.of(balances.balanceOn(riderId, today)));
+    }
+
+    // W3's Void: a wrong payment is never edited or deleted. It stays in the history, marked voided with a reason,
+    // and stops counting. Refused once sessions were used from it, so usage never silently moves to another package.
+    // Upcoming, active and expired packages can all be voided. No notice goes to the trainer.
+    @Transactional
+    public PaymentResult voidPayment(UUID paymentId, VoidPaymentRequest req, UUID adminId) {
+        // The lock serialises two voids, and a void with a session deduction, on the same payment.
+        Payment p = payments.findByIdForUpdate(paymentId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,
+                ErrorCodes.PAYMENT_NOT_FOUND, "This payment does not exist."));
+        if (p.isVoided()) {
+            throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.PAYMENT_ALREADY_VOIDED,
+                    "This payment is already voided.");
+        }
+        long used = usages.countByPaymentId(paymentId);
+        if (used > 0) {
+            String sessionsWere = used == 1 ? "1 session was" : used + " sessions were";
+            throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.PAYMENT_HAS_USAGE,
+                    sessionsWere + " already used from this payment.", Map.of("details", Map.of("used", used)));
+        }
+
+        p.voidPayment(adminId, req.reason(), clock.instant());
+        LocalDate today = balances.today();
+        return new PaymentResult(assembler.entry(p, today),
+                BalanceDto.of(balances.balanceOn(p.getRider().getId(), today)));
     }
 
     // Answered in the same 400 shape as a failed @Valid.

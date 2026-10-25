@@ -3,6 +3,7 @@ package com.equestrian.equis.controller.payments;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.dto.payments.PaymentResult;
 import com.equestrian.equis.dto.payments.RecordPaymentRequest;
+import com.equestrian.equis.dto.payments.VoidPaymentRequest;
 import com.equestrian.equis.service.payments.AdminPaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -30,5 +31,12 @@ public class AdminPaymentController {
     PaymentResult record(@PathVariable UUID id, @Valid @RequestBody RecordPaymentRequest req,
                          @AuthenticationPrincipal AuthUser me) {
         return service.record(id, req, me.id());
+    }
+
+    // Void a wrong payment with a reason; it stays in the history. Answers like record, with the new balance.
+    @PostMapping("/admin/payments/{id}/void")
+    PaymentResult voidPayment(@PathVariable UUID id, @Valid @RequestBody VoidPaymentRequest req,
+                              @AuthenticationPrincipal AuthUser me) {
+        return service.voidPayment(id, req, me.id());
     }
 }
