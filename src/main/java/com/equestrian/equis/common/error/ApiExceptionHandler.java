@@ -2,6 +2,7 @@ package com.equestrian.equis.common.error;
 
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.*;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,7 +12,10 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import tools.jackson.databind.DatabindException;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
@@ -59,6 +63,24 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             TypeMismatchException ex, HttpHeaders headers,
             HttpStatusCode status, WebRequest request) {
         String field = ex instanceof MethodArgumentTypeMismatchException m ? m.getName() : ex.getPropertyName();
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Some fields are not valid.");
+        pd.setProperty("code", ErrorCodes.VALIDATION_FAILED);
+        pd.setProperty("fieldErrors", List.of(new ApiFieldError(field, ErrorCodes.INVALID_VALUE)));
+        return handleExceptionInternal(ex, pd, headers, HttpStatus.BAD_REQUEST, request);
+    }
+
+    // A body value Jackson can't read into its field, e.g. "startMonth": "Nov" for a YearMonth. Answered like a
+    // failed @Valid on that field. A body that isn't JSON at all keeps Spring's default 400.
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex, HttpHeaders headers,
+            HttpStatusCode status, WebRequest request) {
+        if (!(ex.getCause() instanceof DatabindException cause) || cause.getPath().isEmpty()) {
+            return super.handleHttpMessageNotReadable(ex, headers, status, request);
+        }
+        String field = cause.getPath().stream()
+                .map(ref -> ref.getPropertyName() != null ? ref.getPropertyName() : String.valueOf(ref.getIndex()))
+                .collect(Collectors.joining("."));
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Some fields are not valid.");
         pd.setProperty("code", ErrorCodes.VALIDATION_FAILED);
         pd.setProperty("fieldErrors", List.of(new ApiFieldError(field, ErrorCodes.INVALID_VALUE)));
