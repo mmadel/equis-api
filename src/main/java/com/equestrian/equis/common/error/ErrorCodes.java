@@ -16,6 +16,9 @@ public class ErrorCodes {
     public static final String REASON_TEXT_NOT_ALLOWED = "reason_text_not_allowed"; // 400 field error
     public static final String NOTHING_TO_CHANGE  = "nothing_to_change";  // 400 field error
     public static final String TRAINER_OR_RESET_REQUIRED = "trainer_or_reset_required"; // 400 field error
+    public static final String INVALID_AMOUNT     = "invalid_amount";     // 400 field error
+    public static final String INVALID_METHOD     = "invalid_method";     // 400 field error
+    public static final String START_MONTH_OUT_OF_RANGE = "start_month_out_of_range"; // 400 field error
     public static final String UNAUTHORIZED       = "unauthorized";          // 401
     public static final String INVALID_REFRESH_TOKEN = "invalid_refresh_token"; // 401
     public static final String INVALID_CREDENTIALS   = "invalid_credentials";   // 401
