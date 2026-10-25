@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # Dummy values for every required ${...} placeholder. Test use only, never real secrets.
+    # Tests start their own PostgreSQL with Testcontainers (Docker is on the runner).
+    env:
+      APP_BASE_URL: http://ci.local
+      APP_MAIL_MODE: log
+      # base64 of a 40-byte dummy string (the JWT key must be 32+ bytes)
+      APP_JWT_SECRET: Y2ktZHVtbXktand0LXNlY3JldC1ub3QtZm9yLXByb2R1Y3Rpb24hIQ==
+      # Flyway admin seed (V5__seed_admin.sql)
+      APP_ADMIN_EMAIL: ci-admin@example.com
+      # BCrypt of "ci-dummy-password"
+      APP_ADMIN_PASSWORD_HASH: $2a$10$7WLnfWkVp4Dn1VVgkhZZ6OEiY.jyEOKPv0CCh5HYg/nUiKyo8hVmu
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build and test
+        run: ./mvnw -B verify
