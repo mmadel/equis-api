@@ -34,6 +34,8 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -253,10 +255,10 @@ public class AdminRiderApiTest {
                 .andExpect(jsonPath("$.riders[0].howAssigned").value("from_assessment"));
     }
 
-    // Case 11
+    // Case 11. Every rider has a package this month, so the two balance queries run in both lists.
     @Test
     void theListRunsTheSameNumberOfQueriesWhateverTheNumberOfRiders() throws Exception {
-        rider("Rider 000", "01100000000", 1, ahmed, placedMember("Rider 000", ahmed));
+        payment(rider("Rider 000", "01100000000", 1, ahmed, placedMember("Rider 000", ahmed)));
         long withOne = statementsFor(this::list);
 
         UUID[] trainers = {ahmed, mona, karim, null};
@@ -264,9 +266,10 @@ public class AdminRiderApiTest {
             String name = "Rider %03d".formatted(i);
             UUID trainer = trainers[i % trainers.length];
             UUID member = i % 5 == 0 ? null : placedMember(name, i % 2 == 0 ? ahmed : karim);
-            rider(name, "011%08d".formatted(i), 1 + i % 6, trainer, member);
+            payment(rider(name, "011%08d".formatted(i), 1 + i % 6, trainer, member));
         }
-        list().andExpect(jsonPath("$.riders.length()").value(100));
+        list().andExpect(jsonPath("$.riders.length()").value(100))
+                .andExpect(jsonPath("$.totals.awaitingPayment").value(0));
         long withHundred = statementsFor(this::list);
 
         assertThat(withHundred).isEqualTo(withOne);
@@ -301,6 +304,7 @@ public class AdminRiderApiTest {
                 .andExpect(jsonPath("$.totals.changedManually").value(1))
                 .andExpect(jsonPath("$.totals.setManually").value(1))
                 .andExpect(jsonPath("$.totals.unassigned").value(2))
+                .andExpect(jsonPath("$.totals.awaitingPayment").value(5))
                 .andExpect(jsonPath("$.trainers[*].name", contains("Ahmed Said", "Mona Adel", "Karim Nabil")))
                 .andExpect(jsonPath("$.trainers[*].riderCount", contains(2, 1, 1)));
     }
@@ -383,6 +387,17 @@ public class AdminRiderApiTest {
         return jdbc.queryForObject(
                 "insert into rider (name, phone, level_id, trainer_id, member_id) values (?, ?, ?, ?, ?) returning id",
                 UUID.class, name, phone, level, trainer, member);
+    }
+
+    // One month, 8 sessions from this month (school time zone), recorded by the seeded admin.
+    private void payment(UUID riderId) {
+        YearMonth month = YearMonth.now(ZoneId.of("Africa/Cairo"));
+        jdbc.update("""
+                        insert into payment (rider_id, amount_egp, method, start_month, months, sessions, valid_until,
+                                             recorded_at, recorded_by)
+                        values (?, 1200.00, 'cash', ?, 1, 8, ?, now(),
+                                (select id from admin_account where email = 'riders-api-admin@example.com'))""",
+                riderId, month.atDay(1), month.plusMonths(1).atEndOfMonth());
     }
 
     @FunctionalInterface
