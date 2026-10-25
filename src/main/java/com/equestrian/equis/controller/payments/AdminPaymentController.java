@@ -3,11 +3,13 @@ package com.equestrian.equis.controller.payments;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.dto.payments.PaymentResult;
 import com.equestrian.equis.dto.payments.RecordPaymentRequest;
+import com.equestrian.equis.dto.payments.RiderPayments;
 import com.equestrian.equis.dto.payments.VoidPaymentRequest;
 import com.equestrian.equis.service.payments.AdminPaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +25,12 @@ public class AdminPaymentController {
 
     public AdminPaymentController(AdminPaymentService service) {
         this.service = service;
+    }
+
+    // A rider's payment history and balance, for W3's history panel.
+    @GetMapping("/admin/riders/{id}/payments")
+    RiderPayments history(@PathVariable UUID id) {
+        return service.history(id);
     }
 
     // Answers with the new package and the rider's balance, so W3 updates in place.

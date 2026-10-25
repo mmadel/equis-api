@@ -11,12 +11,14 @@ import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.assessment.BookingStatus;
 import com.equestrian.equis.entity.levels.Levels;
+import com.equestrian.equis.entity.payments.RiderPaymentStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -52,13 +54,17 @@ public class AdminRiderService {
 
     // All filters optional. trainer: the rider's current trainer; an unknown id gives no rows.
     // unassigned: true keeps only riders needing a trainer. q: part of the name, or digits of the phone.
+    // payment: "active" or "awaiting_payment", from today's balance.
     @Transactional(readOnly = true)
-    public AdminRiderList list(Integer level, UUID trainer, Boolean unassigned, String q) {
+    public AdminRiderList list(Integer level, UUID trainer, Boolean unassigned, String q, String payment) {
         if (level != null && !Levels.isValid(level)) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, ErrorCodes.VALIDATION_FAILED, "Some fields are not valid.",
-                    Map.of("fieldErrors", List.of(new ApiFieldError("level", ErrorCodes.INVALID_LEVEL))));
+            throw invalidField("level", ErrorCodes.INVALID_LEVEL);
         }
-        List<AdminRiderRow> all = allRows();
+        RiderPaymentStatus paymentStatus = payment == null ? null : Arrays.stream(RiderPaymentStatus.values())
+                .filter(s -> s.value().equals(payment))
+                .findFirst()
+                .orElseThrow(() -> invalidField("payment", ErrorCodes.INVALID_PAYMENT_STATUS));
+        List<AdminRiderRow> all = rows.rows(riders.findAdminView(BookingStatus.PLACED));
 
         Map<String, Long> byHow = all.stream()
                 .collect(Collectors.groupingBy(AdminRiderRow::howAssigned, Collectors.counting()));
@@ -66,7 +72,8 @@ public class AdminRiderService {
                 byHow.getOrDefault(HowAssigned.FROM_ASSESSMENT.value(), 0L),
                 byHow.getOrDefault(HowAssigned.CHANGED_MANUALLY.value(), 0L),
                 byHow.getOrDefault(HowAssigned.SET_MANUALLY.value(), 0L),
-                all.stream().filter(AdminRiderService::needsTrainer).count());
+                all.stream().filter(AdminRiderService::needsTrainer).count(),
+                all.stream().filter(r -> r.balance().status() == RiderPaymentStatus.AWAITING_PAYMENT).count());
 
         Map<UUID, Long> perTrainer = all.stream()
                 .filter(r -> r.trainer() != null)
@@ -82,20 +89,25 @@ public class AdminRiderService {
                 .filter(r -> level == null || r.levelId() == level)
                 .filter(r -> trainer == null || (r.trainer() != null && r.trainer().id().equals(trainer)))
                 .filter(r -> !Boolean.TRUE.equals(unassigned) || needsTrainer(r))
+                .filter(r -> paymentStatus == null || r.balance().status() == paymentStatus)
                 .filter(matches(q))
                 .sorted(LIST_ORDER)
                 .toList();
         return new AdminRiderList(totals, cards, shown);
     }
 
-    // W3's "needs a trainer" total (totals.unassigned), for the admin Overview. One query.
+    // W3's "needs a trainer" total (totals.unassigned), for the admin Overview. One query: no balances needed.
     @Transactional(readOnly = true)
     public long countNeedingTrainer() {
-        return allRows().stream().filter(AdminRiderService::needsTrainer).count();
+        return riders.findAdminView(BookingStatus.PLACED).stream()
+                .filter(v -> rows.howAssigned(v).equals(UNASSIGNED))
+                .count();
     }
 
-    private List<AdminRiderRow> allRows() {
-        return riders.findAdminView(BookingStatus.PLACED).stream().map(rows::row).toList();
+    // Answered in the same 400 shape as a failed @Valid.
+    private static ApiException invalidField(String field, String message) {
+        return new ApiException(HttpStatus.BAD_REQUEST, ErrorCodes.VALIDATION_FAILED, "Some fields are not valid.",
+                Map.of("fieldErrors", List.of(new ApiFieldError(field, message))));
     }
 
     private static boolean needsTrainer(AdminRiderRow r) {

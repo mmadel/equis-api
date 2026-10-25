@@ -30,8 +30,9 @@ public class AdminRiderController {
     // The whole list, totals and trainer cards in one answer; the filters only narrow the rows.
     @GetMapping
     AdminRiderList list(@RequestParam(required = false) Integer level, @RequestParam(required = false) UUID trainer,
-                        @RequestParam(required = false) Boolean unassigned, @RequestParam(required = false) String q) {
-        return service.list(level, trainer, unassigned, q);
+                        @RequestParam(required = false) Boolean unassigned, @RequestParam(required = false) String q,
+                        @RequestParam(required = false) String payment) {
+        return service.list(level, trainer, unassigned, q, payment);
     }
 
     // The trainer dropdown (one rider), the bulk bar and Reset to assessor. Answers with the new rows so W3 updates

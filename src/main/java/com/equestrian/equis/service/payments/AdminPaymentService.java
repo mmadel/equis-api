@@ -6,6 +6,7 @@ import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.dto.payments.BalanceDto;
 import com.equestrian.equis.dto.payments.PaymentResult;
 import com.equestrian.equis.dto.payments.RecordPaymentRequest;
+import com.equestrian.equis.dto.payments.RiderPayments;
 import com.equestrian.equis.dto.payments.VoidPaymentRequest;
 import com.equestrian.equis.entity.payments.Payment;
 import com.equestrian.equis.entity.payments.PaymentMethod;
@@ -43,6 +44,18 @@ public class AdminPaymentService {
         this.balances = balances;
         this.assembler = assembler;
         this.clock = clock;
+    }
+
+    // W3's payment history for one rider: today's balance and every package, newest first, voided ones included.
+    // No paging: a rider has a few payments a year.
+    @Transactional(readOnly = true)
+    public RiderPayments history(UUID riderId) {
+        Rider rider = riders.findById(riderId).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,
+                ErrorCodes.RIDER_NOT_FOUND, "This rider does not exist."));
+        LocalDate today = balances.today();
+        List<Payment> history = payments.findByRiderIdOrderByRecordedAtDesc(riderId);
+        return new RiderPayments(rider.getId(), rider.getName(), BalanceDto.of(balances.balanceOn(riderId, today)),
+                assembler.entries(history, today));
     }
 
     @Transactional
