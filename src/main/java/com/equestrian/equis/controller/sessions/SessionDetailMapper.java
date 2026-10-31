@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.sessions;
 
+import com.equestrian.equis.dto.evaluations.SeatEvaluation;
 import com.equestrian.equis.dto.levels.LevelRef;
 import com.equestrian.equis.dto.sessions.SessionDetailResponse;
 import com.equestrian.equis.entity.riders.Rider;
@@ -10,6 +11,7 @@ import com.equestrian.equis.service.sessions.SessionDetail;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,7 +37,10 @@ final class SessionDetailMapper {
                 detail.seats().size() - seatedByMe.size(),
                 seatedByMe.stream()
                         .map(rider -> new SessionDetailResponse.MySeat(rider.getId(), rider.getName(),
-                                rider.initials(), detail.sessionsLeft(rider.getId())))
+                                rider.initials(), detail.sessionsLeft(rider.getId()),
+                                Optional.ofNullable(detail.evaluation(rider.getId())).map(SeatEvaluation::of)
+                                        .orElse(null),
+                                detail.canEvaluate(rider.getId())))
                         .toList(),
                 detail.eligibleRiders().stream()
                         .map(rider -> new SessionDetailResponse.RiderOption(rider.getId(), rider.getName(),

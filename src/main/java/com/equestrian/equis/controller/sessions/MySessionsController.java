@@ -1,8 +1,10 @@
 package com.equestrian.equis.controller.sessions;
 
 import com.equestrian.equis.common.security.AuthUser;
+import com.equestrian.equis.dto.evaluations.EvaluationRequest;
 import com.equestrian.equis.dto.sessions.AssignmentsRequest;
 import com.equestrian.equis.dto.sessions.SessionDetailResponse;
+import com.equestrian.equis.service.evaluations.EvaluationService;
 import com.equestrian.equis.service.sessions.AssignmentService;
 import com.equestrian.equis.service.sessions.FinishSessionService;
 import com.equestrian.equis.service.sessions.SessionDetailService;
@@ -25,12 +27,14 @@ public class MySessionsController {
     private final SessionDetailService details;
     private final AssignmentService assignments;
     private final FinishSessionService finisher;
+    private final EvaluationService evaluator;
 
     public MySessionsController(SessionDetailService details, AssignmentService assignments,
-                                FinishSessionService finisher) {
+                                FinishSessionService finisher, EvaluationService evaluator) {
         this.details = details;
         this.assignments = assignments;
         this.finisher = finisher;
+        this.evaluator = evaluator;
     }
 
     @GetMapping("/{id}")
@@ -50,6 +54,14 @@ public class MySessionsController {
     @PostMapping("/{id}/finish")
     SessionDetailResponse finish(@AuthenticationPrincipal AuthUser user, @PathVariable UUID id) {
         finisher.finish(user.id(), id);
+        return SessionDetailMapper.toResponse(details.get(user.id(), id), user.id());
+    }
+
+    // One rider at a time. Answers with the session as saved, done once every rider of every coach is evaluated.
+    @PostMapping("/{id}/evaluations")
+    SessionDetailResponse evaluate(@AuthenticationPrincipal AuthUser user, @PathVariable UUID id,
+                                   @Valid @RequestBody EvaluationRequest req) {
+        evaluator.evaluate(user.id(), id, req);
         return SessionDetailMapper.toResponse(details.get(user.id(), id), user.id());
     }
 }

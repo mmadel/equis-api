@@ -22,4 +22,22 @@ public interface SessionEvaluationRepository extends JpaRepository<SessionEvalua
             where e.session.id in :sessionIds
             """)
     List<SessionEvaluation> findBySessionIdIn(@Param("sessionIds") Collection<UUID> sessionIds);
+
+    // The trainer's seats still to evaluate, one row per finished session, any date, newest session first.
+    // A done session has every seat evaluated, so only finished ones can appear.
+    @Query("""
+            select new com.equestrian.equis.repository.evaluations.PendingEvaluationRow(
+                       s.id, s.sessionDate, s.startTime, s.endTime, l.id, count(a))
+            from Assignment a
+            join a.session s
+            join s.template t
+            join t.level l
+            where a.assignedBy.id = :trainerId
+              and s.status = com.equestrian.equis.entity.sessions.SessionStatus.FINISHED
+              and not exists (select 1 from SessionEvaluation e
+                              where e.session.id = s.id and e.rider.id = a.rider.id)
+            group by s.id, s.sessionDate, s.startTime, s.endTime, l.id
+            order by s.sessionDate desc, s.startTime desc
+            """)
+    List<PendingEvaluationRow> pendingForTrainer(@Param("trainerId") UUID trainerId);
 }

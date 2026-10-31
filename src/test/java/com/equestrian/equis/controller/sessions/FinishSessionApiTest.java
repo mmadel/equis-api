@@ -47,6 +47,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -146,6 +147,9 @@ public class FinishSessionApiTest {
                 .andExpect(jsonPath("$.otherCoachSeats").value(1))
                 .andExpect(jsonPath("$.mySeats[*].name", contains("Nour Adel", "Sara Ali")))
                 .andExpect(jsonPath("$.mySeats[*].sessionsLeft", contains(0, 7)))
+                .andExpect(jsonPath("$.mySeats[*].canEvaluate", contains(true, true)))
+                .andExpect(jsonPath("$.mySeats[0].evaluation").value(nullValue()))
+                .andExpect(jsonPath("$.mySeats[1].evaluation").value(nullValue()))
                 .andExpect(jsonPath("$.riders", empty()));
 
         assertThat(usages()).isEqualTo(3);

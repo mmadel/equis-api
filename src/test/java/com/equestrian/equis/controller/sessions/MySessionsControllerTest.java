@@ -8,6 +8,7 @@ import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
+import com.equestrian.equis.dto.evaluations.EvaluationRequest;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.levels.Level;
@@ -17,6 +18,7 @@ import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.service.accounts.JwtService;
+import com.equestrian.equis.service.evaluations.EvaluationService;
 import com.equestrian.equis.service.sessions.AssignmentService;
 import com.equestrian.equis.service.sessions.FinishSessionService;
 import com.equestrian.equis.service.sessions.SessionDetail;
@@ -74,6 +76,8 @@ public class MySessionsControllerTest {
     @MockitoBean
     FinishSessionService finisher;
     @MockitoBean
+    EvaluationService evaluator;
+    @MockitoBean
     TrainerRepository trainerRepository;
 
     @BeforeEach
@@ -106,6 +110,8 @@ public class MySessionsControllerTest {
                 .andExpect(jsonPath("$.mySeats[0].name").value("Mona Ali"))
                 .andExpect(jsonPath("$.mySeats[0].initials").value("MA"))
                 .andExpect(jsonPath("$.mySeats[0].sessionsLeft").value(8))
+                .andExpect(jsonPath("$.mySeats[0].evaluation").value(nullValue()))
+                .andExpect(jsonPath("$.mySeats[0].canEvaluate").value(false))
                 .andExpect(jsonPath("$.riders.length()").value(2))
                 .andExpect(jsonPath("$.riders[0].id").value(MONA_ID.toString()))
                 .andExpect(jsonPath("$.riders[0].name").value("Mona Ali"))
@@ -212,7 +218,39 @@ public class MySessionsControllerTest {
     }
 
     @Test
+    void evaluateSavesThenAnswersWithTheSessionAsSaved() throws Exception {
+        when(details.get(TRAINER_ID, SESSION_ID)).thenReturn(detail(false));
+
+        mvc.perform(trainer(post(PATH + "/evaluations")).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"riderId\": \"" + MONA_ID + "\", \"stars\": 4, \"comment\": \"  Heels down \"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(SESSION_ID.toString()));
+
+        InOrder order = inOrder(evaluator, details);
+        order.verify(evaluator).evaluate(TRAINER_ID, SESSION_ID, new EvaluationRequest(MONA_ID, 4, "Heels down"));
+        order.verify(details).get(TRAINER_ID, SESSION_ID);
+    }
+
+    @Test
+    void evaluatePassesRefusalsThrough() throws Exception {
+        EvaluationRequest req = new EvaluationRequest(MONA_ID, 4, null);
+        when(evaluator.evaluate(TRAINER_ID, SESSION_ID, req)).thenThrow(new ApiException(
+                HttpStatus.CONFLICT, ErrorCodes.ALREADY_EVALUATED, "Mona Ali already has an evaluation for this session."));
+
+        mvc.perform(trainer(post(PATH + "/evaluations")).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"riderId\": \"" + MONA_ID + "\", \"stars\": 4}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("already_evaluated"));
+        verifyNoInteractions(details);
+    }
+
+    @Test
     void onlyTrainersGetIn() throws Exception {
+        mvc.perform(post(PATH + "/evaluations").header(HttpHeaders.AUTHORIZATION, bearer(Role.ADMIN))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"riderId\": \"" + MONA_ID + "\", \"stars\": 4}"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(evaluator);
         mvc.perform(get(PATH)).andExpect(status().isUnauthorized());
         mvc.perform(get(PATH).header(HttpHeaders.AUTHORIZATION, bearer(Role.ADMIN)))
                 .andExpect(status().isForbidden());
@@ -252,7 +290,7 @@ public class MySessionsControllerTest {
         return new SessionDetail(session,
                 List.of(Assignment.of(session, rider(OTHERS_RIDER_ID, "Youssef Tarek"), trainer(OTHER_TRAINER_ID)),
                         Assignment.of(session, mona, trainer(TRAINER_ID))),
-                List.of(mona, zeina), Map.of(MONA_ID, 8, ZEINA_ID, 1), canAssign, false);
+                List.of(mona, zeina), Map.of(MONA_ID, 8, ZEINA_ID, 1), Map.of(), canAssign, false);
     }
 
     private static Rider rider(UUID id, String name) {
