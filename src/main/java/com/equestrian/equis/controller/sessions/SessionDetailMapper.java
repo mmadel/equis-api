@@ -9,6 +9,7 @@ import com.equestrian.equis.service.sessions.SessionDetail;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,14 +30,17 @@ final class SessionDetailMapper {
 
         return new SessionDetailResponse(session.getId(), LevelRef.of(session.getTemplate().getLevel()),
                 session.getSessionDate(), session.getStartTime(), session.getEndTime(), session.getCapacity(),
-                detail.readOnly(), detail.seats().size() - seatedByMe.size(),
+                session.getStatus().name().toLowerCase(Locale.ROOT), session.getFinishedAt(),
+                detail.canAssign(), detail.canFinish(), detail.readOnly(),
+                detail.seats().size() - seatedByMe.size(),
                 seatedByMe.stream()
                         .map(rider -> new SessionDetailResponse.MySeat(rider.getId(), rider.getName(),
-                                rider.initials()))
+                                rider.initials(), detail.sessionsLeft(rider.getId())))
                         .toList(),
-                detail.myRiders().stream()
+                detail.eligibleRiders().stream()
                         .map(rider -> new SessionDetailResponse.RiderOption(rider.getId(), rider.getName(),
-                                rider.initials(), seatedIds.contains(rider.getId())))
+                                rider.initials(), seatedIds.contains(rider.getId()),
+                                detail.sessionsLeft(rider.getId())))
                         .toList());
     }
 }

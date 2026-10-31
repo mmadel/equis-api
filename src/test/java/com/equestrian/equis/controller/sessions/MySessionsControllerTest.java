@@ -37,8 +37,10 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -77,7 +79,7 @@ public class MySessionsControllerTest {
 
     @Test
     void returnsTheSessionWithMySeatsAndMyRiders() throws Exception {
-        when(details.get(TRAINER_ID, SESSION_ID)).thenReturn(detail(false));
+        when(details.get(TRAINER_ID, SESSION_ID)).thenReturn(detail(true));
 
         mvc.perform(trainer(get(PATH)))
                 .andExpect(status().isOk())
@@ -89,28 +91,36 @@ public class MySessionsControllerTest {
                 .andExpect(jsonPath("$.start").value("08:30"))
                 .andExpect(jsonPath("$.end").value("09:30"))
                 .andExpect(jsonPath("$.capacity").value(6))
+                .andExpect(jsonPath("$.status").value("scheduled"))
+                .andExpect(jsonPath("$.finishedAt").value(nullValue()))
+                .andExpect(jsonPath("$.canAssign").value(true))
+                .andExpect(jsonPath("$.canFinish").value(false))
                 .andExpect(jsonPath("$.readOnly").value(false))
                 .andExpect(jsonPath("$.otherCoachSeats").value(1))
                 .andExpect(jsonPath("$.mySeats.length()").value(1))
                 .andExpect(jsonPath("$.mySeats[0].riderId").value(MONA_ID.toString()))
                 .andExpect(jsonPath("$.mySeats[0].name").value("Mona Ali"))
                 .andExpect(jsonPath("$.mySeats[0].initials").value("MA"))
+                .andExpect(jsonPath("$.mySeats[0].sessionsLeft").value(8))
                 .andExpect(jsonPath("$.riders.length()").value(2))
                 .andExpect(jsonPath("$.riders[0].id").value(MONA_ID.toString()))
                 .andExpect(jsonPath("$.riders[0].name").value("Mona Ali"))
                 .andExpect(jsonPath("$.riders[0].initials").value("MA"))
                 .andExpect(jsonPath("$.riders[0].inThisSession").value(true))
+                .andExpect(jsonPath("$.riders[0].sessionsLeft").value(8))
                 .andExpect(jsonPath("$.riders[1].id").value(ZEINA_ID.toString()))
-                .andExpect(jsonPath("$.riders[1].inThisSession").value(false));
+                .andExpect(jsonPath("$.riders[1].inThisSession").value(false))
+                .andExpect(jsonPath("$.riders[1].sessionsLeft").value(1));
     }
 
     @Test
     void readOnlySessionIsStillReturned() throws Exception {
-        when(details.get(TRAINER_ID, SESSION_ID)).thenReturn(detail(true));
+        when(details.get(TRAINER_ID, SESSION_ID)).thenReturn(detail(false));
 
         mvc.perform(trainer(get(PATH)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.readOnly").value(true));
+                .andExpect(jsonPath("$.readOnly").value(true))
+                .andExpect(jsonPath("$.canAssign").value(false));
     }
 
     @Test
@@ -126,7 +136,7 @@ public class MySessionsControllerTest {
 
     @Test
     void putSavesThenAnswersWithTheSessionAsSaved() throws Exception {
-        when(details.get(TRAINER_ID, SESSION_ID)).thenReturn(detail(false));
+        when(details.get(TRAINER_ID, SESSION_ID)).thenReturn(detail(true));
 
         mvc.perform(trainer(put(PATH + "/assignments")).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"riderIds\": [\"" + MONA_ID + "\", \"" + ZEINA_ID + "\"]}"))
@@ -141,7 +151,7 @@ public class MySessionsControllerTest {
 
     @Test
     void putAcceptsAnEmptyList() throws Exception {
-        when(details.get(TRAINER_ID, SESSION_ID)).thenReturn(detail(false));
+        when(details.get(TRAINER_ID, SESSION_ID)).thenReturn(detail(true));
 
         mvc.perform(trainer(put(PATH + "/assignments")).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"riderIds\": []}"))
@@ -192,8 +202,9 @@ public class MySessionsControllerTest {
         return "Bearer " + jwtService.issue(new AuthUser(TRAINER_ID, role)).value();
     }
 
-    // Mona is seated by the caller, one more seat by another trainer; Zeina is the caller's rider without a seat.
-    private static SessionDetail detail(boolean readOnly) {
+    // Mona (8 left) is seated by the caller, one more seat by another trainer; Zeina (1 left) is the caller's
+    // rider without a seat.
+    private static SessionDetail detail(boolean canAssign) {
         Level level = new Level();
         level.setId((short) 2);
         level.setName("Level 2");
@@ -211,7 +222,7 @@ public class MySessionsControllerTest {
         return new SessionDetail(session,
                 List.of(Assignment.of(session, rider(OTHERS_RIDER_ID, "Youssef Tarek"), trainer(OTHER_TRAINER_ID)),
                         Assignment.of(session, mona, trainer(TRAINER_ID))),
-                List.of(mona, zeina), readOnly);
+                List.of(mona, zeina), Map.of(MONA_ID, 8, ZEINA_ID, 1), canAssign, false);
     }
 
     private static Rider rider(UUID id, String name) {

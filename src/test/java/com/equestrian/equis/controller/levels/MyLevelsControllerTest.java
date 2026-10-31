@@ -87,7 +87,7 @@ public class MyLevelsControllerTest {
     void listsALevelsSessionsByDay() throws Exception {
         when(service.sessions(TRAINER_ID, (short) 2, FROM, TO)).thenReturn(new LevelSessionsResponse(
                 new LevelRef(2, "Level 2", "#2A559A"), FROM, TO, List.of(new Day(FROM, List.of(
-                new SessionSlot(SESSION_ID, LocalTime.of(8, 30), LocalTime.of(9, 30), 6, 2, false,
+                new SessionSlot(SESSION_ID, LocalTime.of(8, 30), LocalTime.of(9, 30), "scheduled", 6, 2, false,
                         List.of(new Seat(true, RIDER_ID, "MA"), Seat.other())))))));
 
         mvc.perform(trainer(get(PATH + "/2/sessions").param("from", "2026-10-17").param("to", "2026-10-23")))
@@ -101,6 +101,7 @@ public class MyLevelsControllerTest {
                 .andExpect(jsonPath("$.days[0].sessions[0].id").value(SESSION_ID.toString()))
                 .andExpect(jsonPath("$.days[0].sessions[0].start").value("08:30"))
                 .andExpect(jsonPath("$.days[0].sessions[0].end").value("09:30"))
+                .andExpect(jsonPath("$.days[0].sessions[0].status").value("scheduled"))
                 .andExpect(jsonPath("$.days[0].sessions[0].capacity").value(6))
                 .andExpect(jsonPath("$.days[0].sessions[0].booked").value(2))
                 .andExpect(jsonPath("$.days[0].sessions[0].past").value(false))

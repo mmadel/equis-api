@@ -155,6 +155,7 @@ public class LevelChangeFlowTest {
         inTransaction(() -> {
             riderIds.forEach(id -> jdbc.update("delete from level_change where rider_id = ?", id));
             riderIds.forEach(id -> jdbc.update("delete from assignment where rider_id = ?", id));
+            riderIds.forEach(id -> jdbc.update("delete from payment where rider_id = ?", id));
             sessionIds.forEach(id -> jdbc.update("delete from assignment where session_id = ?", id));
             sessionIds.forEach(id -> jdbc.update("delete from session where id = ?", id));
             templateIds.forEach(id -> jdbc.update("delete from session_template where id = ?", id));
@@ -273,6 +274,10 @@ public class LevelChangeFlowTest {
         seat(omar, ahmed, today1800);
         long level3SeatsBefore = seatsFilledOnLevel(ahmed, LEVEL_3);
         long level4SeatsBefore = seatsFilledOnLevel(ahmed, LEVEL_4);
+
+        // Both can ride today, so only the level decides who is listed on Assign riders.
+        payOctober(sara);
+        payOctober(omar);
 
         changeLevel(sara.getId(), ahmed, "up", 3)
                 .andExpect(status().isOk())
@@ -410,6 +415,16 @@ public class LevelChangeFlowTest {
 
     private void inTransaction(Runnable work) {
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> work.run());
+    }
+
+    // An October package of 8 sessions, recorded by the seeded admin.
+    private void payOctober(Rider rider) {
+        jdbc.update("""
+                        insert into payment (rider_id, amount_egp, method, start_month, months, sessions,
+                                             valid_until, recorded_by)
+                        values (?, 1200, 'cash', date '2026-10-01', 1, 8, date '2026-11-30',
+                                (select id from admin_account limit 1))""",
+                rider.getId());
     }
 
     private <T> T committed(Supplier<T> work) {

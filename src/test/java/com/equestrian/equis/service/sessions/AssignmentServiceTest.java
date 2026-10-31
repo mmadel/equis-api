@@ -3,17 +3,23 @@ package com.equestrian.equis.service.sessions;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ApiFieldError;
 import com.equestrian.equis.common.error.ErrorCodes;
+import com.equestrian.equis.entity.accounts.AdminAccount;
 import com.equestrian.equis.entity.accounts.Trainer;
+import com.equestrian.equis.entity.payments.Payment;
+import com.equestrian.equis.entity.payments.PaymentMethod;
 import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.entity.sessions.Assignment;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
+import com.equestrian.equis.repository.accounts.AdminAccountRepository;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.levels.LevelRepository;
+import com.equestrian.equis.repository.payments.PaymentRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.repository.sessions.AssignmentRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.service.payments.RiderBalanceService;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,11 +35,13 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
@@ -44,7 +52,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
-@Import({AssignmentService.class, AssignmentRules.class})
+@Import({AssignmentService.class, AssignmentRules.class, RiderBalanceService.class})
 public class AssignmentServiceTest {
     private static final short LEVEL_1 = 1;
     private static final short LEVEL_2 = 2;
@@ -70,6 +78,10 @@ public class AssignmentServiceTest {
     TrainerRepository trainerRepository;
     @Autowired
     LevelRepository levelRepository;
+    @Autowired
+    PaymentRepository paymentRepository;
+    @Autowired
+    AdminAccountRepository adminAccountRepository;
 
     Trainer sara;
     Trainer omar;
@@ -77,6 +89,7 @@ public class AssignmentServiceTest {
     Rider nour;
     Rider hana;
     Rider omarsRider;
+    AdminAccount admin;
 
     @BeforeEach
     void setUp() {
@@ -134,20 +147,64 @@ public class AssignmentServiceTest {
     @Test
     void unknownSessionIsNotFound() {
         assertRefused(() -> service.replaceMine(sara.getId(), UUID.randomUUID(), ids(laila)),
-                HttpStatus.NOT_FOUND, ErrorCodes.NOT_FOUND);
+                HttpStatus.NOT_FOUND, ErrorCodes.SESSION_NOT_FOUND);
     }
 
     @Test
-    void startedAndCancelledSessionsAreClosed() {
-        Session past = session(LEVEL_1, TODAY.minusWeeks(1), 6);
-        Session cancelled = Session.of(template(LEVEL_1, 6), TODAY.plusWeeks(1));
+    void startedSessionTodayStillTakesRiders() {
+        // 13:00 now; the session started at 09:00 today.
+        Session started = sessionRepository.saveAndFlush(Session.of(template(LEVEL_1, 6, LocalTime.of(9, 0)), TODAY));
+
+        service.replaceMine(sara.getId(), started.getId(), ids(laila));
+
+        assertThat(seats(started)).extracting(Assignment::getRider).containsExactly(laila);
+    }
+
+    @Test
+    void sessionsOnOtherDaysAreNotToday() {
+        Session yesterday = session(LEVEL_1, TODAY.minusDays(1), 6);
+        Session nextWeek = session(LEVEL_1, TODAY.plusWeeks(1), 6);
+
+        assertRefused(() -> service.replaceMine(sara.getId(), yesterday.getId(), ids(laila)),
+                HttpStatus.CONFLICT, ErrorCodes.SESSION_NOT_TODAY);
+        assertRefused(() -> service.replaceMine(sara.getId(), nextWeek.getId(), ids(laila)),
+                HttpStatus.CONFLICT, ErrorCodes.SESSION_NOT_TODAY);
+    }
+
+    @Test
+    void finishedAndCancelledSessionsAreReadOnly() {
+        Session finished = Session.of(template(LEVEL_1, 6), TODAY);
+        finished.finish(sara.getId(), NOW);
+        sessionRepository.saveAndFlush(finished);
+        Session cancelled = Session.of(template(LEVEL_1, 6), TODAY);
         cancelled.cancel(NOW);
         sessionRepository.saveAndFlush(cancelled);
 
-        assertRefused(() -> service.replaceMine(sara.getId(), past.getId(), ids(laila)),
-                HttpStatus.CONFLICT, ErrorCodes.SESSION_CLOSED);
+        assertRefused(() -> service.replaceMine(sara.getId(), finished.getId(), ids(laila)),
+                HttpStatus.CONFLICT, ErrorCodes.SESSION_READ_ONLY);
         assertRefused(() -> service.replaceMine(sara.getId(), cancelled.getId(), ids(laila)),
-                HttpStatus.CONFLICT, ErrorCodes.SESSION_CLOSED);
+                HttpStatus.CONFLICT, ErrorCodes.SESSION_READ_ONLY);
+    }
+
+    @Test
+    void newlyAddedRiderWithoutASessionLeftIsRefused() {
+        Session session = session(LEVEL_1, TODAY, 6);
+        Rider unpaid = rider("Omar Fathy", LEVEL_1, sara, false);
+
+        assertRefused(() -> service.replaceMine(sara.getId(), session.getId(), ids(laila, unpaid)),
+                HttpStatus.UNPROCESSABLE_ENTITY, ErrorCodes.RIDER_NO_SESSIONS_LEFT, unpaid.getId());
+        assertThat(seats(session)).isEmpty();
+    }
+
+    @Test
+    void riderAlreadySeatedIsNotCheckedAgain() {
+        Session session = session(LEVEL_1, TODAY, 6);
+        Rider unpaid = rider("Omar Fathy", LEVEL_1, sara, false);
+        assign(session, unpaid, sara);
+
+        service.replaceMine(sara.getId(), session.getId(), ids(unpaid, laila));
+
+        assertThat(seats(session)).extracting(Assignment::getRider).containsExactlyInAnyOrder(unpaid, laila);
     }
 
     @Test
@@ -171,11 +228,11 @@ public class AssignmentServiceTest {
     }
 
     @Test
-    void assessmentSlotTakesNoRiders() {
+    void assessmentSlotIsNotFound() {
         Session session = session(null, TODAY, 6);
 
         assertRefused(() -> service.replaceMine(sara.getId(), session.getId(), ids(laila)),
-                HttpStatus.UNPROCESSABLE_ENTITY, ErrorCodes.LEVEL_OUT_OF_RANGE, laila.getId());
+                HttpStatus.NOT_FOUND, ErrorCodes.SESSION_NOT_FOUND);
     }
 
     @Test
@@ -243,22 +300,46 @@ public class AssignmentServiceTest {
     }
 
     private SessionTemplate template(Short levelId, int capacity) {
+        return template(levelId, capacity, LocalTime.of(16, 0));
+    }
+
+    private SessionTemplate template(Short levelId, int capacity, LocalTime start) {
         SessionTemplate template = new SessionTemplate();
         template.setLevel(levelId == null ? null : levelRepository.getReferenceById(levelId));
         template.setDayOfWeek(DayOfWeek.MONDAY);
-        template.setStartTime(LocalTime.of(16, 0));
-        template.setEndTime(LocalTime.of(17, 0));
+        template.setStartTime(start);
+        template.setEndTime(start.plusHours(1));
         template.setCapacity(capacity);
         template.setValidFrom(LocalDate.of(2026, 9, 1));
         return sessionTemplateRepository.saveAndFlush(template);
     }
 
+    // Riders come with an October package of 8 sessions, so they can ride today, unless paid is false.
     private Rider rider(String name, short levelId, Trainer trainer) {
+        return rider(name, levelId, trainer, true);
+    }
+
+    private Rider rider(String name, short levelId, Trainer trainer, boolean paid) {
         Rider rider = new Rider();
         rider.setName(name);
         rider.setLevel(levelRepository.getReferenceById(levelId));
         rider.setTrainer(trainer);
-        return riderRepository.saveAndFlush(rider);
+        rider = riderRepository.saveAndFlush(rider);
+        if (paid) {
+            paymentRepository.saveAndFlush(Payment.record(rider, new BigDecimal("1200"), PaymentMethod.CASH,
+                    YearMonth.of(2026, 10), 1, 8, admin().getId(), NOW));
+        }
+        return rider;
+    }
+
+    private AdminAccount admin() {
+        if (admin == null) {
+            AdminAccount account = new AdminAccount();
+            account.setEmail("assignment-service-test-admin@example.com");
+            account.setPasswordHash("hash");
+            admin = adminAccountRepository.saveAndFlush(account);
+        }
+        return admin;
     }
 
     private Trainer trainer(String name, String phone, String email) {

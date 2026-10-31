@@ -5,8 +5,24 @@ import com.equestrian.equis.entity.sessions.Assignment;
 import com.equestrian.equis.entity.sessions.Session;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-// One level session as a trainer sees it: seats are every trainer's assignments,
-// myRiders are the trainer's riders in the session's level, ordered by name.
-public record SessionDetail(Session session, List<Assignment> seats, List<Rider> myRiders, boolean readOnly) {
+// One level session as a trainer sees it: seats are every trainer's assignments; eligibleRiders are the trainer's
+// riders of the session's level with a session left that day, by name, and empty unless canAssign.
+// sessionsLeft holds, on the session date, every eligible rider and every rider the trainer seated.
+public record SessionDetail(Session session,
+                            List<Assignment> seats,
+                            List<Rider> eligibleRiders,
+                            Map<UUID, Integer> sessionsLeft,
+                            boolean canAssign,
+                            boolean canFinish) {
+
+    public boolean readOnly() {
+        return !canAssign;
+    }
+
+    public int sessionsLeft(UUID riderId) {
+        return sessionsLeft.getOrDefault(riderId, 0);
+    }
 }

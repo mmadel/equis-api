@@ -224,9 +224,15 @@ class RiderReassignJourneyTest {
     }
 
     // Ahmed places Sara at Level 2 on Tue 20 Oct 17:00 and seats her in Level 2 at 18:00 the same evening; the admin
-    // then gives her to Mona.
+    // then gives her to Mona. She has an October package, since only riders with a session left can be seated.
     private UUID placedAndSeatedByAhmedThenMovedToMona() throws Exception {
         UUID sara = fx.placedRiders(ahmed, tue20, LEVEL_TWO, "Sara Ali").getFirst();
+        fx.jdbc().update("""
+                        insert into payment (rider_id, amount_egp, method, start_month, months, sessions,
+                                             valid_until, recorded_by)
+                        values (?, 1200, 'cash', date '2026-10-01', 1, 8, date '2026-11-30',
+                                (select id from admin_account limit 1))""",
+                sara);
         fx.assignToSession(ahmed, levelTwo, List.of(sara)).andExpect(status().isOk());
         fx.assignRiders(List.of(sara), mona.id()).andExpect(status().isOk());
         return sara;
