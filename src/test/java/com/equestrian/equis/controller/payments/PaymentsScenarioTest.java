@@ -8,6 +8,7 @@ import com.equestrian.equis.service.payments.RiderBalanceService;
 import com.equestrian.equis.support.AdminOversightFixture;
 import com.equestrian.equis.support.AdminOversightFixture.Coach;
 import com.equestrian.equis.support.MutableClock;
+import com.equestrian.equis.support.PaymentJourneys;
 import com.equestrian.equis.support.TrainerAccountsFixture;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
@@ -33,8 +34,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -44,7 +43,6 @@ import static com.equestrian.equis.support.AdminOversightFixture.read;
 import static com.equestrian.equis.support.TrainerAccountsFixture.START;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -52,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // E12 payment journeys 1–15 end to end, over HTTP: the admin on W3 (record, void, history, the list) and the
 // trainers on My riders, with the clock moved across month ends. Session usage goes in with SessionUsageRepository,
 // because no endpoint writes it until the next epic. After every step assertPaymentInvariants() checks the rules
-// that span the endpoints (scenario 16). The single rules are in each endpoint's own *ApiTest.
+// that span the endpoints (scenario 16; in PaymentJourneys). The single rules are in each endpoint's own *ApiTest.
 // Every scenario has trainers Ahmed and Mona and a Monday 10:00 assessment slot for 12; riders are placed in it on
 // Monday 2 Nov 2026 with Ahmed as assessor, so they start as his.
 @SpringBootTest(properties = "app.sessions.generate-cron=-")
@@ -102,12 +100,14 @@ class PaymentsScenarioTest {
     Coach ahmed;
     Coach mona;
     UUID mondaySlot;
+    PaymentJourneys payments;
 
     @BeforeEach
     void setUp() throws Exception {
         fx.reset();
         ahmed = fx.coach("Ahmed Said");
         mona = fx.coach("Mona Kamal");
+        payments = new PaymentJourneys(fx, ahmed, mona);
         fx.at(SUN_1_NOV, TEN);
         assessmentSlotsOnMondays();
         mondaySlot = fx.slotOn(MON_2_NOV, TEN);
@@ -122,13 +122,13 @@ class PaymentsScenarioTest {
     // 1
     @Test
     void aNewlyPlacedRiderIsAwaitingPaymentOnBothScreens() throws Exception {
-        assertThat(w3Total()).isZero();
+        assertThat(payments.w3Total()).isZero();
 
         UUID omar = placeRiders("Omar Hassan").getFirst();
 
-        assertBalance(omar, 0, "awaiting_payment", null);
-        assertThat(onMyRiders(ahmed)).containsKey(omar.toString());
-        assertThat(w3Total()).isEqualTo(1);
+        payments.assertBalance(omar, 0, "awaiting_payment", null);
+        assertThat(payments.onMyRiders(ahmed)).containsKey(omar.toString());
+        assertThat(payments.w3Total()).isEqualTo(1);
     }
 
     // 2: the epic demo's first payment
@@ -145,7 +145,7 @@ class PaymentsScenarioTest {
         moveTo(LocalDate.of(2026, 12, 10));
         pay(omar, "1200", DEC, 1).andExpect(status().isCreated());
 
-        assertBalance(omar, 16, "active", NOV_EXPIRY);
+        payments.assertBalance(omar, 16, "active", NOV_EXPIRY);
     }
 
     // 4
@@ -161,8 +161,8 @@ class PaymentsScenarioTest {
 
         moveTo(LocalDate.of(2027, 1, 1));
 
-        assertBalance(omar, 8, "active", DEC_EXPIRY);
-        history(omar)
+        payments.assertBalance(omar, 8, "active", DEC_EXPIRY);
+        payments.history(omar)
                 .andExpect(jsonPath("$.payments[1].startMonth").value("2026-11"))
                 .andExpect(jsonPath("$.payments[1].state").value("expired"))
                 .andExpect(jsonPath("$.payments[1].used").value(5))
@@ -180,8 +180,8 @@ class PaymentsScenarioTest {
 
         moveTo(LocalDate.of(2027, 2, 1));
 
-        assertBalance(omar, 0, "awaiting_payment", null);
-        history(omar).andExpect(jsonPath("$.payments[*].state", contains("expired", "expired")));
+        payments.assertBalance(omar, 0, "awaiting_payment", null);
+        payments.history(omar).andExpect(jsonPath("$.payments[*].state", contains("expired", "expired")));
     }
 
     // 7: the epic demo's typo
@@ -190,20 +190,20 @@ class PaymentsScenarioTest {
         UUID omar = placeRiders("Omar Hassan").getFirst();
         moveTo(NOV_3);
 
-        UUID wrong = paymentId(pay(omar, "12000", NOV, 1).andExpect(status().isCreated()));
-        assertBalance(omar, 8, "active", NOV_EXPIRY);
+        UUID wrong = PaymentJourneys.paymentId(pay(omar, "12000", NOV, 1).andExpect(status().isCreated()));
+        payments.assertBalance(omar, 8, "active", NOV_EXPIRY);
 
         voidPayment(wrong, "Typo in amount")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payment.state").value("voided"))
                 .andExpect(jsonPath("$.balance.sessionsLeft").value(0));
-        assertBalance(omar, 0, "awaiting_payment", null);
+        payments.assertBalance(omar, 0, "awaiting_payment", null);
 
-        UUID right = paymentId(pay(omar, "1200", NOV, 1).andExpect(status().isCreated()));
-        assertBalance(omar, 8, "active", NOV_EXPIRY);
+        UUID right = PaymentJourneys.paymentId(pay(omar, "1200", NOV, 1).andExpect(status().isCreated()));
+        payments.assertBalance(omar, 8, "active", NOV_EXPIRY);
 
         // Newest first: the right one, then the voided one with its reason.
-        ResultActions history = history(omar)
+        ResultActions history = payments.history(omar)
                 .andExpect(jsonPath("$.payments.length()").value(2))
                 .andExpect(jsonPath("$.payments[0].id").value(right.toString()))
                 .andExpect(jsonPath("$.payments[0].state").value("active"))
@@ -219,18 +219,18 @@ class PaymentsScenarioTest {
     void aPackageSessionsWereUsedFromCannotBeVoided() throws Exception {
         UUID omar = placeRiders("Omar Hassan").getFirst();
         moveTo(NOV_3);
-        UUID nov = paymentId(pay(omar, "1200", NOV, 1).andExpect(status().isCreated()));
+        UUID nov = PaymentJourneys.paymentId(pay(omar, "1200", NOV, 1).andExpect(status().isCreated()));
         moveTo(LocalDate.of(2026, 11, 10));
         useSessions(nov, 2);
-        assertBalance(omar, 6, "active", NOV_EXPIRY);
+        payments.assertBalance(omar, 6, "active", NOV_EXPIRY);
 
         voidPayment(nov, "Entered by mistake")
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("payment_has_usage"))
                 .andExpect(jsonPath("$.details.used").value(2));
 
-        assertBalance(omar, 6, "active", NOV_EXPIRY);
-        history(omar).andExpect(jsonPath("$.payments[0].state").value("active"))
+        payments.assertBalance(omar, 6, "active", NOV_EXPIRY);
+        payments.history(omar).andExpect(jsonPath("$.payments[0].state").value("active"))
                 .andExpect(jsonPath("$.payments[0].voidReason").isEmpty());
     }
 
@@ -242,16 +242,16 @@ class PaymentsScenarioTest {
 
         pay(omar, "1200", DEC, 1).andExpect(status().isCreated());
 
-        assertBalance(omar, 0, "awaiting_payment", null);
-        history(omar).andExpect(jsonPath("$.payments[0].state").value("upcoming"))
+        payments.assertBalance(omar, 0, "awaiting_payment", null);
+        payments.history(omar).andExpect(jsonPath("$.payments[0].state").value("upcoming"))
                 .andExpect(jsonPath("$.payments[0].left").value(8));
         moveTo(LocalDate.of(2026, 11, 30));
-        assertBalance(omar, 0, "awaiting_payment", null);
+        payments.assertBalance(omar, 0, "awaiting_payment", null);
 
         moveTo(LocalDate.of(2026, 12, 1));
 
-        assertBalance(omar, 8, "active", DEC_EXPIRY);
-        history(omar).andExpect(jsonPath("$.payments[0].state").value("active"));
+        payments.assertBalance(omar, 8, "active", DEC_EXPIRY);
+        payments.history(omar).andExpect(jsonPath("$.payments[0].state").value("active"));
     }
 
     // 10
@@ -263,7 +263,7 @@ class PaymentsScenarioTest {
         pay(omar, "1200", NOV, 1).andExpect(status().isCreated());
         pay(omar, "1200", NOV, 1).andExpect(status().isCreated());
 
-        assertBalance(omar, 16, "active", NOV_EXPIRY);
+        payments.assertBalance(omar, 16, "active", NOV_EXPIRY);
     }
 
     // 11
@@ -280,8 +280,8 @@ class PaymentsScenarioTest {
                     .andExpect(jsonPath("$.fieldErrors[0].message").value("start_month_out_of_range"));
         }
 
-        assertBalance(omar, 0, "awaiting_payment", null);
-        history(omar).andExpect(jsonPath("$.payments.length()").value(0));
+        payments.assertBalance(omar, 0, "awaiting_payment", null);
+        payments.history(omar).andExpect(jsonPath("$.payments.length()").value(0));
     }
 
     // 12
@@ -295,30 +295,30 @@ class PaymentsScenarioTest {
         moveTo(NOV_3);
         pay(omar, "1200", NOV, 1).andExpect(status().isCreated());
         // Sara has not paid; Nour's only payment was voided; Laila paid for December only.
-        UUID nours = paymentId(pay(nour, "12000", NOV, 1).andExpect(status().isCreated()));
+        UUID nours = PaymentJourneys.paymentId(pay(nour, "12000", NOV, 1).andExpect(status().isCreated()));
         voidPayment(nours, "Typo in amount").andExpect(status().isOk());
         pay(laila, "1200", DEC, 1).andExpect(status().isCreated());
 
         fx.w3(Map.of("payment", "awaiting_payment"))
                 .andExpect(jsonPath("$.riders.length()").value(3))
                 .andExpect(jsonPath("$.totals.awaitingPayment").value(3));
-        assertThat(w3Ids(Map.of("payment", "awaiting_payment")))
+        assertThat(payments.w3Ids(Map.of("payment", "awaiting_payment")))
                 .containsExactlyInAnyOrder(sara.toString(), nour.toString(), laila.toString());
-        assertThat(w3Ids(Map.of("payment", "active"))).containsExactly(omar.toString());
+        assertThat(payments.w3Ids(Map.of("payment", "active"))).containsExactly(omar.toString());
     }
 
     // 13
     @Test
     void aRiderMovedToAnotherTrainerKeepsTheBalance() throws Exception {
         UUID omar = omarPaidForNovember();
-        Map<String, Object> before = onMyRiders(ahmed).get(omar.toString());
+        Map<String, Object> before = payments.onMyRiders(ahmed).get(omar.toString());
 
         fx.assignRiders(List.of(omar), mona.id()).andExpect(status().isOk());
-        assertPaymentInvariants();
+        payments.assertPaymentInvariants();
 
-        assertThat(onMyRiders(ahmed)).doesNotContainKey(omar.toString());
-        assertThat(onMyRiders(mona)).containsEntry(omar.toString(), before);
-        assertBalance(omar, 8, "active", NOV_EXPIRY);
+        assertThat(payments.onMyRiders(ahmed)).doesNotContainKey(omar.toString());
+        assertThat(payments.onMyRiders(mona)).containsEntry(omar.toString(), before);
+        payments.assertBalance(omar, 8, "active", NOV_EXPIRY);
     }
 
     // 14
@@ -326,17 +326,17 @@ class PaymentsScenarioTest {
     void twoVoidsOfTheSamePaymentAtOnce() throws Exception {
         UUID omar = placeRiders("Omar Hassan").getFirst();
         moveTo(NOV_3);
-        UUID nov = paymentId(pay(omar, "1200", NOV, 1).andExpect(status().isCreated()));
+        UUID nov = PaymentJourneys.paymentId(pay(omar, "1200", NOV, 1).andExpect(status().isCreated()));
         signInEveryone();
 
         List<String> outcomes = race(
-                () -> voidRequest(nov, "Entered twice").andReturn(),
-                () -> voidRequest(nov, "Entered twice").andReturn());
+                () -> payments.voidRequest(nov, "Entered twice").andReturn(),
+                () -> payments.voidRequest(nov, "Entered twice").andReturn());
 
         assertThat(outcomes).containsExactlyInAnyOrder("ok", "payment_already_voided");
-        assertPaymentInvariants();
-        assertBalance(omar, 0, "awaiting_payment", null);
-        history(omar).andExpect(jsonPath("$.payments.length()").value(1))
+        payments.assertPaymentInvariants();
+        payments.assertBalance(omar, 0, "awaiting_payment", null);
+        payments.history(omar).andExpect(jsonPath("$.payments.length()").value(1))
                 .andExpect(jsonPath("$.payments[0].state").value("voided"));
     }
 
@@ -348,13 +348,13 @@ class PaymentsScenarioTest {
         signInEveryone();
 
         List<String> outcomes = race(
-                () -> payRequest(omar, "1200", NOV, 1).andReturn(),
-                () -> payRequest(omar, "1200", NOV, 1).andReturn());
+                () -> payments.payRequest(omar, "1200", NOV, 1).andReturn(),
+                () -> payments.payRequest(omar, "1200", NOV, 1).andReturn());
 
         assertThat(outcomes).containsExactly("ok", "ok");
-        assertPaymentInvariants();
-        assertBalance(omar, 16, "active", NOV_EXPIRY);
-        history(omar).andExpect(jsonPath("$.payments.length()").value(2));
+        payments.assertPaymentInvariants();
+        payments.assertBalance(omar, 16, "active", NOV_EXPIRY);
+        payments.history(omar).andExpect(jsonPath("$.payments.length()").value(2));
     }
 
     // ---- Journeys several scenarios build on
@@ -362,7 +362,7 @@ class PaymentsScenarioTest {
     // Steps 1 and 2: Omar placed on 2 Nov, paid 1,200 cash for November on 3 Nov.
     private UUID omarPaidForNovember() throws Exception {
         UUID omar = placeRiders("Omar Hassan").getFirst();
-        assertBalance(omar, 0, "awaiting_payment", null);
+        payments.assertBalance(omar, 0, "awaiting_payment", null);
         moveTo(NOV_3);
 
         pay(omar, "1200", NOV, 1)
@@ -372,7 +372,7 @@ class PaymentsScenarioTest {
                 .andExpect(jsonPath("$.payment.validUntil").value(NOV_EXPIRY))
                 .andExpect(jsonPath("$.balance.sessionsLeft").value(8));
 
-        assertBalance(omar, 8, "active", NOV_EXPIRY);
+        payments.assertBalance(omar, 8, "active", NOV_EXPIRY);
         return omar;
     }
 
@@ -381,8 +381,8 @@ class PaymentsScenarioTest {
     private UUID omarUsedFiveInDecember() throws Exception {
         UUID omar = omarPaidForNovember();
         moveTo(LocalDate.of(2026, 12, 10));
-        UUID dec = paymentId(pay(omar, "1200", DEC, 1).andExpect(status().isCreated()));
-        UUID nov = UUID.fromString(read(history(omar), "$.payments[1].id"));
+        UUID dec = PaymentJourneys.paymentId(pay(omar, "1200", DEC, 1).andExpect(status().isCreated()));
+        UUID nov = UUID.fromString(read(payments.history(omar), "$.payments[1].id"));
         moveTo(LocalDate.of(2026, 12, 12));
 
         for (int i = 0; i < 5; i++) {
@@ -391,8 +391,8 @@ class PaymentsScenarioTest {
             useSessions(from, 1);
         }
 
-        assertBalance(omar, 11, "active", NOV_EXPIRY);
-        history(omar)
+        payments.assertBalance(omar, 11, "active", NOV_EXPIRY);
+        payments.history(omar)
                 .andExpect(jsonPath("$.payments[1].id").value(nov.toString()))
                 .andExpect(jsonPath("$.payments[1].used").value(5))
                 .andExpect(jsonPath("$.payments[1].left").value(3))
@@ -401,102 +401,35 @@ class PaymentsScenarioTest {
         return omar;
     }
 
-    // ---- 16: the rules that span the endpoints
-
-    // For every rider on W3: the trainer's My riders shows the same balance (and only their trainer lists them);
-    // the history agrees; sessionsLeft is the sum of what the active packages have left (upcoming ones don't count
-    // yet); the status is active exactly when something is left; nextExpiry is the soonest expiry among the active
-    // packages with sessions left. totals.awaitingPayment is the number of awaiting rows.
-    private void assertPaymentInvariants() throws Exception {
-        String w3 = body(fx.w3());
-        List<Map<String, Object>> rows = JsonPath.read(w3, "$.riders");
-
-        Map<String, Map<String, Object>> listed = new HashMap<>();
-        Map<String, String> listedBy = new HashMap<>();
-        for (Coach coach : List.of(ahmed, mona)) {
-            onMyRiders(coach).forEach((riderId, balance) -> {
-                listed.put(riderId, balance);
-                listedBy.put(riderId, coach.id().toString());
-            });
-        }
-
-        long awaiting = 0;
-        int withTrainer = 0;
-        for (Map<String, Object> row : rows) {
-            String id = (String) row.get("id");
-            @SuppressWarnings("unchecked")
-            Map<String, Object> balance = (Map<String, Object>) row.get("balance");
-            @SuppressWarnings("unchecked")
-            Map<String, Object> trainer = (Map<String, Object>) row.get("trainer");
-            if (trainer != null) {
-                withTrainer++;
-                assertThat(listedBy.get(id)).as("%s is on their trainer's My riders", id).isEqualTo(trainer.get("id"));
-                assertThat(listed.get(id)).as("%s: My riders balance = W3 balance", id).isEqualTo(balance);
-            }
-
-            String history = body(history(UUID.fromString(id)));
-            assertThat(JsonPath.<Map<String, Object>>read(history, "$.balance"))
-                    .as("%s: history balance = W3 balance", id).isEqualTo(balance);
-            List<Integer> left = JsonPath.read(history, "$.payments[?(@.state == 'active')].left");
-            int sessionsLeft = (Integer) balance.get("sessionsLeft");
-            assertThat(sessionsLeft).as("%s: sessionsLeft = sum over active packages", id)
-                    .isEqualTo(left.stream().mapToInt(Integer::intValue).sum());
-            assertThat(balance.get("status")).as("%s: status follows the balance", id)
-                    .isEqualTo(sessionsLeft > 0 ? "active" : "awaiting_payment");
-            List<String> expiries = JsonPath.read(history,
-                    "$.payments[?(@.state == 'active' && @.left > 0)].validUntil");
-            assertThat(balance.get("nextExpiry")).as("%s: nextExpiry is the soonest with sessions left", id)
-                    .isEqualTo(expiries.stream().sorted().findFirst().orElse(null));
-            if (sessionsLeft == 0) {
-                awaiting++;
-            }
-        }
-        assertThat(listed).as("My riders lists only riders W3 gives a trainer").hasSize(withTrainer);
-        assertThat(((Number) JsonPath.read(w3, "$.totals.awaitingPayment")).longValue())
-                .as("awaitingPayment total = awaiting rows").isEqualTo(awaiting);
-    }
-
     // ---- Steps
 
     // Admin adds each person into the Monday slot with Ahmed as assessor; the clock moves past its start and Ahmed
     // places them all at level 1. The rider ids, in the order of the names.
     private List<UUID> placeRiders(String... names) throws Exception {
         List<UUID> riders = fx.placedRiders(ahmed, mondaySlot, LEVEL_ONE, names);
-        assertPaymentInvariants();
+        payments.assertPaymentInvariants();
         return riders;
     }
 
     // 10:00 school time on that day.
     private void moveTo(LocalDate date) throws Exception {
         fx.at(date, TEN);
-        assertPaymentInvariants();
+        payments.assertPaymentInvariants();
     }
 
     private ResultActions pay(UUID riderId, String amount, YearMonth start, int months) throws Exception {
         // A minute apart, so the history's newest-first order is well defined.
         fx.accounts().advance(Duration.ofMinutes(1));
-        ResultActions result = payRequest(riderId, amount, start, months);
-        assertPaymentInvariants();
+        ResultActions result = payments.payRequest(riderId, amount, start, months);
+        payments.assertPaymentInvariants();
         return result;
-    }
-
-    private ResultActions payRequest(UUID riderId, String amount, YearMonth start, int months) throws Exception {
-        return fx.accounts().admin(post("/admin/riders/" + riderId + "/payments")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{ \"amountEgp\": %s, \"method\": \"cash\", \"startMonth\": \"%s\", \"months\": %d }"
-                        .formatted(amount, start, months)));
     }
 
     private ResultActions voidPayment(UUID paymentId, String reason) throws Exception {
         fx.accounts().advance(Duration.ofMinutes(1));
-        ResultActions result = voidRequest(paymentId, reason);
-        assertPaymentInvariants();
+        ResultActions result = payments.voidRequest(paymentId, reason);
+        payments.assertPaymentInvariants();
         return result;
-    }
-
-    private ResultActions voidRequest(UUID paymentId, String reason) throws Exception {
-        return fx.accounts().admin(post("/admin/payments/" + paymentId + "/void")
-                .contentType(MediaType.APPLICATION_JSON).content("{ \"reason\": \"%s\" }".formatted(reason)));
     }
 
     // n sessions the package's rider rode on the n days before today, paid from this package.
@@ -509,7 +442,7 @@ class PaymentsScenarioTest {
                     paymentRepository.findById(paymentId).orElseThrow(),
                     sessionRepository.getReferenceById(session), clock.instant())));
         }
-        assertPaymentInvariants();
+        payments.assertPaymentInvariants();
     }
 
     // A level-1 session on that date, on a template of its own (the usage rows are what matter, not the timetable).
@@ -529,41 +462,6 @@ class PaymentsScenarioTest {
         return fx.jdbc().queryForObject("select count(*) from session_usage", Integer.class);
     }
 
-    // ---- What the screens show
-
-    private void assertBalance(UUID riderId, int sessionsLeft, String status, String nextExpiry) throws Exception {
-        Map<String, Object> expected = new HashMap<>();
-        expected.put("sessionsLeft", sessionsLeft);
-        expected.put("status", status);
-        expected.put("nextExpiry", nextExpiry);
-        List<Map<String, Object>> w3 = JsonPath.read(body(fx.w3()), riderRow(riderId) + ".balance");
-        assertThat(w3).as("W3 balance").singleElement().isEqualTo(expected);
-    }
-
-    private ResultActions history(UUID riderId) throws Exception {
-        return fx.accounts().admin(get("/admin/riders/" + riderId + "/payments")).andExpect(status().isOk());
-    }
-
-    // The trainer's My riders: each rider id with its balance.
-    private Map<String, Map<String, Object>> onMyRiders(Coach coach) throws Exception {
-        List<Map<String, Object>> rows = JsonPath.read(body(fx.myRiders(coach)), "$");
-        Map<String, Map<String, Object>> byId = new HashMap<>();
-        for (Map<String, Object> row : rows) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> balance = (Map<String, Object>) row.get("balance");
-            byId.put((String) row.get("id"), balance);
-        }
-        return byId;
-    }
-
-    private long w3Total() throws Exception {
-        return ((Number) JsonPath.read(body(fx.w3()), "$.totals.awaitingPayment")).longValue();
-    }
-
-    private List<String> w3Ids(Map<String, String> params) throws Exception {
-        return new ArrayList<>(JsonPath.read(body(fx.w3(params)), "$.riders[*].id"));
-    }
-
     // ---- Helpers
 
     // Monday 10:00–11:00 assessments for 12, from today, so the slot on 2 Nov exists.
@@ -580,19 +478,7 @@ class PaymentsScenarioTest {
         fx.token(mona);
     }
 
-    private static UUID paymentId(ResultActions created) throws Exception {
-        return UUID.fromString(read(created, "$.payment.id"));
-    }
-
     private static double amount(ResultActions result, String path) throws Exception {
-        return ((Number) JsonPath.read(body(result), path)).doubleValue();
-    }
-
-    private static String riderRow(UUID id) {
-        return AdminOversightFixture.riderRow(id);
-    }
-
-    private static String body(ResultActions result) throws Exception {
-        return result.andReturn().getResponse().getContentAsString();
+        return ((Number) JsonPath.read(PaymentJourneys.body(result), path)).doubleValue();
     }
 }
