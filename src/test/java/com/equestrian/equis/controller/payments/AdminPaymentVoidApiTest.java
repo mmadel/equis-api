@@ -39,6 +39,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -110,6 +111,7 @@ public class AdminPaymentVoidApiTest {
                 .andExpect(jsonPath("$.payment.voidReason").value("Typo in amount, should be 1,200"))
                 .andExpect(jsonPath("$.payment.voidedAt").value("2026-11-03T08:15:00Z"))
                 .andExpect(jsonPath("$.payment.used").value(0))
+                .andExpect(jsonPath("$.payment.usages", empty()))
                 .andExpect(jsonPath("$.payment.left").value(0))
                 .andExpect(jsonPath("$.balance.sessionsLeft").value(0))
                 .andExpect(jsonPath("$.balance.status").value("awaiting_payment"))
