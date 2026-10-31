@@ -2,9 +2,11 @@ package com.equestrian.equis.service.sessions;
 
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
+import com.equestrian.equis.entity.evaluations.SessionEvaluation;
 import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.entity.sessions.Assignment;
 import com.equestrian.equis.entity.sessions.Session;
+import com.equestrian.equis.repository.evaluations.SessionEvaluationRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.repository.sessions.AssignmentRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,16 +34,18 @@ public class SessionDetailService {
     private final SessionRepository sessions;
     private final AssignmentRepository assignments;
     private final RiderRepository riders;
+    private final SessionEvaluationRepository evaluations;
     private final RiderBalanceService balances;
     private final Clock clock;
     private final ZoneId schoolZone;
 
     public SessionDetailService(SessionRepository sessions, AssignmentRepository assignments, RiderRepository riders,
-                                RiderBalanceService balances, Clock clock,
+                                SessionEvaluationRepository evaluations, RiderBalanceService balances, Clock clock,
                                 @Value("${app.time-zone}") ZoneId schoolZone) {
         this.sessions = sessions;
         this.assignments = assignments;
         this.riders = riders;
+        this.evaluations = evaluations;
         this.balances = balances;
         this.clock = clock;
         this.schoolZone = schoolZone;
@@ -78,6 +83,11 @@ public class SessionDetailService {
         List<Rider> eligible = myRiders.stream()
                 .filter(rider -> sessionsLeft.getOrDefault(rider.getId(), 0) > 0)
                 .toList();
-        return new SessionDetail(session, seats, eligible, sessionsLeft, canAssign, canFinish);
+        // Only a finished session can have evaluations, so the others skip the query.
+        Map<UUID, SessionEvaluation> saved = session.isFinished()
+                ? evaluations.findBySessionIdIn(List.of(sessionId)).stream()
+                        .collect(Collectors.toMap(e -> e.getRider().getId(), Function.identity()))
+                : Map.of();
+        return new SessionDetail(session, seats, eligible, sessionsLeft, saved, canAssign, canFinish);
     }
 }

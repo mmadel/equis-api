@@ -52,6 +52,8 @@ public class ErrorCodes {
     public static final String SESSION_NOT_TODAY  = "session_not_today";  // 409
     public static final String SESSION_ALREADY_FINISHED = "session_already_finished"; // 409
     public static final String SESSION_NOT_STARTED = "session_not_started"; // 409
+    public static final String SESSION_NOT_FINISHED = "session_not_finished"; // 409
+    public static final String ALREADY_EVALUATED  = "already_evaluated";  // 409
     public static final String SLOT_CLOSED        = "slot_closed";        // 409
     public static final String SLOT_FULL          = "slot_full";          // 409
     public static final String SLOT_NOT_STARTED   = "slot_not_started";   // 409
@@ -78,6 +80,8 @@ public class ErrorCodes {
     public static final String LEVEL_AT_BOTTOM    = "level_at_bottom";    // 409
     public static final String LEVEL_OUT_OF_RANGE = "level_out_of_range"; // 422
     public static final String RESULT_TOO_EARLY   = "result_too_early";   // 422
+    public static final String RIDER_NOT_IN_SESSION = "rider_not_in_session"; // 422 field error on riderId
+    public static final String RIDER_NOT_YOURS    = "rider_not_yours";    // 422 field error on riderId: seated by another coach
     public static final String RIDER_NO_SESSIONS_LEFT = "rider_no_sessions_left"; // 422 field errors; 409 details on finish
     public static final String ACCOUNT_LOCKED     = "account_locked";     // 423
     public static final String INTERNAL_ERROR     = "internal_error";     // 500
