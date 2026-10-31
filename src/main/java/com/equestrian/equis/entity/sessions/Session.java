@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 // A dated occurrence of a session template. Not org.hibernate.Session.
@@ -59,6 +60,13 @@ public class Session {
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
 
+    @Column(name = "finished_at")
+    private Instant finishedAt;
+
+    // The trainer's id; the foreign key is in the database.
+    @Column(name = "finished_by")
+    private UUID finishedBy;
+
     @Version
     @Column(name = "version", nullable = false)
     private long version;
@@ -88,10 +96,31 @@ public class Session {
         return startsAt(zone).toInstant().isAfter(now);
     }
 
-    // Cancelling an already cancelled session keeps the first cancelledAt.
+    public boolean hasStarted(Instant now, ZoneId zone) {
+        return !now.isBefore(startsAt(zone).toInstant());
+    }
+
+    public boolean isFinished() {
+        return status == SessionStatus.FINISHED;
+    }
+
+    // A finished session is final. The start time is checked by the finish endpoint, which knows the school zone.
+    public void finish(UUID trainerId, Instant now) {
+        if (status != SessionStatus.SCHEDULED) {
+            throw new IllegalStateException("Only a scheduled session can be finished");
+        }
+        status = SessionStatus.FINISHED;
+        finishedBy = Objects.requireNonNull(trainerId, "trainerId");
+        finishedAt = Objects.requireNonNull(now, "now");
+    }
+
+    // Cancelling an already cancelled session keeps the first cancelledAt. A finished session can't be cancelled.
     public void cancel(Instant now) {
         if (status == SessionStatus.CANCELLED) {
             return;
+        }
+        if (status == SessionStatus.FINISHED) {
+            throw new IllegalStateException("A finished session can't be cancelled");
         }
         status = SessionStatus.CANCELLED;
         cancelledAt = now;

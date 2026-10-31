@@ -34,4 +34,15 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
               and p.validUntil >= :date
             """)
     List<Payment> findValidOn(@Param("riderIds") Collection<UUID> riderIds, @Param("date") LocalDate date);
+
+    // The same packages, locked before a session deduction so a void on one of them waits (or is waited on).
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select p from Payment p
+            where p.rider.id in :riderIds
+              and p.voidedAt is null
+              and p.startMonth <= :date
+              and p.validUntil >= :date
+            """)
+    List<Payment> lockValidOn(@Param("riderIds") Collection<UUID> riderIds, @Param("date") LocalDate date);
 }
