@@ -7,7 +7,8 @@ import java.util.Locale;
 
 public enum SessionStatus {
     SCHEDULED,
-    CANCELLED;
+    CANCELLED,
+    FINISHED;
 
     @Converter(autoApply = true)
     public static class DbConverter implements AttributeConverter<SessionStatus, String> {

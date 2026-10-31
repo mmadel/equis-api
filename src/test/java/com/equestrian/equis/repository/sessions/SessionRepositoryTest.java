@@ -4,7 +4,9 @@ import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.entity.sessions.SessionStatus;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
 import com.equestrian.equis.repository.levels.LevelRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
@@ -19,8 +21,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -28,6 +32,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SessionRepositoryTest {
     private static final short LEVEL_1 = 1;
     private static final ZoneId CAIRO = ZoneId.of("Africa/Cairo");
+    // Seeded by V4.
+    private static final UUID TRAINER_1 = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     // 2026-10-05 is a Monday.
     private static final LocalDate MONDAY = LocalDate.of(2026, 10, 5);
@@ -44,6 +50,8 @@ public class SessionRepositoryTest {
     LevelRepository levelRepository;
     @Autowired
     JdbcTemplate jdbcTemplate;
+    @Autowired
+    EntityManager entityManager;
 
     @Test
     void factoryCopiesTemplateAndSavesAsScheduled() {
@@ -139,6 +147,83 @@ public class SessionRepositoryTest {
 
         assertThat(sessionRepository.existsByTemplateIdAndSessionDate(template.getId(), MONDAY)).isTrue();
         assertThat(sessionRepository.existsByTemplateIdAndSessionDate(template.getId(), MONDAY.plusWeeks(1))).isFalse();
+    }
+
+    // E13 case 5
+    @Test
+    void finishedSessionIsSavedAndReadBack() {
+        Session session = sessionRepository.saveAndFlush(Session.of(template("16:00"), MONDAY));
+        Instant at = Instant.parse("2026-10-05T14:05:00Z");
+
+        session.finish(TRAINER_1, at);
+        sessionRepository.saveAndFlush(session);
+        entityManager.clear();
+
+        Session read = sessionRepository.findById(session.getId()).orElseThrow();
+        assertThat(read.getStatus()).isEqualTo(SessionStatus.FINISHED);
+        assertThat(read.isFinished()).isTrue();
+        assertThat(read.getFinishedAt()).isEqualTo(at);
+        assertThat(read.getFinishedBy()).isEqualTo(TRAINER_1);
+        assertThat(statusInDb(read)).isEqualTo("finished");
+    }
+
+    // E13 case 2. One rejected insert per test: it aborts the test's transaction.
+    @Test
+    void finishedNeedsFinishedAt() {
+        assertThatThrownBy(() -> insertSession(template("16:00"), MONDAY, "finished", null, TRAINER_1))
+                .isInstanceOf(DataIntegrityViolationException.class).hasMessageContaining("ck_session_finished");
+    }
+
+    @Test
+    void onlyAFinishedSessionHasFinishedBy() {
+        assertThatThrownBy(() -> insertSession(template("16:00"), MONDAY, "scheduled", null, TRAINER_1))
+                .isInstanceOf(DataIntegrityViolationException.class).hasMessageContaining("ck_session_finished");
+    }
+
+    // E13 case 3
+    @Test
+    void unknownStatusIsRejected() {
+        assertThatThrownBy(() -> insertSession(template("16:00"), MONDAY, "done", null, null))
+                .isInstanceOf(DataIntegrityViolationException.class).hasMessageContaining("ck_session_status");
+    }
+
+    // E13 case 6
+    @Test
+    void finishOnlyFromScheduledAndAFinishedSessionCantBeCancelled() {
+        Instant at = Instant.parse("2026-10-05T14:05:00Z");
+        Session finished = Session.of(template("16:00"), MONDAY);
+        finished.finish(TRAINER_1, at);
+
+        assertThatThrownBy(() -> finished.finish(TRAINER_1, at)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> finished.cancel(at)).isInstanceOf(IllegalStateException.class);
+        assertThat(finished.getStatus()).isEqualTo(SessionStatus.FINISHED);
+
+        Session cancelled = Session.of(template("16:00"), MONDAY);
+        cancelled.cancel(at);
+        assertThatThrownBy(() -> cancelled.finish(TRAINER_1, at)).isInstanceOf(IllegalStateException.class);
+        assertThat(cancelled.getStatus()).isEqualTo(SessionStatus.CANCELLED);
+        assertThat(cancelled.getFinishedAt()).isNull();
+    }
+
+    // E13 case 7
+    @Test
+    void hasStartedFromTheStartTime() {
+        Session session = Session.of(template("17:00"), MONDAY);
+        Instant start = MONDAY.atTime(17, 0).atZone(CAIRO).toInstant();
+
+        assertThat(session.hasStarted(start.minusSeconds(60), CAIRO)).isFalse();
+        assertThat(session.hasStarted(start, CAIRO)).isTrue();
+        assertThat(session.hasStarted(start.plusSeconds(65 * 60), CAIRO)).isTrue();
+    }
+
+    private void insertSession(SessionTemplate template, LocalDate date, String status, Instant finishedAt,
+                               UUID finishedBy) {
+        jdbcTemplate.update("""
+                INSERT INTO session (template_id, session_date, start_time, end_time, capacity, status,
+                                     finished_at, finished_by)
+                VALUES (?, ?, '16:00', '17:00', 6, ?, ?, ?)
+                """, template.getId(), date, status,
+                finishedAt == null ? null : java.sql.Timestamp.from(finishedAt), finishedBy);
     }
 
     private String statusInDb(Session session) {
