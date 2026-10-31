@@ -131,12 +131,19 @@ public class AdminOverviewService {
                 seats.size(), names, state(s, now));
     }
 
+    // A level session is finished only when a trainer finished it; after its end without that it is not_finished.
+    // Assessment slots have no Finish button, so they are finished once their end time passes.
     private String state(Session s, Instant now) {
+        if (s.isFinished()) {
+            return "finished";
+        }
         if (now.isBefore(s.startsAt(schoolZone).toInstant())) {
             return "upcoming";
         }
-        return now.isBefore(s.getSessionDate().atTime(s.getEndTime()).atZone(schoolZone).toInstant())
-                ? "in_progress" : "finished";
+        if (now.isBefore(s.getSessionDate().atTime(s.getEndTime()).atZone(schoolZone).toInstant())) {
+            return "in_progress";
+        }
+        return isAssessment(s) ? "finished" : "not_finished";
     }
 
     // Levels 1–6 then assessment, every one listed even when it has no session.

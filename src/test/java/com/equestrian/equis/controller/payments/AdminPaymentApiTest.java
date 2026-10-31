@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -95,6 +96,7 @@ public class AdminPaymentApiTest {
                 .andExpect(jsonPath("$.payment.sessions").value(8))
                 .andExpect(jsonPath("$.payment.validUntil").value("2026-12-31"))
                 .andExpect(jsonPath("$.payment.used").value(0))
+                .andExpect(jsonPath("$.payment.usages", empty()))
                 .andExpect(jsonPath("$.payment.left").value(8))
                 .andExpect(jsonPath("$.payment.state").value("active"))
                 .andExpect(jsonPath("$.balance.sessionsLeft").value(8))
@@ -234,7 +236,7 @@ public class AdminPaymentApiTest {
         Map<String, Object> payment = JsonPath.read(json, "$.payment");
         assertThat(payment).containsEntry("voidedAt", null).containsEntry("voidReason", null);
         assertThat(payment).containsOnlyKeys("id", "riderId", "amountEgp", "method", "startMonth", "months",
-                "sessions", "validUntil", "used", "left", "state", "recordedAt", "voidedAt", "voidReason");
+                "sessions", "validUntil", "used", "left", "state", "recordedAt", "voidedAt", "voidReason", "usages");
         Map<String, Object> balance = JsonPath.read(json, "$.balance");
         assertThat(balance).containsOnlyKeys("sessionsLeft", "status", "nextExpiry");
     }
