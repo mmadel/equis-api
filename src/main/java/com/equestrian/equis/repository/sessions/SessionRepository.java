@@ -1,6 +1,7 @@
 package com.equestrian.equis.repository.sessions;
 
 import com.equestrian.equis.entity.sessions.Session;
+import com.equestrian.equis.entity.sessions.SessionStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -10,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -80,6 +82,19 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
             order by s.sessionDate, s.startTime, l.id
             """)
     List<Session> findScheduledLevelSessionsBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    // Level sessions on the date with one of the statuses, with template and level loaded, by start time.
+    // The inner join on the level leaves assessment slots out.
+    @Query("""
+            select s from Session s
+            join fetch s.template t
+            join fetch t.level l
+            where s.sessionDate = :date
+              and s.status in :statuses
+            order by s.startTime, l.id
+            """)
+    List<Session> findLevelSessionsOn(@Param("date") LocalDate date,
+                                      @Param("statuses") Collection<SessionStatus> statuses);
 
     // Scheduled assessment slots from..to (both included), each with its template loaded.
     @Query("""

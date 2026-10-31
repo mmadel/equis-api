@@ -44,6 +44,15 @@ public interface AssignmentRepository extends JpaRepository<Assignment, UUID> {
             """)
     List<Assignment> findBySessionIdIn(@Param("sessionIds") Collection<UUID> sessionIds);
 
+    // Like findBySessionIdIn, with the trainer who gave each seat loaded too. Don't call with an empty list.
+    @Query("""
+            select a from Assignment a
+            join fetch a.rider
+            join fetch a.assignedBy
+            where a.session.id in :sessionIds
+            """)
+    List<Assignment> findWithCoachBySessionIdIn(@Param("sessionIds") Collection<UUID> sessionIds);
+
     // One row per seat in these sessions, with the name of the rider's current trainer. Don't call with an empty list.
     @Query("""
             select new com.equestrian.equis.repository.sessions.SeatHolder(a.session.id, t.name)
