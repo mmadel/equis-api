@@ -83,6 +83,8 @@ public class FinishSessionService {
             throw noSessionsLeft(e.getRiders(), mine);
         }
         session.finish(trainerId, now);
+        // Nobody to evaluate: an empty session is done at once.
+        session.markDoneIfAllEvaluated(riders.size(), 0);
         return session;
     }
 

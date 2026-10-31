@@ -230,14 +230,15 @@ public class FinishSessionApiTest {
         assertThat(sessionStatus()).isEqualTo("scheduled");
     }
 
-    // Case 7
+    // Case 7. E14 case 13: with nobody to evaluate, an empty session goes straight to done.
     @Test
     void anEmptySessionIsFinishedWithoutUsingAnything() throws Exception {
         UUID empty = saveSession(LEVEL_2, TUESDAY, LocalTime.of(15, 0), State.SCHEDULED);
 
         finish(empty, ahmed)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("finished"))
+                .andExpect(jsonPath("$.status").value("done"))
+                .andExpect(jsonPath("$.finishedAt").value("2026-11-03T16:05:00Z"))
                 .andExpect(jsonPath("$.mySeats", empty()));
         assertThat(usages()).isZero();
     }

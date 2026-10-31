@@ -180,10 +180,10 @@ public class SessionRepositoryTest {
                 .isInstanceOf(DataIntegrityViolationException.class).hasMessageContaining("ck_session_finished");
     }
 
-    // E13 case 3
+    // E13 case 3 ("done" became a status in E14)
     @Test
     void unknownStatusIsRejected() {
-        assertThatThrownBy(() -> insertSession(template("16:00"), MONDAY, "done", null, null))
+        assertThatThrownBy(() -> insertSession(template("16:00"), MONDAY, "archived", null, null))
                 .isInstanceOf(DataIntegrityViolationException.class).hasMessageContaining("ck_session_status");
     }
 

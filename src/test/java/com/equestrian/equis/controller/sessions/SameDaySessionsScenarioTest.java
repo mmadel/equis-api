@@ -372,9 +372,10 @@ class SameDaySessionsScenarioTest {
         UUID ahmeds = todaysSession(FIVE_PM);
 
         at(TUE_3_NOV, LocalTime.of(16, 5));
+        // Nobody to evaluate, so it is done at once (E14).
         finish(ahmed, empty)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("finished"))
+                .andExpect(jsonPath("$.status").value("done"))
                 .andExpect(jsonPath("$.mySeats", empty()));
         at(TUE_3_NOV, LocalTime.of(16, 55));
         assign(ahmed, ahmeds, sara).andExpect(status().isOk());

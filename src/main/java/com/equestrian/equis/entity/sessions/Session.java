@@ -100,8 +100,13 @@ public class Session {
         return !now.isBefore(startsAt(zone).toInstant());
     }
 
+    // A done session has been finished too.
     public boolean isFinished() {
-        return status == SessionStatus.FINISHED;
+        return status == SessionStatus.FINISHED || status == SessionStatus.DONE;
+    }
+
+    public boolean isDone() {
+        return status == SessionStatus.DONE;
     }
 
     // A finished session is final. The start time is checked by the finish endpoint, which knows the school zone.
@@ -114,12 +119,21 @@ public class Session {
         finishedAt = Objects.requireNonNull(now, "now");
     }
 
+    // A finished session becomes done once every seated rider has an evaluation. Returns whether it changed.
+    public boolean markDoneIfAllEvaluated(long seated, long evaluated) {
+        if (status != SessionStatus.FINISHED || evaluated < seated) {
+            return false;
+        }
+        status = SessionStatus.DONE;
+        return true;
+    }
+
     // Cancelling an already cancelled session keeps the first cancelledAt. A finished session can't be cancelled.
     public void cancel(Instant now) {
         if (status == SessionStatus.CANCELLED) {
             return;
         }
-        if (status == SessionStatus.FINISHED) {
+        if (isFinished()) {
             throw new IllegalStateException("A finished session can't be cancelled");
         }
         status = SessionStatus.CANCELLED;
