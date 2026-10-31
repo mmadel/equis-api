@@ -93,12 +93,12 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
     List<Session> findAssessmentSlots(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
     // Scheduled sessions of every level and assessment slots from..to (both included), with template and level
-    // loaded; the level is null for an assessment slot. Cancelled sessions are left out.
+    // loaded; the level is null for an assessment slot. Cancelled sessions are left out; finished ones are kept.
     @Query("""
             select s from Session s
             join fetch s.template t
             left join fetch t.level
-            where s.status = com.equestrian.equis.entity.sessions.SessionStatus.SCHEDULED
+            where s.status <> com.equestrian.equis.entity.sessions.SessionStatus.CANCELLED
               and s.sessionDate between :from and :to
             """)
     List<Session> findActiveBetween(@Param("from") LocalDate from, @Param("to") LocalDate to);

@@ -131,7 +131,7 @@ public class AdminOverviewApiTest {
                 .andExpect(jsonPath("$.sessionsToday[*].sessionId",
                         contains(morning.toString(), slot.toString(), late.toString())))
                 .andExpect(jsonPath("$.sessionsToday[*].levelId", contains(1, null, 4)))
-                .andExpect(jsonPath("$.sessionsToday[*].state", contains("finished", "finished", "upcoming")))
+                .andExpect(jsonPath("$.sessionsToday[*].state", contains("not_finished", "finished", "upcoming")))
                 .andExpect(jsonPath("$.sessionsToday[2].start").value("16:00"))
                 .andExpect(jsonPath("$.sessionsToday[2].end").value("17:00"));
     }
@@ -144,7 +144,7 @@ public class AdminOverviewApiTest {
 
         overview().andExpect(jsonPath("$.sessionsToday[0].state").value("in_progress"));
         CLOCK.set(cairo(SATURDAY, 17, 0));
-        overview().andExpect(jsonPath("$.sessionsToday[0].state").value("finished"));
+        overview().andExpect(jsonPath("$.sessionsToday[0].state").value("not_finished"));
     }
 
     // Case 3

@@ -21,4 +21,20 @@ public interface SessionUsageRepository extends JpaRepository<SessionUsage, UUID
             group by u.payment.id
             """)
     List<UsedCount> countUsedByPayment(@Param("paymentIds") Collection<UUID> paymentIds);
+
+    // Every session used from these packages, in one query, oldest first. The trainer is the one who seated the rider
+    // in that session (null if that seat is gone), not the rider's trainer today.
+    @Query("""
+            select new com.equestrian.equis.repository.payments.UsageLine(
+                u.payment.id, s.id, s.sessionDate, s.startTime, s.endTime, l.id, t.name, u.usedAt)
+            from SessionUsage u
+            join u.session s
+            join s.template tp
+            left join tp.level l
+            left join Assignment a on a.session = s and a.rider = u.rider
+            left join a.assignedBy t
+            where u.payment.id in :paymentIds
+            order by s.sessionDate, s.startTime, u.usedAt
+            """)
+    List<UsageLine> findUsageLines(@Param("paymentIds") Collection<UUID> paymentIds);
 }

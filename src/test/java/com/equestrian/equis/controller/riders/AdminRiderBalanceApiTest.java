@@ -30,6 +30,7 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -177,6 +178,7 @@ public class AdminRiderBalanceApiTest {
                 .andExpect(jsonPath("$.payments[*].id", contains(saraNov.toString(), typo.toString())))
                 .andExpect(jsonPath("$.payments[0].state").value("active"))
                 .andExpect(jsonPath("$.payments[0].used").value(0))
+                .andExpect(jsonPath("$.payments[0].usages", empty()))
                 .andExpect(jsonPath("$.payments[0].left").value(8))
                 .andExpect(jsonPath("$.payments[1].state").value("voided"))
                 .andExpect(jsonPath("$.payments[1].amountEgp").value(12000.0))
