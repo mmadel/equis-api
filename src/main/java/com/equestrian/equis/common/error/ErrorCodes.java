@@ -29,6 +29,7 @@ public class ErrorCodes {
     public static final String ACCOUNT_DISABLED      = "account_disabled";      // 403
     public static final String NOT_YOUR_RIDER     = "not_your_rider";     // 403
     public static final String NOT_ASSESSOR       = "not_assessor";       // 403
+    public static final String SESSION_NOT_YOURS  = "session_not_yours";  // 403
     public static final String NOT_FOUND          = "not_found";          // 404
     public static final String LEVEL_NOT_FOUND    = "level_not_found";    // 404
     public static final String SESSION_NOT_FOUND  = "session_not_found";  // 404
@@ -49,6 +50,8 @@ public class ErrorCodes {
     public static final String TRAINER_IN_USE     = "trainer_in_use";     // 409
     public static final String SESSION_READ_ONLY  = "session_read_only";  // 409: cancelled or finished
     public static final String SESSION_NOT_TODAY  = "session_not_today";  // 409
+    public static final String SESSION_ALREADY_FINISHED = "session_already_finished"; // 409
+    public static final String SESSION_NOT_STARTED = "session_not_started"; // 409
     public static final String SLOT_CLOSED        = "slot_closed";        // 409
     public static final String SLOT_FULL          = "slot_full";          // 409
     public static final String SLOT_NOT_STARTED   = "slot_not_started";   // 409
@@ -75,7 +78,7 @@ public class ErrorCodes {
     public static final String LEVEL_AT_BOTTOM    = "level_at_bottom";    // 409
     public static final String LEVEL_OUT_OF_RANGE = "level_out_of_range"; // 422
     public static final String RESULT_TOO_EARLY   = "result_too_early";   // 422
-    public static final String RIDER_NO_SESSIONS_LEFT = "rider_no_sessions_left"; // 422 field errors
+    public static final String RIDER_NO_SESSIONS_LEFT = "rider_no_sessions_left"; // 422 field errors; 409 details on finish
     public static final String ACCOUNT_LOCKED     = "account_locked";     // 423
     public static final String INTERNAL_ERROR     = "internal_error";     // 500
 }

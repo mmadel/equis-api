@@ -18,6 +18,7 @@ import com.equestrian.equis.entity.sessions.SessionTemplate;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.sessions.AssignmentService;
+import com.equestrian.equis.service.sessions.FinishSessionService;
 import com.equestrian.equis.service.sessions.SessionDetail;
 import com.equestrian.equis.service.sessions.SessionDetailService;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -69,6 +71,8 @@ public class MySessionsControllerTest {
     SessionDetailService details;
     @MockitoBean
     AssignmentService assignments;
+    @MockitoBean
+    FinishSessionService finisher;
     @MockitoBean
     TrainerRepository trainerRepository;
 
@@ -184,6 +188,30 @@ public class MySessionsControllerTest {
     }
 
     @Test
+    void finishThenAnswersWithTheSessionAsFinished() throws Exception {
+        when(details.get(TRAINER_ID, SESSION_ID)).thenReturn(detail(false));
+
+        mvc.perform(trainer(post(PATH + "/finish")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(SESSION_ID.toString()));
+
+        InOrder order = inOrder(finisher, details);
+        order.verify(finisher).finish(TRAINER_ID, SESSION_ID);
+        order.verify(details).get(TRAINER_ID, SESSION_ID);
+    }
+
+    @Test
+    void finishPassesRefusalsThrough() throws Exception {
+        when(finisher.finish(TRAINER_ID, SESSION_ID)).thenThrow(new ApiException(
+                HttpStatus.CONFLICT, ErrorCodes.SESSION_NOT_STARTED, "This session has not started yet."));
+
+        mvc.perform(trainer(post(PATH + "/finish")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("session_not_started"));
+        verifyNoInteractions(details);
+    }
+
+    @Test
     void onlyTrainersGetIn() throws Exception {
         mvc.perform(get(PATH)).andExpect(status().isUnauthorized());
         mvc.perform(get(PATH).header(HttpHeaders.AUTHORIZATION, bearer(Role.ADMIN)))
@@ -191,7 +219,9 @@ public class MySessionsControllerTest {
         mvc.perform(put(PATH + "/assignments").header(HttpHeaders.AUTHORIZATION, bearer(Role.ADMIN))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"riderIds\": []}"))
                 .andExpect(status().isForbidden());
-        verifyNoInteractions(assignments, details);
+        mvc.perform(post(PATH + "/finish").header(HttpHeaders.AUTHORIZATION, bearer(Role.ADMIN)))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(assignments, details, finisher);
     }
 
     private MockHttpServletRequestBuilder trainer(MockHttpServletRequestBuilder request) {
