@@ -14,10 +14,11 @@ public record LevelSessionsResponse(LevelRef level, LocalDate from, LocalDate to
     public record Day(LocalDate date, List<SessionSlot> sessions) {
     }
 
-    // past is true once the session has started.
+    // status is scheduled or finished (cancelled sessions are left out). past is true once the session has started.
     public record SessionSlot(UUID id,
                               @JsonFormat(pattern = "HH:mm") LocalTime start,
                               @JsonFormat(pattern = "HH:mm") LocalTime end,
+                              String status,
                               int capacity,
                               int booked,
                               boolean past,

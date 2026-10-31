@@ -39,7 +39,7 @@ public class AssignmentService {
     public Session replaceMine(UUID trainerId, UUID sessionId, List<UUID> riderIds) {
         // The lock makes the seat count below safe against a second trainer saving at the same time.
         Session session = sessions.findByIdForUpdate(sessionId).orElseThrow(() ->
-                new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.NOT_FOUND, "This session does not exist."));
+                new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.SESSION_NOT_FOUND, "This session does not exist."));
 
         List<Assignment> seats = assignments.findBySessionIdIn(List.of(sessionId));
         Set<UUID> requested = new LinkedHashSet<>(riderIds);

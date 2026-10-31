@@ -34,6 +34,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -86,13 +87,14 @@ public class MyLevelsService {
                 .toList();
     }
 
-    // The level's scheduled sessions from..to (both included), grouped by date. Two queries whatever the range.
+    // The level's scheduled and finished sessions from..to (both included), grouped by date. Two queries whatever
+    // the range.
     public LevelSessionsResponse sessions(UUID trainerId, short levelId, LocalDate from, LocalDate to) {
         Level level = levels.findById(levelId).orElseThrow(() ->
                 new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.LEVEL_NOT_FOUND, "This level does not exist."));
         DateRanges.require(from, to, MAX_RANGE_DAYS);
 
-        List<Session> inRange = sessions.findScheduledByLevel(levelId, from, to);
+        List<Session> inRange = sessions.findNotCancelledByLevel(levelId, from, to);
         Map<UUID, List<Assignment>> seatsBySession = inRange.isEmpty() ? Map.of()
                 : assignments.findBySessionIdIn(inRange.stream().map(Session::getId).toList()).stream()
                         .collect(Collectors.groupingBy(seat -> seat.getSession().getId()));
@@ -104,7 +106,7 @@ public class MyLevelsService {
                     seatsBySession.getOrDefault(session.getId(), List.of()), trainerId, now, schoolZone);
             byDate.computeIfAbsent(session.getSessionDate(), date -> new ArrayList<>())
                     .add(new SessionSlot(session.getId(), session.getStartTime(), session.getEndTime(),
-                            seats.capacity(), seats.booked(), seats.past(), seats.seats()));
+                            session.getStatus().name().toLowerCase(Locale.ROOT), seats.capacity(), seats.booked(), seats.past(), seats.seats()));
         }
 
         List<Day> days = byDate.entrySet().stream()

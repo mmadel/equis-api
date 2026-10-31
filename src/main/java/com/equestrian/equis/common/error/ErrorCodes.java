@@ -47,7 +47,8 @@ public class ErrorCodes {
     public static final String INVALID_TRAINER_STATUS = "invalid_trainer_status"; // 409
     public static final String CONFIRM_REQUIRED   = "confirm_required";   // 409
     public static final String TRAINER_IN_USE     = "trainer_in_use";     // 409
-    public static final String SESSION_CLOSED     = "session_closed";     // 409
+    public static final String SESSION_READ_ONLY  = "session_read_only";  // 409: cancelled or finished
+    public static final String SESSION_NOT_TODAY  = "session_not_today";  // 409
     public static final String SLOT_CLOSED        = "slot_closed";        // 409
     public static final String SLOT_FULL          = "slot_full";          // 409
     public static final String SLOT_NOT_STARTED   = "slot_not_started";   // 409
@@ -74,6 +75,7 @@ public class ErrorCodes {
     public static final String LEVEL_AT_BOTTOM    = "level_at_bottom";    // 409
     public static final String LEVEL_OUT_OF_RANGE = "level_out_of_range"; // 422
     public static final String RESULT_TOO_EARLY   = "result_too_early";   // 422
+    public static final String RIDER_NO_SESSIONS_LEFT = "rider_no_sessions_left"; // 422 field errors
     public static final String ACCOUNT_LOCKED     = "account_locked";     // 423
     public static final String INTERNAL_ERROR     = "internal_error";     // 500
 }

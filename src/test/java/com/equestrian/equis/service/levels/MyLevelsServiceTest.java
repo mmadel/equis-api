@@ -134,11 +134,13 @@ public class MyLevelsServiceTest {
         assertThat(response.days()).extracting(Day::date).containsExactly(TODAY, FRIDAY);
         assertThat(response.days().get(0).sessions()).containsExactly(
                 // Started at 09:00, before the fixed 13:00.
-                new SessionSlot(early.getId(), LocalTime.of(9, 0), LocalTime.of(10, 0), 4, 0, true, List.of()),
-                new SessionSlot(late.getId(), LocalTime.of(16, 0), LocalTime.of(17, 0), 6, 3, false, List.of(
-                        new Seat(true, laila.getId(), "LN"),
-                        new Seat(true, nour.getId(), "NA"),
-                        Seat.other())));
+                new SessionSlot(early.getId(), LocalTime.of(9, 0), LocalTime.of(10, 0), "scheduled", 4, 0, true,
+                        List.of()),
+                new SessionSlot(late.getId(), LocalTime.of(16, 0), LocalTime.of(17, 0), "scheduled", 6, 3, false,
+                        List.of(
+                                new Seat(true, laila.getId(), "LN"),
+                                new Seat(true, nour.getId(), "NA"),
+                                Seat.other())));
         assertThat(response.days().get(1).sessions()).extracting(SessionSlot::id).containsExactly(friday.getId());
     }
 

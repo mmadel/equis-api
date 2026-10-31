@@ -19,6 +19,7 @@ import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.repository.sessions.AssignmentRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.service.payments.RiderBalanceService;
 import com.equestrian.equis.service.sessions.AssignmentRules;
 import com.equestrian.equis.service.sessions.AssignmentService;
 import org.junit.jupiter.api.AfterEach;
@@ -70,7 +71,7 @@ import static org.mockito.Mockito.doThrow;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
 @Import({LevelChangeService.class, LevelChangeRules.class, RiderSeatQuery.class,
-        AssignmentService.class, AssignmentRules.class})
+        AssignmentService.class, AssignmentRules.class, RiderBalanceService.class})
 public class LevelChangeServiceTest {
     private static final short LEVEL_2 = 2;
     private static final short LEVEL_3 = 3;

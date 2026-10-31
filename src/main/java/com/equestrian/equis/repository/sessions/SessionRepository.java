@@ -56,16 +56,16 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
             """)
     Optional<Session> findWithLevelById(@Param("id") UUID id);
 
-    // Scheduled sessions of the level from..to (both included), each with its template loaded.
+    // Scheduled and finished sessions of the level from..to (both included), each with its template loaded.
     @Query("""
             select s from Session s
             join fetch s.template t
             where t.level.id = :levelId
-              and s.status = com.equestrian.equis.entity.sessions.SessionStatus.SCHEDULED
+              and s.status <> com.equestrian.equis.entity.sessions.SessionStatus.CANCELLED
               and s.sessionDate between :from and :to
             order by s.sessionDate, s.startTime
             """)
-    List<Session> findScheduledByLevel(@Param("levelId") Short levelId,
+    List<Session> findNotCancelledByLevel(@Param("levelId") Short levelId,
                                        @Param("from") LocalDate from,
                                        @Param("to") LocalDate to);
 

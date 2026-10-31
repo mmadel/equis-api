@@ -133,16 +133,17 @@ public class RiderReassignApiTest {
 
         assertThat(jdbc.queryForObject("select assigned_by from assignment where session_id = ? and rider_id = ?",
                 UUID.class, tuesday, sara)).isEqualTo(ahmed);
+        // A session next week takes no riders yet (E13: riders are added on the day), so Mona only sees the seat.
         mvc.perform(asTrainer(mona, get("/me/sessions/" + tuesday)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.otherCoachSeats").value(1))
                 .andExpect(jsonPath("$.mySeats").isEmpty())
-                .andExpect(jsonPath("$.riders[*].id", contains(sara.toString())))
-                .andExpect(jsonPath("$.riders[0].inThisSession").value(false));
-        // Mona's save leaves seats given by other trainers alone.
+                .andExpect(jsonPath("$.canAssign").value(false))
+                .andExpect(jsonPath("$.riders").isEmpty());
         mvc.perform(asTrainer(mona, put("/me/sessions/" + tuesday + "/assignments"))
                         .contentType(MediaType.APPLICATION_JSON).content("{ \"riderIds\": [] }"))
-                .andExpect(status().isOk());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("session_not_today"));
         assertThat(count("assignment")).isEqualTo(1);
     }
 
