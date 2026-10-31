@@ -40,4 +40,18 @@ public interface SessionEvaluationRepository extends JpaRepository<SessionEvalua
             order by s.sessionDate desc, s.startTime desc
             """)
     List<PendingEvaluationRow> pendingForTrainer(@Param("trainerId") UUID trainerId);
+
+    // Every evaluation of the rider, whoever wrote it, newest session first. One query.
+    @Query("""
+            select new com.equestrian.equis.repository.evaluations.EvaluationHistoryRow(
+                       s.id, s.sessionDate, s.startTime, s.endTime, l.id, tr.name, e.stars, e.comment, e.createdAt)
+            from SessionEvaluation e
+            join e.session s
+            join s.template t
+            join t.level l
+            join e.trainer tr
+            where e.rider.id = :riderId
+            order by s.sessionDate desc, s.startTime desc
+            """)
+    List<EvaluationHistoryRow> findHistory(@Param("riderId") UUID riderId);
 }
