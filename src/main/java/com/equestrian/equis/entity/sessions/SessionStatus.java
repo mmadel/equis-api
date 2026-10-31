@@ -8,7 +8,9 @@ import java.util.Locale;
 public enum SessionStatus {
     SCHEDULED,
     CANCELLED,
-    FINISHED;
+    FINISHED,
+    // Finished, and every seated rider has an evaluation. Final.
+    DONE;
 
     @Converter(autoApply = true)
     public static class DbConverter implements AttributeConverter<SessionStatus, String> {
