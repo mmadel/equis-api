@@ -40,6 +40,7 @@ public class ErrorCodes {
     public static final String TRAINER_NOT_FOUND  = "trainer_not_found";  // 404
     public static final String MEMBER_NOT_FOUND   = "member_not_found";   // 404
     public static final String PAYMENT_NOT_FOUND  = "payment_not_found";  // 404
+    public static final String ASSESSMENT_NOT_FOUND = "assessment_not_found"; // 404
     public static final String ENDPOINT_REMOVED   = "endpoint_removed";   // 410
     public static final String SEAT_TAKEN        = "seat_taken";         // 409
     public static final String CAPACITY_EXCEEDED  = "capacity_exceeded";  // 409

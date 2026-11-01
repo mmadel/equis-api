@@ -5,8 +5,6 @@ import com.equestrian.equis.dto.riders.RiderLevelDto;
 import com.equestrian.equis.dto.riders.UpcomingSeat;
 import com.equestrian.equis.entity.levels.Levels;
 import com.equestrian.equis.entity.riders.Rider;
-import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
-import com.equestrian.equis.repository.riders.LevelChangeRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,7 +14,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,20 +22,17 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class RiderLevelQueryService {
     private final RiderRepository riders;
-    private final LevelChangeRepository levelChanges;
-    private final AssessmentBookingRepository bookings;
+    private final LevelHistoryQuery levelHistory;
     private final RiderSeatQuery seats;
     private final LevelChangeRules rules;
     private final Clock clock;
     private final ZoneId schoolZone;
 
-    public RiderLevelQueryService(RiderRepository riders, LevelChangeRepository levelChanges,
-                                  AssessmentBookingRepository bookings, RiderSeatQuery seats,
+    public RiderLevelQueryService(RiderRepository riders, LevelHistoryQuery levelHistory, RiderSeatQuery seats,
                                   LevelChangeRules rules, Clock clock,
                                   @Value("${app.time-zone}") ZoneId schoolZone) {
         this.riders = riders;
-        this.levelChanges = levelChanges;
-        this.bookings = bookings;
+        this.levelHistory = levelHistory;
         this.seats = seats;
         this.rules = rules;
         this.clock = clock;
@@ -57,18 +51,11 @@ public class RiderLevelQueryService {
                 .map(a -> UpcomingSeat.of(a.getSession()))
                 .toList();
 
-        List<LevelHistoryEntry> history = new ArrayList<>(levelChanges.findHistory(riderId).stream()
-                .map(LevelHistoryEntry::of)
-                .toList());
-        // The placement is the oldest event, so it goes last. Seed riders have no member.
-        if (rider.getMemberId() != null) {
-            bookings.findPlacedByMemberId(rider.getMemberId())
-                    .ifPresent(b -> history.add(LevelHistoryEntry.placed(b)));
-        }
+        List<LevelHistoryEntry> history = levelHistory.history(rider);
 
         return new RiderLevelDto(rider.getId(), rider.getName(), rider.initials(), levelId,
                 LocalDate.ofInstant(rider.getCreatedAt(), schoolZone),
                 levelId < Levels.MAX_LEVEL, levelId > Levels.MIN_LEVEL,
-                upcoming, List.copyOf(history));
+                upcoming, history);
     }
 }

@@ -62,7 +62,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
-@Import({RiderLevelQueryService.class, LevelChangeService.class, LevelChangeRules.class, RiderSeatQuery.class})
+@Import({RiderLevelQueryService.class, LevelHistoryQuery.class, LevelChangeService.class, LevelChangeRules.class,
+        RiderSeatQuery.class})
 public class RiderLevelQueryServiceTest {
     private static final short LEVEL_1 = 1;
     private static final short LEVEL_3 = 3;

@@ -1,6 +1,7 @@
 package com.equestrian.equis.repository.payments;
 
 import com.equestrian.equis.entity.payments.SessionUsage;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -37,4 +38,24 @@ public interface SessionUsageRepository extends JpaRepository<SessionUsage, UUID
             order by s.sessionDate, s.startTime, u.usedAt
             """)
     List<UsageLine> findUsageLines(@Param("paymentIds") Collection<UUID> paymentIds);
+
+    // The rider's rides, newest first, one page. The coach is who evaluated the rider, or who finished the session
+    // when there is no evaluation yet.
+    @Query("""
+            select new com.equestrian.equis.repository.payments.RiderSessionRow(
+                s.id, s.sessionDate, s.startTime, s.endTime, l.id, coalesce(et.name, ft.name),
+                e.stars, e.comment, e.createdAt)
+            from SessionUsage u
+            join u.session s
+            join s.template tp
+            join tp.level l
+            left join SessionEvaluation e on e.session = s and e.rider = u.rider
+            left join e.trainer et
+            left join Trainer ft on ft.id = s.finishedBy
+            where u.rider.id = :riderId
+            order by s.sessionDate desc, s.startTime desc, s.id
+            """)
+    List<RiderSessionRow> findRiderSessions(@Param("riderId") UUID riderId, Pageable pageable);
+
+    long countByRiderId(UUID riderId);
 }
