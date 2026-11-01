@@ -25,6 +25,9 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     // The same history as W3 shows it: newest first.
     List<Payment> findByRiderIdOrderByRecordedAtDesc(UUID riderId);
 
+    // The rider app's Payments: voided ones left out, newest first.
+    List<Payment> findByRiderIdAndVoidedAtIsNullOrderByRecordedAtDesc(UUID riderId);
+
     // The packages that count on date for these riders: not voided, started, not expired.
     @Query("""
             select p from Payment p

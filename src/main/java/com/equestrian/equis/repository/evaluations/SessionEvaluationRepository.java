@@ -1,6 +1,7 @@
 package com.equestrian.equis.repository.evaluations;
 
 import com.equestrian.equis.entity.evaluations.SessionEvaluation;
+import java.time.LocalDate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -54,4 +55,18 @@ public interface SessionEvaluationRepository extends JpaRepository<SessionEvalua
             order by s.sessionDate desc, s.startTime desc
             """)
     List<EvaluationHistoryRow> findHistory(@Param("riderId") UUID riderId);
+
+    // The rider's average stars per calendar month of the session date, from the given day on, oldest month first.
+    @Query("""
+            select new com.equestrian.equis.repository.evaluations.StarTrendRow(
+                       extract(year from s.sessionDate), extract(month from s.sessionDate),
+                       avg(e.stars), count(e))
+            from SessionEvaluation e
+            join e.session s
+            where e.rider.id = :riderId
+              and s.sessionDate >= :from
+            group by extract(year from s.sessionDate), extract(month from s.sessionDate)
+            order by extract(year from s.sessionDate), extract(month from s.sessionDate)
+            """)
+    List<StarTrendRow> starTrend(@Param("riderId") UUID riderId, @Param("from") LocalDate from);
 }
