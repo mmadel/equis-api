@@ -50,6 +50,19 @@ public class Rider {
     @Column(name = "member_id")
     private UUID memberId;
 
+    // The login email, copied from the member at placement. Null for seed riders, who have no member.
+    @Column(name = "email", length = 254)
+    private String email;
+
+    @Column(name = "password_hash", length = 100)
+    private String passwordHash;
+
+    @Column(name = "account_status", nullable = false, length = 16)
+    private RiderAccountStatus accountStatus = RiderAccountStatus.NONE;
+
+    @Column(name = "last_active_at")
+    private Instant lastActiveAt;
+
     @Version
     @Column(name = "version", nullable = false)
     private long version;
@@ -63,11 +76,13 @@ public class Rider {
     private Instant updatedAt;
 
     // The only way a real rider is created: the member placed at an assessment, assigned to the assessor.
-    // The member must be loaded (its name and phone are copied); the trainer may be a reference.
+    // The member must be loaded (its name, phone and email are copied); the trainer may be a reference.
     public static Rider fromAssessment(Member member, Level level, Trainer trainer) {
         Rider rider = new Rider();
         rider.name = member.getName();
         rider.phone = member.getPhone();
+        // Already lowercase: Member stores it that way.
+        rider.email = member.getEmail();
         rider.level = level;
         rider.trainer = trainer;
         rider.memberId = member.getId();
@@ -93,6 +108,35 @@ public class Rider {
         }
         this.trainer = to;
         return true;
+    }
+
+    // Whether the rider can sign in.
+    public boolean hasAccount() {
+        return accountStatus == RiderAccountStatus.ACTIVE;
+    }
+
+    // A set-password link was sent. Sending again while invited is fine; an active rider gets a reset instead.
+    public void markInvited() {
+        if (email == null) {
+            throw new IllegalStateException("A rider without an email can't be invited");
+        }
+        if (accountStatus == RiderAccountStatus.ACTIVE) {
+            throw new IllegalStateException("The rider already has an account");
+        }
+        this.accountStatus = RiderAccountStatus.INVITED;
+    }
+
+    // From an invite link (INVITED -> ACTIVE) or a reset link (ACTIVE stays ACTIVE). Never without a link.
+    public void setPassword(String hash) {
+        if (accountStatus == RiderAccountStatus.NONE) {
+            throw new IllegalStateException("The rider was never invited");
+        }
+        this.passwordHash = hash;
+        this.accountStatus = RiderAccountStatus.ACTIVE;
+    }
+
+    public void touch(Instant now) {
+        this.lastActiveAt = now;
     }
 
     // First letters of the first and last name, e.g. "Sara Adel Hassan" -> "SH"; a single name gives one letter.

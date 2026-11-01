@@ -21,6 +21,8 @@ public enum Role {
         return switch (subjectType) {
             case TRAINER -> TRAINER;
             case ADMIN -> ADMIN;
+            // Rider sign-in comes with the next E15 ticket; until then no rider token is ever issued.
+            case RIDER -> throw new IllegalStateException("Riders can't sign in yet");
         };
     }
 }

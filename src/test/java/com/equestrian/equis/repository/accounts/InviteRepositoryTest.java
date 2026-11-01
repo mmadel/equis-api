@@ -3,11 +3,13 @@ package com.equestrian.equis.repository.accounts;
 import com.equestrian.equis.entity.accounts.Invite;
 import com.equestrian.equis.entity.accounts.InvitePurpose;
 import com.equestrian.equis.entity.accounts.Trainer;
+import com.equestrian.equis.entity.riders.Rider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -44,6 +46,8 @@ public class InviteRepositoryTest {
     TrainerRepository trainerRepository;
     @Autowired
     JdbcTemplate jdbcTemplate;
+    @Autowired
+    TestEntityManager entityManager;
 
     // V4 seeds dev trainers and an invite, and V12 sample riders of trainer 1; clear them so each test starts from
     // empty tables (rolled back afterwards). Riders go first: they point at their trainer.
@@ -191,6 +195,120 @@ public class InviteRepositoryTest {
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM invite", Integer.class)).isEqualTo(3);
     }
 
+    // E15 case 6
+    @Test
+    void rejectsALinkWithBothOwners() {
+        UUID trainerId = sara().getId();
+        UUID riderId = rider("Laila Nour", "laila@gmail.com");
+
+        assertThatThrownBy(() -> jdbcTemplate.update("""
+                INSERT INTO invite (trainer_id, rider_id, token_hash, purpose, expires_at)
+                VALUES (?, ?, ?, 'invite', now() + interval '1 day')
+                """, trainerId, riderId, HASH_A))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_invite_owner");
+    }
+
+    @Test
+    void rejectsALinkWithNoOwner() {
+        assertThatThrownBy(() -> jdbcTemplate.update("""
+                INSERT INTO invite (token_hash, purpose, expires_at)
+                VALUES (?, 'invite', now() + interval '1 day')
+                """, HASH_A))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_invite_owner");
+    }
+
+    // E15 case 7
+    @Test
+    void rejectsSecondOpenLinkForTheSameRider() {
+        UUID riderId = rider("Laila Nour", "laila@gmail.com");
+        insertForRider(riderId, HASH_A, "NULL");
+
+        assertThatThrownBy(() -> insertForRider(riderId, HASH_B, "NULL"))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("uq_invite_open_per_rider");
+    }
+
+    @Test
+    void allowsANewOpenLinkOnceTheRidersFirstIsAccepted() {
+        UUID riderId = rider("Laila Nour", "laila@gmail.com");
+        insertForRider(riderId, HASH_A, "NULL");
+
+        jdbcTemplate.update("UPDATE invite SET accepted_at = now() WHERE token_hash = ?", HASH_A);
+        insertForRider(riderId, HASH_C, "NULL");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM invite WHERE rider_id = ?", Integer.class, riderId))
+                .isEqualTo(2);
+    }
+
+    // E15 case 8
+    @Test
+    void savesOpenTrainerAndRiderLinksTogether() {
+        Trainer sara = sara();
+        Rider laila = entityManager.find(Rider.class, rider("Laila Nour", "laila@gmail.com"));
+
+        Invite trainerLink = inviteRepository.saveAndFlush(invite(sara, HASH_A, InvitePurpose.INVITE, null));
+        Invite riderLink = Invite.forRider(laila);
+        riderLink.setTokenHash(HASH_B);
+        riderLink.setPurpose(InvitePurpose.INVITE);
+        riderLink.setExpiresAt(Instant.now().plus(Duration.ofDays(1)));
+        inviteRepository.saveAndFlush(riderLink);
+        entityManager.clear();
+
+        Invite trainerRead = inviteRepository.findByTokenHash(HASH_A).orElseThrow();
+        Invite riderRead = inviteRepository.findByTokenHash(HASH_B).orElseThrow();
+        assertThat(trainerRead.getId()).isEqualTo(trainerLink.getId());
+        assertThat(trainerRead.isForTrainer()).isTrue();
+        assertThat(trainerRead.isForRider()).isFalse();
+        assertThat(riderRead.isForRider()).isTrue();
+        assertThat(riderRead.isForTrainer()).isFalse();
+        assertThat(riderRead.getRider().getId()).isEqualTo(laila.getId());
+    }
+
+    // E15 case 13
+    @Test
+    void deletesOnlyTheOpenLinkOfThatRider() {
+        UUID laila = rider("Laila Nour", "laila@gmail.com");
+        UUID adam = rider("Adam Samir", "adam@gmail.com");
+        Trainer sara = sara();
+        insertForRider(laila, HASH_A, "now()");
+        insertForRider(laila, HASH_B, "NULL");
+        insertForRider(adam, HASH_C, "NULL");
+        insert(sara.getId(), HASH_D, "invite", TOMORROW, "NULL");
+
+        int deleted = inviteRepository.deleteByRiderIdAndAcceptedAtIsNull(laila);
+
+        assertThat(deleted).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForList("SELECT token_hash FROM invite", String.class))
+                .containsExactlyInAnyOrder(HASH_A, HASH_C, HASH_D);
+    }
+
+    @Test
+    void deletingTheRiderCascadesToItsLinks() {
+        UUID riderId = rider("Laila Nour", "laila@gmail.com");
+        insertForRider(riderId, HASH_A, "NULL");
+
+        jdbcTemplate.update("DELETE FROM rider WHERE id = ?", riderId);
+
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM invite", Integer.class)).isZero();
+    }
+
+    @Test
+    void factoriesNeedAnOwner() {
+        assertThatThrownBy(() -> Invite.forTrainer(null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Invite.forRider(null)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    private UUID rider(String name, String email) {
+        return jdbcTemplate.queryForObject("INSERT INTO rider (name, level_id, email) VALUES (?, 1, ?) RETURNING id",
+                UUID.class, name, email);
+    }
+
+    private void insertForRider(UUID riderId, String tokenHash, String acceptedAt) {
+        jdbcTemplate.update("INSERT INTO invite (rider_id, token_hash, purpose, expires_at, accepted_at) VALUES (?, ?, 'invite', "
+                + TOMORROW + ", " + acceptedAt + ")", riderId, tokenHash);
+    }
+
     private Trainer sara() {
         return trainer("Sara Ali", "01000000001", "sara@example.com");
     }
@@ -208,8 +326,7 @@ public class InviteRepositoryTest {
     }
 
     private Invite invite(Trainer trainer, String tokenHash, InvitePurpose purpose, Instant acceptedAt) {
-        Invite invite = new Invite();
-        invite.setTrainer(trainer);
+        Invite invite = Invite.forTrainer(trainer);
         invite.setTokenHash(tokenHash);
         invite.setPurpose(purpose);
         invite.setExpiresAt(Instant.now().plus(Duration.ofDays(1)));

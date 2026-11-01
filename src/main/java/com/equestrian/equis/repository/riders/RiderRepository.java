@@ -3,6 +3,7 @@ package com.equestrian.equis.repository.riders;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.assessment.BookingStatus;
 import com.equestrian.equis.entity.riders.Rider;
+import com.equestrian.equis.entity.riders.RiderAccountStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -69,6 +70,13 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
             """)
     List<AdminRiderView> findAdminViewByIds(@Param("placed") BookingStatus placed,
                                             @Param("ids") Collection<UUID> ids);
+
+    // Emails are stored lowercase; callers pass a lowercased email.
+    Optional<Rider> findByEmail(String email);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByIdAndAccountStatus(UUID id, RiderAccountStatus accountStatus);
 
     // Whether the member was already placed as a rider.
     boolean existsByMemberId(UUID memberId);

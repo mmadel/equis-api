@@ -47,8 +47,7 @@ public class AccountLinkService {
         GeneratedToken generated = tokenGenerator.generate();
         Duration ttl = purpose == InvitePurpose.RESET ? properties.reset().ttl() : properties.invite().ttl();
 
-        Invite invite = new Invite();
-        invite.setTrainer(trainer);
+        Invite invite = Invite.forTrainer(trainer);
         invite.setTokenHash(generated.hash());
         invite.setPurpose(purpose);
         invite.setExpiresAt(clock.instant().plus(ttl));
