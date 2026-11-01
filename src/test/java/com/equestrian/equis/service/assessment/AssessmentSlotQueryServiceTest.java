@@ -1,5 +1,8 @@
 package com.equestrian.equis.service.assessment;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.dto.assessment.AssessmentSlotDayDto;
@@ -26,13 +29,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
@@ -49,7 +48,6 @@ import static org.assertj.core.api.Assertions.tuple;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
 @Import({AssessmentSlotQueryService.class, AssessmentSlotMapper.class, AssessmentRules.class})
 public class AssessmentSlotQueryServiceTest {
     // The clock is fixed on this Wednesday at 09:00 school time (Africa/Cairo).
@@ -58,9 +56,12 @@ public class AssessmentSlotQueryServiceTest {
     private static final LocalTime NINE = LocalTime.of(9, 0);
     private static final LocalTime TEN = LocalTime.of(10, 0);
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @Autowired
     AssessmentSlotQueryService service;

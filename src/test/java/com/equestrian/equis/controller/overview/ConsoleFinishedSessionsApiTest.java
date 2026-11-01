@@ -1,5 +1,8 @@
 package com.equestrian.equis.controller.overview;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.entity.sessions.Session;
@@ -17,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,9 +30,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.Timestamp;
 import java.time.Clock;
@@ -57,7 +56,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.flyway.placeholders.adminPasswordHash=not-a-real-hash",
         "spring.jpa.properties.hibernate.generate_statistics=true"})
 @AutoConfigureMockMvc
-@Testcontainers
 public class ConsoleFinishedSessionsApiTest {
     private static final ZoneId CAIRO = ZoneId.of("Africa/Cairo");
     private static final LocalDate TUESDAY = LocalDate.of(2026, 11, 3);
@@ -67,9 +65,12 @@ public class ConsoleFinishedSessionsApiTest {
     private static final LocalTime SIX_PM = LocalTime.of(18, 0);
     private static final LocalTime EIGHT_PM = LocalTime.of(20, 0);
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     static final MutableClock CLOCK = new MutableClock(at(19, 30));
 

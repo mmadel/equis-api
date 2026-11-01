@@ -1,5 +1,8 @@
 package com.equestrian.equis.service.payments;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.dto.payments.VoidPaymentRequest;
@@ -28,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
@@ -38,9 +40,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -63,7 +62,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 // E13 · the deduction under the trainer's Finished button. Statistics are on so case 12 can count SQL statements.
 @DataJpaTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
 @Import({SessionUsageService.class, RiderBalanceService.class, AdminPaymentService.class, PaymentEntryAssembler.class})
 public class SessionUsageServiceTest {
     private static final short LEVEL_2 = 2;
@@ -75,9 +73,12 @@ public class SessionUsageServiceTest {
     private static final YearMonth NOV = YearMonth.of(2026, 11);
     private static final YearMonth DEC = YearMonth.of(2026, 12);
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @Autowired
     SessionUsageService service;

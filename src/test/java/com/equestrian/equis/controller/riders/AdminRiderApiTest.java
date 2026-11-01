@@ -1,5 +1,8 @@
 package com.equestrian.equis.controller.riders;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.entity.riders.Rider;
@@ -17,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,9 +28,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -54,13 +53,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.flyway.placeholders.adminPasswordHash=not-a-real-hash",
         "spring.jpa.properties.hibernate.generate_statistics=true"})
 @AutoConfigureMockMvc
-@Testcontainers
 public class AdminRiderApiTest {
     private static final String PATH = "/admin/riders";
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @Autowired
     MockMvc mvc;

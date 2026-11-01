@@ -1,5 +1,8 @@
 package com.equestrian.equis.service.riders;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.dto.payments.BalanceDto;
 import com.equestrian.equis.dto.riders.AdminRiderRow;
 import com.equestrian.equis.dto.riders.MyRiderDto;
@@ -31,13 +34,9 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -56,7 +55,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 // Statistics are on so the N+1 test can count SQL statements.
 @DataJpaTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
 // AdminRiderRowAssembler builds the W3 rows, so a test can check both screens show the same balance.
 @Import({MyRidersQueryService.class, RiderBalanceService.class, AdminRiderRowAssembler.class})
 public class MyRidersQueryServiceTest {
@@ -72,9 +70,12 @@ public class MyRidersQueryServiceTest {
     private static final YearMonth NOV = YearMonth.of(2026, 11);
     private static final YearMonth DEC = YearMonth.of(2026, 12);
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @Autowired
     MyRidersQueryService service;

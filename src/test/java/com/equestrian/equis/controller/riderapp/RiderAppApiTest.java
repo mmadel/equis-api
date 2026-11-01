@@ -1,5 +1,8 @@
 package com.equestrian.equis.controller.riderapp;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.entity.sessions.Session;
@@ -17,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -27,9 +29,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.Timestamp;
 import java.time.Clock;
@@ -60,7 +59,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.flyway.placeholders.adminPasswordHash=not-a-real-hash",
         "spring.jpa.properties.hibernate.generate_statistics=true"})
 @AutoConfigureMockMvc
-@Testcontainers
 class RiderAppApiTest {
     private static final ZoneId CAIRO = ZoneId.of("Africa/Cairo");
     private static final Instant THU_26_NOV_10_00 = cairo(LocalDate.of(2026, 11, 26), 10, 0);
@@ -73,9 +71,12 @@ class RiderAppApiTest {
             LocalDate.of(2026, 11, 3), LocalDate.of(2026, 11, 5), LocalDate.of(2026, 11, 10),
             LocalDate.of(2026, 11, 12), LocalDate.of(2026, 11, 17), LocalDate.of(2026, 11, 24));
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     static final MutableClock CLOCK = new MutableClock(THU_26_NOV_10_00);
 

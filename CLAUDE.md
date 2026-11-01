@@ -28,7 +28,8 @@ Most tests start a PostgreSQL Testcontainer, so Docker must be running. Use the 
 
 1. No Surefire/Failsafe split: `pom.xml` configures neither plugin, so every test runs in `mvn test`.
 2. No `@Tag("email")` or exclusion of it: `SmtpNotificationSenderTest` (GreenMail, in-process) runs in the default suite.
-3. No shared `@SpringBootTest` base class: each class declares its own Postgres container and `adminEmail`
-   placeholder, so each gets its own Spring context.
+3. No shared `@SpringBootTest` base class: each class sets its own `adminEmail` placeholder, so each gets its own
+   Spring context. All classes share one Postgres container through `support/TestPostgres`, which gives each
+   class its own empty database (`TestPostgres.newDatabase()` + `@DynamicPropertySource`). New DB tests should do the same.
 4. No test profile: test settings live in `src/test/resources/config/application.properties`, not `application-test`.
 5. No dedicated no-op sender: `LogNotificationSender` (log mode) and `RecordingNotificationSender` fill that role.

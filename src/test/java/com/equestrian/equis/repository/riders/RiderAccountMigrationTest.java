@@ -1,12 +1,10 @@
 package com.equestrian.equis.repository.riders;
 
+import com.equestrian.equis.support.TestPostgres;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Map;
 import java.util.UUID;
@@ -15,10 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 // E15 case 2: V22 copies each placed rider's intake email onto the rider; every rider starts with no account.
 // Runs Flyway by hand on its own database: up to V21, add a placed rider and a seed rider, then the rest.
-@Testcontainers
 class RiderAccountMigrationTest {
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
 
     @Test
     void placedRidersTakeTheirIntakeEmailAndSeedRidersKeepNone() {

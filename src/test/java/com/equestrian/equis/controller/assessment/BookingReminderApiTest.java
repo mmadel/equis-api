@@ -1,5 +1,8 @@
 package com.equestrian.equis.controller.assessment;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
@@ -18,7 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -29,9 +31,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.Timestamp;
 import java.time.Clock;
@@ -63,7 +62,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.flyway.placeholders.adminPasswordHash=not-a-real-hash",
         "spring.jpa.properties.hibernate.generate_statistics=true"})
 @AutoConfigureMockMvc
-@Testcontainers
 public class BookingReminderApiTest {
     private static final String PATH = "/admin/bookings/";
     private static final ZoneId CAIRO = ZoneId.of("Africa/Cairo");
@@ -75,9 +73,12 @@ public class BookingReminderApiTest {
     private static final String SARA_MESSAGE =
             "Result overdue: Sara Ali (assessment Sat 17 Oct, 10:00). Record it in Assessment results.";
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     static final MutableClock CLOCK = new MutableClock(SUNDAY_NOON);
 

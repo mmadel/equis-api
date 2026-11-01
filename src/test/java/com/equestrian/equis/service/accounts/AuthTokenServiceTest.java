@@ -1,5 +1,8 @@
 package com.equestrian.equis.service.accounts;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.common.config.AuthProperties;
 import com.equestrian.equis.common.config.ClockConfig;
 import com.equestrian.equis.common.config.JwtConfig;
@@ -16,15 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -35,7 +34,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
 @EnableConfigurationProperties(AuthProperties.class)
 @Import({AuthTokenService.class, JwtService.class, TokenGenerator.class, JwtConfig.class, ClockConfig.class})
 public class AuthTokenServiceTest {
@@ -43,9 +41,12 @@ public class AuthTokenServiceTest {
     private static final UUID TRAINER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID ADMIN_ID = UUID.randomUUID();
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @Autowired
     AuthTokenService authTokenService;

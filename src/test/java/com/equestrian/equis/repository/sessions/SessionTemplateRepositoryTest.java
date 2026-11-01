@@ -1,5 +1,8 @@
 package com.equestrian.equis.repository.sessions;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.entity.levels.Level;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
 import com.equestrian.equis.repository.levels.LevelRepository;
@@ -8,11 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -24,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
 public class SessionTemplateRepositoryTest {
     private static final short LEVEL_1 = 1;
     private static final short LEVEL_2 = 2;
@@ -32,9 +30,12 @@ public class SessionTemplateRepositoryTest {
     // 2026-10-05 is a Monday.
     private static final LocalDate MONDAY = LocalDate.of(2026, 10, 5);
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @Autowired
     SessionTemplateRepository sessionTemplateRepository;

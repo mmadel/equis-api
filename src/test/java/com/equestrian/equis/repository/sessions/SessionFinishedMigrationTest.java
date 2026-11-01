@@ -1,12 +1,10 @@
 package com.equestrian.equis.repository.sessions;
 
+import com.equestrian.equis.support.TestPostgres;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -17,12 +15,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 // E13 case 4: V20 removes release 1 seats booked for later days; today's and past seats stay.
 // Runs Flyway by hand on its own database: up to V19, add release 1 rows, then the rest.
-@Testcontainers
 class SessionFinishedMigrationTest {
     private static final UUID TRAINER_1 = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
 
     @Test
     void laterDaySeatsAreRemovedTodaysAndPastOnesStay() {

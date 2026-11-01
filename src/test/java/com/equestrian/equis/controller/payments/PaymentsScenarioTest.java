@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.payments;
 
+import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.entity.payments.SessionUsage;
 import com.equestrian.equis.repository.payments.PaymentRepository;
 import com.equestrian.equis.repository.payments.SessionUsageRepository;
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -25,9 +25,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -55,7 +52,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // Monday 2 Nov 2026 with Ahmed as assessor, so they start as his.
 @SpringBootTest(properties = "app.sessions.generate-cron=-")
 @AutoConfigureMockMvc
-@Testcontainers
 @Import(AdminOversightFixture.Config.class)
 class PaymentsScenarioTest {
     private static final int LEVEL_ONE = 1;
@@ -68,9 +64,12 @@ class PaymentsScenarioTest {
     private static final String NOV_EXPIRY = "2026-12-31";
     private static final String DEC_EXPIRY = "2027-01-31";
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @DynamicPropertySource
     static void admin(DynamicPropertyRegistry registry) {

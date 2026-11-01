@@ -1,5 +1,6 @@
 package com.equestrian.equis.repository.accounts;
 
+import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.common.config.SecurityBeans;
 import com.equestrian.equis.entity.accounts.AdminAccount;
 import com.equestrian.equis.entity.accounts.Invite;
@@ -10,15 +11,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -32,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
 @Import(SecurityBeans.class)
 public class SeedDataTest {
     private static final UUID TRAINER_ONE_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -44,9 +40,12 @@ public class SeedDataTest {
     private static final String ADMIN_EMAIL = "Admin.Test@Example.com";
     private static final String ADMIN_PASSWORD = "Admin@123";
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     // Stand in for APP_ADMIN_EMAIL / APP_ADMIN_PASSWORD_HASH so the test does not depend on the environment.
     @DynamicPropertySource
