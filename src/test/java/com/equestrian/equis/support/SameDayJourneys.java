@@ -133,10 +133,15 @@ public class SameDayJourneys {
 
     // The Level 2 session on that date, one hour, on a W1 template of its own valid from that date.
     public UUID sessionOn(LocalDate date, LocalTime start) throws Exception {
+        return sessionOn(date, start, LEVEL_TWO);
+    }
+
+    // The same at another level.
+    public UUID sessionOn(LocalDate date, LocalTime start, int levelId) throws Exception {
         ResultActions created = fx.accounts().admin(post("/admin/session-templates")
                 .contentType(MediaType.APPLICATION_JSON).content("""
                         { "levelId": %d, "dayOfWeek": "%s", "start": "%s", "end": "%s", "capacity": 6, "validFrom": "%s" }"""
-                        .formatted(LEVEL_TWO, date.getDayOfWeek(), start, start.plusHours(1), date)))
+                        .formatted(levelId, date.getDayOfWeek(), start, start.plusHours(1), date)))
                 .andExpect(status().isCreated());
         UUID session = fx.slotOn(date, start);
         opened.put(session, UUID.fromString(read(created, "$.template.id")));
@@ -164,8 +169,13 @@ public class SameDayJourneys {
 
     // A whole session on that day: opened and filled five minutes before the start, finished 65 minutes after it.
     public UUID ride(LocalDate date, LocalTime start, Coach coach, UUID... riderIds) throws Exception {
+        return ride(date, start, LEVEL_TWO, coach, riderIds);
+    }
+
+    // The same at another level.
+    public UUID ride(LocalDate date, LocalTime start, int levelId, Coach coach, UUID... riderIds) throws Exception {
         at(date, start.minusMinutes(5));
-        UUID session = todaysSession(start);
+        UUID session = sessionOn(today(), start, levelId);
         assign(coach, session, riderIds).andExpect(status().isOk());
         at(date, start.plusMinutes(65));
         finish(coach, session).andExpect(status().isOk());
