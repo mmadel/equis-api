@@ -1,5 +1,8 @@
 package com.equestrian.equis.repository.evaluations;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.evaluations.SessionEvaluation;
 import com.equestrian.equis.entity.levels.Level;
@@ -21,12 +24,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.Timestamp;
 import java.time.DayOfWeek;
@@ -42,7 +41,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 // E14 cases 1–7: the session_evaluation table and the done status.
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
 class SessionEvaluationRepositoryTest {
     private static final short LEVEL_2 = 2;
     private static final UUID TRAINER_1 = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -50,9 +48,12 @@ class SessionEvaluationRepositoryTest {
     private static final Instant AT_18_05 = Instant.parse("2026-11-03T16:05:00Z");
     private static final Instant AT_18_10 = Instant.parse("2026-11-03T16:10:00Z");
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @Autowired
     SessionEvaluationRepository evaluations;

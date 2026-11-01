@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.assessment;
 
+import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.support.AdminOversightFixture;
 import com.equestrian.equis.support.AdminOversightFixture.Coach;
 import com.equestrian.equis.support.AdminOversightFixture.Schedule;
@@ -9,15 +10,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.convention.TestBean;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -47,12 +44,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // app (A1 booking, A3 slot, A5 result). The single rules are in AdminBookingChangeApiTest and AdminBookingApiTest.
 @SpringBootTest(properties = "app.sessions.generate-cron=-")
 @AutoConfigureMockMvc
-@Testcontainers
 @Import(AdminOversightFixture.Config.class)
 class BookingOversightJourneyTest {
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @DynamicPropertySource
     static void admin(DynamicPropertyRegistry registry) {

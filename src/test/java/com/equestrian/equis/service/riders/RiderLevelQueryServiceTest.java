@@ -1,5 +1,8 @@
 package com.equestrian.equis.service.riders;
 
+import com.equestrian.equis.support.TestPostgres;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.dto.riders.Direction;
@@ -35,14 +38,10 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.Timestamp;
 import java.time.Clock;
@@ -61,7 +60,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 // Statistics are on so the query-count test can count SQL statements.
 @DataJpaTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Testcontainers
 @Import({RiderLevelQueryService.class, LevelHistoryQuery.class, LevelChangeService.class, LevelChangeRules.class,
         RiderSeatQuery.class})
 public class RiderLevelQueryServiceTest {
@@ -78,9 +76,12 @@ public class RiderLevelQueryServiceTest {
     private static final Instant PROMOTED_AT = Instant.parse("2026-10-13T09:05:00Z");
     private static final Instant DEMOTED_AT = Instant.parse("2026-10-14T15:20:00Z");
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @Autowired
     RiderLevelQueryService service;

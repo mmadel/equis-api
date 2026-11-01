@@ -1,5 +1,6 @@
 package com.equestrian.equis.repository.accounts;
 
+import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.EquisApiApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -7,9 +8,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 // E10: the prod-only Flyway callback db/prod/afterMigrate__remove_demo_data.sql.
 // Each test starts the real app on its own fresh database, so restarts can be checked.
 // The APP_* and SPRING_DATASOURCE_* values below are test stand-ins for the prod environment check.
-@Testcontainers
 class ProdDemoDataCleanupTest {
     private static final String TRAINER_ONE_ID = "00000000-0000-0000-0000-000000000001";
     private static final String TRAINER_TWO_ID = "00000000-0000-0000-0000-000000000002";
@@ -33,8 +30,7 @@ class ProdDemoDataCleanupTest {
             "rider", "assignment", "member", "assessment_booking", "level_change", "notice");
     private static final AtomicInteger DATABASES = new AtomicInteger();
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
 
     // Case 1
     @Test

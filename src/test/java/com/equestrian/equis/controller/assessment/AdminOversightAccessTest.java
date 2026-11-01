@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.assessment;
 
+import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.support.AdminOversightFixture;
 import com.equestrian.equis.support.AdminOversightFixture.Coach;
 import com.equestrian.equis.support.MutableClock;
@@ -8,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -16,9 +16,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Clock;
 import java.time.LocalTime;
@@ -39,12 +36,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // A1–A2: the five E7 admin endpoints turn away callers without a token and trainers, and change nothing.
 @SpringBootTest(properties = "app.sessions.generate-cron=-")
 @AutoConfigureMockMvc
-@Testcontainers
 @Import(AdminOversightFixture.Config.class)
 class AdminOversightAccessTest {
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @DynamicPropertySource
     static void admin(DynamicPropertyRegistry registry) {

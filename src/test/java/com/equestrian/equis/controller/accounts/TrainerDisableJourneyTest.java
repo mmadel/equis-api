@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.accounts;
 
+import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.dto.accounts.AuthTokens;
 import com.equestrian.equis.dto.accounts.TrainerRow;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
@@ -11,16 +12,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.ResultActions;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -40,16 +37,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // and to their riders, and what Enable gives back. The single rules are in TrainerAccessServiceTest.
 @SpringBootTest(properties = "app.sessions.generate-cron=-")
 @AutoConfigureMockMvc
-@Testcontainers
 @Import(TrainerAccountsFixture.Config.class)
 class TrainerDisableJourneyTest {
     private static final String PHONE = "01022223333";
     private static final String PASSWORD = "Ahmed@2026";
     private static final int LEVEL = 3;
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @DynamicPropertySource
     static void admin(DynamicPropertyRegistry registry) {

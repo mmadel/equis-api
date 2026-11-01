@@ -1,12 +1,10 @@
 package com.equestrian.equis.repository.assessment;
 
+import com.equestrian.equis.support.TestPostgres;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Map;
@@ -16,10 +14,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 // E11 case 2: V16 fills the trial members that have no phone or email with placeholders.
 // Runs Flyway by hand on its own database: up to V15, add release 1 rows, then the rest.
-@Testcontainers
 class ApplicantIntakeMigrationTest {
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
 
     @Test
     void membersWithoutPhoneOrEmailGetPlaceholders() {

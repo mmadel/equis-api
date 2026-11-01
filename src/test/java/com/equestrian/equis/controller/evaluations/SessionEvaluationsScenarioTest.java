@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.evaluations;
 
+import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.support.AdminOversightFixture;
 import com.equestrian.equis.support.AdminOversightFixture.Coach;
 import com.equestrian.equis.support.MutableClock;
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -19,9 +19,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.ResultActions;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.sql.Date;
 import java.time.Clock;
@@ -53,7 +50,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // The steps and E13's invariants come from SameDayJourneys; the single rules are in each endpoint's own *ApiTest.
 @SpringBootTest(properties = "app.sessions.generate-cron=-")
 @AutoConfigureMockMvc
-@Testcontainers
 @Import(AdminOversightFixture.Config.class)
 class SessionEvaluationsScenarioTest {
     private static final int LEVEL_TWO = 2;
@@ -67,9 +63,12 @@ class SessionEvaluationsScenarioTest {
     private static final LocalTime HALF_PAST_EIGHT = LocalTime.of(20, 30);
     private static final YearMonth NOV = YearMonth.of(2026, 11);
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @DynamicPropertySource
     static void admin(DynamicPropertyRegistry registry) {

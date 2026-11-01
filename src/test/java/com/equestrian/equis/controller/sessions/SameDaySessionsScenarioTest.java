@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.sessions;
 
+import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.support.AdminOversightFixture;
 import com.equestrian.equis.support.AdminOversightFixture.Coach;
 import com.equestrian.equis.support.MutableClock;
@@ -10,15 +11,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.convention.TestBean;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -42,7 +39,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // The steps and the invariants are in SameDayJourneys, shared with E14's SessionEvaluationsScenarioTest.
 @SpringBootTest(properties = "app.sessions.generate-cron=-")
 @AutoConfigureMockMvc
-@Testcontainers
 @Import(AdminOversightFixture.Config.class)
 class SameDaySessionsScenarioTest {
     private static final LocalDate TUE_3_NOV = LocalDate.of(2026, 11, 3);
@@ -57,9 +53,12 @@ class SameDaySessionsScenarioTest {
     private static final YearMonth JAN = YearMonth.of(2027, 1);
     private static final String NOV_EXPIRY = "2026-12-31";
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static TestPostgres postgres = TestPostgres.newDatabase();
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        postgres.register(registry);
+    }
 
     @DynamicPropertySource
     static void admin(DynamicPropertyRegistry registry) {
