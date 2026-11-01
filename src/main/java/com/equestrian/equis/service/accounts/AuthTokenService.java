@@ -7,9 +7,12 @@ import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.dto.accounts.AuthTokens;
 import com.equestrian.equis.entity.accounts.RefreshToken;
+import com.equestrian.equis.entity.accounts.SubjectType;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
+import com.equestrian.equis.entity.riders.RiderAccountStatus;
 import com.equestrian.equis.repository.accounts.RefreshTokenRepository;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService.AccessToken;
 import com.equestrian.equis.service.accounts.TokenGenerator.GeneratedToken;
 import org.springframework.http.HttpStatus;
@@ -25,16 +28,18 @@ import java.util.UUID;
 public class AuthTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final TrainerRepository trainerRepository;
+    private final RiderRepository riderRepository;
     private final JwtService jwtService;
     private final TokenGenerator tokenGenerator;
     private final AuthProperties properties;
     private final Clock clock;
 
     public AuthTokenService(RefreshTokenRepository refreshTokenRepository, TrainerRepository trainerRepository,
-                            JwtService jwtService, TokenGenerator tokenGenerator,
+                            RiderRepository riderRepository, JwtService jwtService, TokenGenerator tokenGenerator,
                             AuthProperties properties, Clock clock) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.trainerRepository = trainerRepository;
+        this.riderRepository = riderRepository;
         this.jwtService = jwtService;
         this.tokenGenerator = tokenGenerator;
         this.properties = properties;
@@ -47,7 +52,8 @@ public class AuthTokenService {
     }
 
     // Every failure before the disabled check gives the same answer, so a caller cannot learn why a token was refused.
-    @Transactional
+    // Every refusal happens before anything is written, except the inactive rider's revoke, which must stay.
+    @Transactional(noRollbackFor = ApiException.class)
     public AuthTokens rotate(String rawRefresh) {
         if (rawRefresh == null || rawRefresh.isBlank()) {
             throw invalidRefreshToken();
@@ -64,6 +70,12 @@ public class AuthTokenService {
         if (role == Role.TRAINER && trainerRepository.existsByIdAndStatus(old.getSubjectId(), TrainerStatus.DISABLED)) {
             throw new ApiException(HttpStatus.FORBIDDEN, ErrorCodes.ACCOUNT_DISABLED,
                     "This account has been disabled.");
+        }
+        // A rider who is no longer active is signed out everywhere (noRollbackFor keeps the revoke).
+        if (role == Role.RIDER
+                && !riderRepository.existsByIdAndAccountStatus(old.getSubjectId(), RiderAccountStatus.ACTIVE)) {
+            refreshTokenRepository.revokeAllActive(SubjectType.RIDER, old.getSubjectId(), now);
+            throw invalidRefreshToken();
         }
         // With "keep me signed in" a trainer may not sign in for weeks, so each refresh counts as being active.
         if (role == Role.TRAINER) {

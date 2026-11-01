@@ -48,7 +48,7 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
     // most one placed booking (a placed member can't be rebooked), so each rider gives one row. Unordered.
     @Query("""
             select new com.equestrian.equis.repository.riders.AdminRiderView(
-                r.id, r.name, r.phone, r.level.id, r.createdAt,
+                r.id, r.name, r.phone, r.level.id, r.createdAt, r.accountStatus,
                 t.id, t.name, t.status, a.id, a.name, a.status)
             from Rider r
             left join r.trainer t
@@ -60,7 +60,7 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
     // The same rows for these riders only. Don't call with an empty list.
     @Query("""
             select new com.equestrian.equis.repository.riders.AdminRiderView(
-                r.id, r.name, r.phone, r.level.id, r.createdAt,
+                r.id, r.name, r.phone, r.level.id, r.createdAt, r.accountStatus,
                 t.id, t.name, t.status, a.id, a.name, a.status)
             from Rider r
             left join r.trainer t

@@ -8,7 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-// Emails the link once the admin's action is committed; a rolled-back action sends nothing.
+// Emails the link once the action (an admin invite or reset, or a rider's placement) is committed;
+// a rolled-back action sends nothing.
 // No retry: on failure the link stays valid and the admin presses Resend.
 @Component
 public class AccountLinkMailListener {
@@ -29,7 +30,8 @@ public class AccountLinkMailListener {
             sender.send(emails.build(e));
         } catch (RuntimeException ex) {
             // Never the token or the body.
-            log.warn("Account link email failed trainer={} purpose={}: {}", e.trainerId(), e.purpose(), ex.toString());
+            log.warn("Account link email failed {}={} purpose={}: {}", e.subjectType(), e.subjectId(), e.purpose(),
+                    ex.toString());
         }
     }
 }

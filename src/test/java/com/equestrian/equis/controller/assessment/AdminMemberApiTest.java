@@ -201,8 +201,8 @@ public class AdminMemberApiTest {
         for (String email : List.of("Ahmed@School.eg", "new-person-admin@example.com")) {
             create("Sara Ali", "01011112222", email, saturday, ahmed)
                     .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.code").value("email_taken"))
-                    .andExpect(jsonPath("$.detail").value("This email is already registered."))
+                    .andExpect(jsonPath("$.code").value("email_in_use"))
+                    .andExpect(jsonPath("$.detail").value("This email is already used by another account."))
                     .andExpect(jsonPath("$.fieldErrors[0].field").value("email"))
                     .andExpect(jsonPath("$.existingMemberId").doesNotExist())
                     .andExpect(jsonPath("$.existingMemberName").doesNotExist())

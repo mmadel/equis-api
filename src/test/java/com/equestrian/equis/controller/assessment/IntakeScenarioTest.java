@@ -256,12 +256,12 @@ class IntakeScenarioTest {
 
         addPerson("Omar Hassan", fx.nextPhone(), trainerEmail, sat17, ahmed)
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("email_taken"))
+                .andExpect(jsonPath("$.code").value("email_in_use"))
                 .andExpect(jsonPath("$.existingMemberId").doesNotExist());
         assertInvariants();
         addPerson("Omar Hassan", fx.nextPhone(), ADMIN_EMAIL, sat17, ahmed)
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("email_taken"))
+                .andExpect(jsonPath("$.code").value("email_in_use"))
                 .andExpect(jsonPath("$.existingMemberId").doesNotExist());
         assertInvariants();
         assertThat(members()).isZero();

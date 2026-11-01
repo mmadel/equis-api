@@ -4,7 +4,8 @@ import com.equestrian.equis.entity.accounts.SubjectType;
 
 public enum Role {
     TRAINER,
-    ADMIN;
+    ADMIN,
+    RIDER;
 
     public String authority() {
         return "ROLE_" + name();
@@ -14,6 +15,7 @@ public enum Role {
         return switch (this) {
             case TRAINER -> SubjectType.TRAINER;
             case ADMIN -> SubjectType.ADMIN;
+            case RIDER -> SubjectType.RIDER;
         };
     }
 
@@ -21,8 +23,7 @@ public enum Role {
         return switch (subjectType) {
             case TRAINER -> TRAINER;
             case ADMIN -> ADMIN;
-            // Rider sign-in comes with the next E15 ticket; until then no rider token is ever issued.
-            case RIDER -> throw new IllegalStateException("Riders can't sign in yet");
+            case RIDER -> RIDER;
         };
     }
 }

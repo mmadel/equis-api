@@ -1,7 +1,9 @@
 package com.equestrian.equis.common.security;
 
 import com.equestrian.equis.entity.accounts.TrainerStatus;
+import com.equestrian.equis.entity.riders.RiderAccountStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.DisabledException;
@@ -22,7 +24,8 @@ public class AuthUserConverterTest {
     private static final UUID ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final TrainerRepository trainerRepository = mock(TrainerRepository.class);
-    private final AuthUserConverter converter = new AuthUserConverter(trainerRepository);
+    private final RiderRepository riderRepository = mock(RiderRepository.class);
+    private final AuthUserConverter converter = new AuthUserConverter(trainerRepository, riderRepository);
 
     @Test
     void activeTrainerBecomesAuthUserWithTrainerRole() {
@@ -34,6 +37,25 @@ public class AuthUserConverterTest {
         assertThat(authentication.getPrincipal()).isEqualTo(new AuthUser(ID, Role.TRAINER));
         assertThat(authentication.getAuthorities()).extracting(GrantedAuthority::getAuthority)
                 .containsExactly("ROLE_TRAINER");
+    }
+
+    @Test
+    void activeRiderBecomesAuthUserWithRiderRole() {
+        when(riderRepository.existsByIdAndAccountStatus(ID, RiderAccountStatus.ACTIVE)).thenReturn(true);
+
+        AbstractAuthenticationToken authentication = converter.convert(jwt(ID.toString(), "RIDER"));
+
+        assertThat(authentication.getPrincipal()).isEqualTo(new AuthUser(ID, Role.RIDER));
+        assertThat(authentication.getAuthorities()).extracting(GrantedAuthority::getAuthority)
+                .containsExactly("ROLE_RIDER");
+    }
+
+    @Test
+    void riderWhoIsNotActiveIsRejected() {
+        when(riderRepository.existsByIdAndAccountStatus(ID, RiderAccountStatus.ACTIVE)).thenReturn(false);
+
+        assertThatThrownBy(() -> converter.convert(jwt(ID.toString(), "RIDER")))
+                .isInstanceOf(DisabledException.class);
     }
 
     @Test

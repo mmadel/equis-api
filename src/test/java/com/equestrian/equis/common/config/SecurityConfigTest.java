@@ -4,6 +4,7 @@ import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,8 @@ public class SecurityConfigTest {
     JwtService jwtService;
     @MockitoBean
     TrainerRepository trainerRepository;
+    @MockitoBean
+    RiderRepository riderRepository;
 
     @RestController
     static class TestController {

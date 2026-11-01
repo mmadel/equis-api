@@ -161,7 +161,7 @@ public class AdminMemberEditApiTest {
             edit(sara, """
                     { "email": "%s" }""".formatted(email))
                     .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.code").value("email_taken"))
+                    .andExpect(jsonPath("$.code").value("email_in_use"))
                     .andExpect(jsonPath("$.fieldErrors[0].field").value("email"))
                     .andExpect(jsonPath("$.existingMemberId").doesNotExist());
         }

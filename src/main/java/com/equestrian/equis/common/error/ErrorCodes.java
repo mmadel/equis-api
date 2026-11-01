@@ -46,9 +46,12 @@ public class ErrorCodes {
     public static final String ALREADY_BOOKED     = "already_booked";     // 409
     public static final String PHONE_TAKEN        = "phone_taken";        // 409
     public static final String EMAIL_TAKEN        = "email_taken";        // 409
+    public static final String EMAIL_IN_USE       = "email_in_use";       // 409: used by another kind of account
     public static final String INVALID_TRAINER_STATUS = "invalid_trainer_status"; // 409
     public static final String CONFIRM_REQUIRED   = "confirm_required";   // 409
     public static final String TRAINER_IN_USE     = "trainer_in_use";     // 409
+    public static final String INVALID_ACCOUNT_STATUS = "invalid_account_status"; // 409, details status and action
+    public static final String RIDER_NO_EMAIL     = "rider_no_email";     // 409
     public static final String SESSION_READ_ONLY  = "session_read_only";  // 409: cancelled or finished
     public static final String SESSION_NOT_TODAY  = "session_not_today";  // 409
     public static final String SESSION_ALREADY_FINISHED = "session_already_finished"; // 409

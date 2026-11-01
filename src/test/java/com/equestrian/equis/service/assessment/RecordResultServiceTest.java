@@ -20,6 +20,7 @@ import com.equestrian.equis.repository.levels.LevelRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
+import com.equestrian.equis.service.riders.RiderAccountService;
 import com.equestrian.equis.support.TestMembers;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -46,12 +48,18 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
 @Import({RecordResultService.class, AssessmentRules.class})
 public class RecordResultServiceTest {
+    // Sends the new rider's app invite; covered by RiderAccountJourneyTest.
+    @MockitoBean
+    RiderAccountService riderAccounts;
     // The clock is fixed on this Monday at 13:00 school time (Africa/Cairo).
     private static final Instant NOW = Instant.parse("2026-10-05T10:00:00Z");
     private static final LocalDate TODAY = LocalDate.of(2026, 10, 5);
@@ -116,6 +124,7 @@ public class RecordResultServiceTest {
         assertThat(rider.getLevel().getId()).isEqualTo((short) 3);
         assertThat(rider.getTrainer().getId()).isEqualTo(sara.getId());
         assertThat(rider.getMemberId()).isEqualTo(saved.getMember().getId());
+        verify(riderAccounts).inviteNewRider(argThat(r -> r.getId().equals(result.riderId())));
     }
 
     @Test
@@ -133,6 +142,7 @@ public class RecordResultServiceTest {
         assertThat(saved.getAttended()).isFalse();
         assertThat(saved.getLevel()).isNull();
         assertThat(riderRepository.count()).isEqualTo(ridersBefore);
+        verifyNoInteractions(riderAccounts);
     }
 
     @Test
