@@ -11,6 +11,7 @@ import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
 import com.equestrian.equis.repository.levels.LevelRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
+import com.equestrian.equis.service.riders.RiderAccountService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,14 +26,16 @@ public class RecordResultService {
     private final RiderRepository riders;
     private final LevelRepository levels;
     private final AssessmentRules rules;
+    private final RiderAccountService riderAccounts;
     private final Clock clock;
 
     public RecordResultService(AssessmentBookingRepository bookings, RiderRepository riders, LevelRepository levels,
-                               AssessmentRules rules, Clock clock) {
+                               AssessmentRules rules, RiderAccountService riderAccounts, Clock clock) {
         this.bookings = bookings;
         this.riders = riders;
         this.levels = levels;
         this.rules = rules;
+        this.riderAccounts = riderAccounts;
         this.clock = clock;
     }
 
@@ -60,6 +63,8 @@ public class RecordResultService {
         // uq_rider_member is only a backstop behind the lock; if it fires it is the same 409, never a 500.
         try {
             Rider rider = riders.saveAndFlush(Rider.fromAssessment(booking.getMember(), level, booking.getAssessor()));
+            // Same transaction: the rider, their invite link and the email (after commit) go together or not at all.
+            riderAccounts.inviteNewRider(rider);
             return new ResultRecorded(booking.getId(), BookingStatus.PLACED.value(), rider.getId());
         } catch (DataIntegrityViolationException e) {
             if (Constraints.nameOf(e).filter("uq_rider_member"::equals).isPresent()) {

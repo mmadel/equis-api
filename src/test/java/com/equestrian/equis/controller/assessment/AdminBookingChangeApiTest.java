@@ -20,9 +20,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -70,6 +74,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.flyway.placeholders.adminPasswordHash=not-a-real-hash"})
 @AutoConfigureMockMvc
 @Testcontainers
+@Import(AdminBookingChangeApiTest.HibernateClock.class)
 public class AdminBookingChangeApiTest {
     private static final String PATH = "/admin/bookings/";
     private static final ZoneId CAIRO = ZoneId.of("Africa/Cairo");
@@ -92,6 +97,16 @@ public class AdminBookingChangeApiTest {
 
     static Clock clock() {
         return CLOCK;
+    }
+
+    // Placing a rider now saves their invite link. Hibernate fills its created_at from the same clock as the app,
+    // so ck_invite_expiry (expires_at > created_at) holds with a clock that is not the real time.
+    @TestConfiguration
+    static class HibernateClock {
+        @Bean
+        HibernatePropertiesCustomizer hibernateClock(Clock clock) {
+            return properties -> properties.put("hibernate.testing.clock", clock);
+        }
     }
 
     @Autowired

@@ -15,6 +15,7 @@ import com.equestrian.equis.dto.assessment.BookingRowDto;
 import com.equestrian.equis.dto.assessment.SlotDetailDto;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.assessment.AssessmentSlotQueryService;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +64,8 @@ public class AssessmentSlotControllerTest {
     AssessmentSlotQueryService query;
     @MockitoBean
     TrainerRepository trainerRepository;
+    @MockitoBean
+    RiderRepository riderRepository;
 
     @BeforeEach
     void trainerIsActive() {

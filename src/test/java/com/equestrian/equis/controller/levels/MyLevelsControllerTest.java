@@ -16,6 +16,7 @@ import com.equestrian.equis.dto.levels.LevelSessionsResponse.SessionSlot;
 import com.equestrian.equis.dto.levels.MyLevelSummary;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.levels.MyLevelsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +61,8 @@ public class MyLevelsControllerTest {
     MyLevelsService service;
     @MockitoBean
     TrainerRepository trainerRepository;
+    @MockitoBean
+    RiderRepository riderRepository;
 
     @BeforeEach
     void trainerIsActive() {

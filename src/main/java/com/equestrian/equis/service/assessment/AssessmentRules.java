@@ -18,6 +18,7 @@ import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
 import com.equestrian.equis.repository.assessment.MemberRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
+import com.equestrian.equis.service.accounts.AccountErrors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -103,7 +104,7 @@ public class AssessmentRules {
                     throw emailTaken(existing);
                 });
         if (trainers.existsByEmail(email) || admins.existsByEmail(email)) {
-            throw emailTaken(null);
+            throw AccountErrors.emailInUse();
         }
     }
 
@@ -198,7 +199,7 @@ public class AssessmentRules {
         return taken(ErrorCodes.PHONE_TAKEN, "phone", "This phone", existing);
     }
 
-    // existing is the member who has the email; null when it is a trainer's or the admin's, who are never named.
+    // existing is the member who has the email; null when unknown. A trainer's or the admin's email is email_in_use.
     public ApiException emailTaken(Member existing) {
         return taken(ErrorCodes.EMAIL_TAKEN, "email", "This email", existing);
     }

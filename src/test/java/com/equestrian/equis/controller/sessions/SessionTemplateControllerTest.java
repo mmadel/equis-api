@@ -12,6 +12,7 @@ import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.levels.Level;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.sessions.BookedSeats;
 import com.equestrian.equis.service.sessions.DeleteImpact;
@@ -73,6 +74,8 @@ public class SessionTemplateControllerTest {
     BookedSeats bookedSeats;
     @MockitoBean
     TrainerRepository trainerRepository;
+    @MockitoBean
+    RiderRepository riderRepository;
 
     @Test
     void listsTheTemplatesOfALevelWithTheirCounts() throws Exception {

@@ -6,12 +6,14 @@ import com.equestrian.equis.dto.accounts.TrainerList;
 import com.equestrian.equis.dto.accounts.TrainerRow;
 import com.equestrian.equis.dto.accounts.TrainerTotals;
 import com.equestrian.equis.entity.accounts.InvitePurpose;
+import com.equestrian.equis.entity.accounts.SubjectType;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.repository.accounts.AdminAccountRepository;
 import com.equestrian.equis.repository.accounts.InviteRepository;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
+import com.equestrian.equis.repository.assessment.MemberRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.AccountLinkService.IssuedLink;
 import org.springframework.context.ApplicationEventPublisher;
@@ -42,11 +44,13 @@ public class TrainerAdminService {
     private final RiderRepository riders;
     private final AssessmentBookingRepository bookings;
     private final InviteRepository invites;
+    private final MemberRepository members;
 
     public TrainerAdminService(TrainerRepository trainers, AdminAccountRepository admins, AccountLinkService links,
                                TrainerRowAssembler rows, ApplicationEventPublisher events,
                                TrainerAccessService access, RiderRepository riders,
-                               AssessmentBookingRepository bookings, InviteRepository invites) {
+                               AssessmentBookingRepository bookings, InviteRepository invites,
+                               MemberRepository members) {
         this.trainers = trainers;
         this.admins = admins;
         this.links = links;
@@ -56,6 +60,7 @@ public class TrainerAdminService {
         this.riders = riders;
         this.bookings = bookings;
         this.invites = invites;
+        this.members = members;
     }
 
     @Transactional(readOnly = true)
@@ -83,6 +88,10 @@ public class TrainerAdminService {
         // An email can't be both the admin's and a trainer's.
         if (trainers.existsByEmail(req.email()) || admins.existsByEmail(req.email())) {
             throw TrainerErrors.emailTaken();
+        }
+        // A person's email becomes their rider login, so a trainer can't take it.
+        if (members.existsByEmail(req.email())) {
+            throw AccountErrors.emailInUse();
         }
         Trainer trainer;
         try {
@@ -148,8 +157,8 @@ public class TrainerAdminService {
     // Also used by the row actions (resend, reset password).
     void sendLink(Trainer trainer, InvitePurpose purpose) {
         IssuedLink link = links.issue(trainer, purpose);
-        events.publishEvent(new AccountLinkCreatedEvent(trainer.getId(), trainer.getName(), trainer.getEmail(),
-                purpose, link.rawToken(), link.expiresAt()));
+        events.publishEvent(new AccountLinkCreatedEvent(SubjectType.TRAINER, trainer.getId(), trainer.getName(),
+                trainer.getEmail(), purpose, link.rawToken(), link.expiresAt()));
     }
 
     private static long count(List<Trainer> trainers, TrainerStatus status) {

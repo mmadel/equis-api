@@ -1,6 +1,7 @@
 package com.equestrian.equis.service.mail;
 
 import com.equestrian.equis.entity.accounts.InvitePurpose;
+import com.equestrian.equis.entity.accounts.SubjectType;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +17,7 @@ public class AccountLinkEmailsTest {
     // Mon 19 Oct 2026, 01:20 in Cairo (summer time, UTC+3).
     private static final Instant EXPIRES = Instant.parse("2026-10-18T22:20:00Z");
 
-    private final AccountLinkEmails emails = new AccountLinkEmails("http://test.local", CAIRO);
+    private final AccountLinkEmails emails = new AccountLinkEmails("http://test.local", "http://rider.test/", CAIRO);
 
     @Test
     void inviteEmailHasLinkAndExpiryInCairoTime() {
@@ -48,7 +49,7 @@ public class AccountLinkEmailsTest {
 
     @Test
     void trailingSlashInBaseUrlGivesNoDoubleSlash() {
-        OutgoingEmail email = new AccountLinkEmails("http://test.local/", CAIRO)
+        OutgoingEmail email = new AccountLinkEmails("http://test.local/", "http://rider.test", CAIRO)
                 .build(event("Mona", InvitePurpose.INVITE));
 
         assertThat(email.text()).contains("http://test.local/invite/" + TOKEN).doesNotContain("local//");
@@ -71,7 +72,44 @@ public class AccountLinkEmailsTest {
                 .doesNotContain(TOKEN);
     }
 
+    // Case 1 and 14 (rider texts); case 22 is the trainer tests above, unchanged.
+    @Test
+    void riderInviteOpensTheRiderAppWithRiderTexts() {
+        OutgoingEmail email = emails.build(riderEvent(InvitePurpose.INVITE));
+
+        assertThat(email.to()).isEqualTo("omar.h@gmail.com");
+        assertThat(email.subject()).isEqualTo("Your rider account at Riding Schedule");
+        assertThat(email.text())
+                .startsWith("Hi Omar Hassan,")
+                .contains("Your riding school has created your rider account. "
+                        + "Set a password to see your sessions, balance and progress.")
+                .contains("Set your password: http://rider.test/invite/" + TOKEN)
+                .contains("After that, sign in on the rider app with this email.")
+                .doesNotContain("test.local")
+                .doesNotContain("phone number")
+                .doesNotContain("Your current password works");
+        assertThat(email.html()).contains("href=\"http://rider.test/invite/" + TOKEN + "\"");
+    }
+
+    @Test
+    void riderResetHasResetSubjectAndRiderIntro() {
+        OutgoingEmail email = emails.build(riderEvent(InvitePurpose.RESET));
+
+        assertThat(email.subject()).isEqualTo("Set a new password for Riding Schedule");
+        assertThat(email.text())
+                .contains("Your admin sent you a link to set a new password for your rider account.")
+                .contains("http://rider.test/invite/" + TOKEN)
+                .contains("After that, sign in on the rider app with this email.")
+                .contains("Your current password works until you set a new one.");
+    }
+
     private static AccountLinkCreatedEvent event(String name, InvitePurpose purpose) {
-        return new AccountLinkCreatedEvent(UUID.randomUUID(), name, "mona@example.com", purpose, TOKEN, EXPIRES);
+        return new AccountLinkCreatedEvent(SubjectType.TRAINER, UUID.randomUUID(), name, "mona@example.com", purpose,
+                TOKEN, EXPIRES);
+    }
+
+    private static AccountLinkCreatedEvent riderEvent(InvitePurpose purpose) {
+        return new AccountLinkCreatedEvent(SubjectType.RIDER, UUID.randomUUID(), "Omar Hassan", "omar.h@gmail.com",
+                purpose, TOKEN, EXPIRES);
     }
 }

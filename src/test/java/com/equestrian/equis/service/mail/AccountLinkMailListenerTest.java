@@ -104,7 +104,7 @@ public class AccountLinkMailListenerTest {
         assertThat(inviteRepository.findByTokenHash(tokenGenerator.hash(token))).get()
                 .satisfies(i -> assertThat(i.getAcceptedAt()).isNull());
         assertThat(output.getAll())
-                .contains("Account link email failed trainer=" + row.id() + " purpose=INVITE")
+                .contains("Account link email failed TRAINER=" + row.id() + " purpose=INVITE")
                 .contains("SMTP down")
                 .doesNotContain(token)
                 .doesNotContain("/invite/");

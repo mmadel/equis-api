@@ -7,6 +7,7 @@ import com.equestrian.equis.entity.accounts.Invite;
 import com.equestrian.equis.entity.accounts.InvitePurpose;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
+import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.repository.accounts.InviteRepository;
 import com.equestrian.equis.service.accounts.TokenGenerator.GeneratedToken;
 import org.springframework.http.HttpStatus;
@@ -45,12 +46,24 @@ public class AccountLinkService {
         invites.deleteByTrainerIdAndAcceptedAtIsNull(trainer.getId());
 
         GeneratedToken generated = tokenGenerator.generate();
-        Duration ttl = purpose == InvitePurpose.RESET ? properties.reset().ttl() : properties.invite().ttl();
 
         Invite invite = Invite.forTrainer(trainer);
         invite.setTokenHash(generated.hash());
         invite.setPurpose(purpose);
-        invite.setExpiresAt(clock.instant().plus(ttl));
+        invite.setExpiresAt(clock.instant().plus(ttl(purpose)));
+        invites.save(invite);
+        return new IssuedLink(generated.raw(), invite.getExpiresAt());
+    }
+
+    // A rider's link: same rules as a trainer's (only the newest works, 72h invite / 24h reset).
+    @Transactional
+    public IssuedLink issue(Rider rider, InvitePurpose purpose) {
+        invites.deleteByRiderIdAndAcceptedAtIsNull(rider.getId());
+        GeneratedToken generated = tokenGenerator.generate();
+        Invite invite = Invite.forRider(rider);
+        invite.setTokenHash(generated.hash());
+        invite.setPurpose(purpose);
+        invite.setExpiresAt(clock.instant().plus(ttl(purpose)));
         invites.save(invite);
         return new IssuedLink(generated.raw(), invite.getExpiresAt());
     }
@@ -63,7 +76,9 @@ public class AccountLinkService {
         }
         Invite invite = invites.findByTokenHash(tokenGenerator.hash(raw))
                 .orElseThrow(AccountLinkService::invalidLink);
-        if (!invite.isOpen(clock.instant()) || invite.getTrainer().getStatus() == TrainerStatus.DISABLED) {
+        // Riders have no disabled state, so their link only has to be unused and not expired.
+        if (!invite.isOpen(clock.instant())
+                || (invite.isForTrainer() && invite.getTrainer().getStatus() == TrainerStatus.DISABLED)) {
             throw invalidLink();
         }
         return invite;
@@ -81,6 +96,10 @@ public class AccountLinkService {
         public String toString() {
             return "IssuedLink[expiresAt=" + expiresAt + "]";
         }
+    }
+
+    private Duration ttl(InvitePurpose purpose) {
+        return purpose == InvitePurpose.RESET ? properties.reset().ttl() : properties.invite().ttl();
     }
 
     private static ApiException invalidLink() {

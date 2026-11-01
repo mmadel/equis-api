@@ -13,6 +13,7 @@ import com.equestrian.equis.dto.assessment.RecordResultRequest;
 import com.equestrian.equis.dto.assessment.ResultRecorded;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.assessment.RecordResultService;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +61,8 @@ public class BookingControllerTest {
     RecordResultService service;
     @MockitoBean
     TrainerRepository trainerRepository;
+    @MockitoBean
+    RiderRepository riderRepository;
 
     @BeforeEach
     void trainerIsActive() {

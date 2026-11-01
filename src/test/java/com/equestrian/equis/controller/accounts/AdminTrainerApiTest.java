@@ -3,6 +3,7 @@ package com.equestrian.equis.controller.accounts;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.entity.accounts.InvitePurpose;
+import com.equestrian.equis.entity.accounts.SubjectType;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.assessment.AssessmentBooking;
@@ -279,7 +280,9 @@ public class AdminTrainerApiTest {
         List<AccountLinkCreatedEvent> published = events.stream(AccountLinkCreatedEvent.class).toList();
         assertThat(published).hasSize(1);
         AccountLinkCreatedEvent event = published.getFirst();
-        assertThat(event.trainerId()).isEqualTo(trainer.get("id"));
+        assertThat(event.subjectType()).isEqualTo(SubjectType.TRAINER);
+        assertThat(event.subjectId()).isEqualTo(trainer.get("id"));
+        assertThat(event.name()).isEqualTo("Mona Fathy");
         assertThat(event.email()).isEqualTo("mona@example.com");
         assertThat(event.purpose()).isEqualTo(InvitePurpose.INVITE);
         assertThat(event.expiresAt()).isEqualTo(expiresAt);
@@ -398,7 +401,7 @@ public class AdminTrainerApiTest {
     // Case 15
     @Test
     void theEventNeverPrintsTheToken() {
-        AccountLinkCreatedEvent event = new AccountLinkCreatedEvent(UUID.randomUUID(), "Mona Fathy",
+        AccountLinkCreatedEvent event = new AccountLinkCreatedEvent(SubjectType.TRAINER, UUID.randomUUID(), "Mona Fathy",
                 "mona@example.com", InvitePurpose.INVITE, "raw-secret-token-123", CLOCK.instant());
 
         assertThat(event.toString()).doesNotContain("raw-secret-token-123").contains("INVITE");

@@ -1,7 +1,9 @@
 package com.equestrian.equis.common.security;
 
 import com.equestrian.equis.entity.accounts.TrainerStatus;
+import com.equestrian.equis.entity.riders.RiderAccountStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.DisabledException;
@@ -18,9 +20,11 @@ public class AuthUserConverter implements Converter<Jwt, AbstractAuthenticationT
     public static final String ROLE_CLAIM = "role";
 
     private final TrainerRepository trainerRepository;
+    private final RiderRepository riderRepository;
 
-    public AuthUserConverter(TrainerRepository trainerRepository) {
+    public AuthUserConverter(TrainerRepository trainerRepository, RiderRepository riderRepository) {
         this.trainerRepository = trainerRepository;
+        this.riderRepository = riderRepository;
     }
 
     @Override
@@ -31,6 +35,10 @@ public class AuthUserConverter implements Converter<Jwt, AbstractAuthenticationT
         if (user.role() == Role.TRAINER
                 && !trainerRepository.existsByIdAndStatus(user.id(), TrainerStatus.ACTIVE)) {
             throw new DisabledException("Trainer is not active");
+        }
+        if (user.role() == Role.RIDER
+                && !riderRepository.existsByIdAndAccountStatus(user.id(), RiderAccountStatus.ACTIVE)) {
+            throw new DisabledException("Rider is not active");
         }
         return new AuthUserAuthentication(user, jwt);
     }

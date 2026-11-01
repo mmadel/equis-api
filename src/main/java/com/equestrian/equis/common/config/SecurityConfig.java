@@ -3,6 +3,7 @@ package com.equestrian.equis.common.config;
 import com.equestrian.equis.common.security.AuthUserConverter;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.riders.RiderRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,8 +29,8 @@ public class SecurityConfig {
     private static final String HEALTH_PATH = "/actuator/health";
 
     @Bean
-    public AuthUserConverter authUserConverter(TrainerRepository trainerRepository) {
-        return new AuthUserConverter(trainerRepository);
+    public AuthUserConverter authUserConverter(TrainerRepository trainerRepository, RiderRepository riderRepository) {
+        return new AuthUserConverter(trainerRepository, riderRepository);
     }
 
     @Bean
@@ -51,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_PATHS, HEALTH_PATH).permitAll()
                         .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                         .requestMatchers("/me/**", "/assessment/**").hasRole(Role.TRAINER.name())
+                        .requestMatchers("/rider/**").hasRole(Role.RIDER.name())
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(bearerTokenResolver())

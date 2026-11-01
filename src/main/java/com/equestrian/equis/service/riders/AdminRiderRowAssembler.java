@@ -57,7 +57,7 @@ public class AdminRiderRowAssembler {
         TrainerRef assessor = assessor(v);
         return new AdminRiderRow(v.id(), v.name(), v.phone(), v.levelId(), trainer, assessor,
                 HowAssigned.of(trainer, assessor).value(), canResetToAssessor(trainer, assessor), v.createdAt(),
-                balance);
+                balance, v.accountStatus());
     }
 
     // Only to an active assessor, and only when the rider is with someone else or nobody.
