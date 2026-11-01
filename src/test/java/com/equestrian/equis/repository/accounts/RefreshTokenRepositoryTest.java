@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -38,6 +39,8 @@ public class RefreshTokenRepositoryTest {
     RefreshTokenRepository refreshTokenRepository;
     @Autowired
     JdbcTemplate jdbcTemplate;
+    @Autowired
+    TestEntityManager entityManager;
 
     @Test
     void savesWithGeneratedIdAndCreatedAt() {
@@ -55,6 +58,19 @@ public class RefreshTokenRepositoryTest {
 
         String subjectType = jdbcTemplate.queryForObject("SELECT subject_type FROM refresh_token WHERE id = ?", String.class, saved.getId());
         assertThat(subjectType).isEqualTo("admin");
+    }
+
+    // E15 case 9
+    @Test
+    void savesARiderTokenAndReadsItBack() {
+        RefreshToken saved = refreshTokenRepository.saveAndFlush(token(SubjectType.RIDER, UUID.randomUUID(), HASH_A, null));
+
+        String subjectType = jdbcTemplate.queryForObject("SELECT subject_type FROM refresh_token WHERE id = ?", String.class, saved.getId());
+        assertThat(subjectType).isEqualTo("rider");
+        // Read from the database, not the persistence context.
+        entityManager.clear();
+        assertThat(refreshTokenRepository.findByTokenHash(HASH_A).orElseThrow().getSubjectType())
+                .isEqualTo(SubjectType.RIDER);
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.equestrian.equis.repository.riders;
 
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.riders.Rider;
+import com.equestrian.equis.entity.riders.RiderAccountStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.levels.LevelRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -138,6 +139,98 @@ public class RiderRepositoryTest {
         assertThat(riderRepository.countByTrainerPerLevel(UUID.randomUUID())).isEmpty();
     }
 
+    // E15 case 3
+    @Test
+    void rejectsTwoRidersWithTheSameEmail() {
+        Rider first = rider("Sara Ali", LEVEL_1, sara);
+        first.setEmail("sara.ali@gmail.com");
+        riderRepository.saveAndFlush(first);
+        Rider second = rider("Sara Ali Hassan", LEVEL_1, omar);
+        second.setEmail("sara.ali@gmail.com");
+
+        assertThatThrownBy(() -> riderRepository.saveAndFlush(second))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("uq_rider_email");
+    }
+
+    // E15 case 4
+    @Test
+    void rejectsAnEmailThatIsNotLowercase() {
+        assertThatThrownBy(() -> jdbcTemplate.update(
+                "INSERT INTO rider (name, level_id, email) VALUES ('Sara Ali', 1, 'Sara@Gmail.com')"))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_rider_email");
+    }
+
+    @Test
+    void newRiderHasNoAccount() {
+        Rider saved = riderRepository.saveAndFlush(rider("Laila Nour", LEVEL_1, sara));
+
+        assertThat(jdbcTemplate.queryForObject("SELECT account_status FROM rider WHERE id = ?", String.class, saved.getId()))
+                .isEqualTo("none");
+        assertThat(saved.getEmail()).isNull();
+        assertThat(saved.getPasswordHash()).isNull();
+        assertThat(saved.getLastActiveAt()).isNull();
+    }
+
+    // E15 case 5
+    @Test
+    void rejectsAnInvitedRiderWithoutEmail() {
+        UUID id = riderRepository.saveAndFlush(rider("Laila Nour", LEVEL_1, sara)).getId();
+
+        assertThatThrownBy(() -> jdbcTemplate.update("UPDATE rider SET account_status = 'invited' WHERE id = ?", id))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_rider_account_email");
+    }
+
+    @Test
+    void rejectsAnActiveRiderWithoutPassword() {
+        UUID id = riderRepository.saveAndFlush(withEmail("Laila Nour", "laila@gmail.com")).getId();
+
+        assertThatThrownBy(() -> jdbcTemplate.update("UPDATE rider SET account_status = 'active' WHERE id = ?", id))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_rider_active_password");
+    }
+
+    @Test
+    void rejectsAnUnknownAccountStatus() {
+        UUID id = riderRepository.saveAndFlush(withEmail("Laila Nour", "laila@gmail.com")).getId();
+
+        assertThatThrownBy(() -> jdbcTemplate.update("UPDATE rider SET account_status = 'blocked' WHERE id = ?", id))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_rider_account_status");
+    }
+
+    // E15 case 13
+    @Test
+    void findsARiderByEmail() {
+        Rider laila = riderRepository.saveAndFlush(withEmail("Laila Nour", "laila@gmail.com"));
+        riderRepository.saveAndFlush(withEmail("Adam Samir", "adam@gmail.com"));
+
+        assertThat(riderRepository.findByEmail("laila@gmail.com")).contains(laila);
+        assertThat(riderRepository.findByEmail("nobody@gmail.com")).isEmpty();
+        assertThat(riderRepository.existsByEmail("adam@gmail.com")).isTrue();
+        assertThat(riderRepository.existsByEmail("nobody@gmail.com")).isFalse();
+    }
+
+    @Test
+    void checksARidersAccountStatus() {
+        Rider laila = withEmail("Laila Nour", "laila@gmail.com");
+        laila.markInvited();
+        laila.setPassword("$2a$10$hash");
+        UUID lailaId = riderRepository.saveAndFlush(laila).getId();
+        Rider adam = withEmail("Adam Samir", "adam@gmail.com");
+        adam.markInvited();
+        UUID adamId = riderRepository.saveAndFlush(adam).getId();
+
+        assertThat(riderRepository.existsByIdAndAccountStatus(lailaId, RiderAccountStatus.ACTIVE)).isTrue();
+        assertThat(riderRepository.existsByIdAndAccountStatus(adamId, RiderAccountStatus.ACTIVE)).isFalse();
+        assertThat(riderRepository.existsByIdAndAccountStatus(adamId, RiderAccountStatus.INVITED)).isTrue();
+        assertThat(riderRepository.existsByIdAndAccountStatus(UUID.randomUUID(), RiderAccountStatus.ACTIVE)).isFalse();
+        assertThat(jdbcTemplate.queryForObject("SELECT account_status FROM rider WHERE id = ?", String.class, lailaId))
+                .isEqualTo("active");
+    }
+
     @Test
     void initialsUseFirstAndLastName() {
         assertThat(named("Sara Adel Hassan").initials()).isEqualTo("SH");
@@ -151,6 +244,12 @@ public class RiderRepositoryTest {
         Rider rider = named(name);
         rider.setLevel(levelRepository.getReferenceById(levelId));
         rider.setTrainer(trainer);
+        return rider;
+    }
+
+    private Rider withEmail(String name, String email) {
+        Rider rider = rider(name, LEVEL_1, sara);
+        rider.setEmail(email);
         return rider;
     }
 

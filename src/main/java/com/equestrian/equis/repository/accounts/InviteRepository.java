@@ -35,6 +35,13 @@ public interface InviteRepository extends JpaRepository<Invite, UUID> {
     @Query("delete from Invite i where i.trainer.id = :trainerId and i.acceptedAt is null")
     int deleteByTrainerIdAndAcceptedAtIsNull(@Param("trainerId") UUID trainerId);
 
+    // Same as for trainers: a bulk delete, so the open link is gone before the replacement is inserted
+    // (uq_invite_open_per_rider).
+    @Modifying
+    @Transactional
+    @Query("delete from Invite i where i.rider.id = :riderId and i.acceptedAt is null")
+    int deleteByRiderIdAndAcceptedAtIsNull(@Param("riderId") UUID riderId);
+
     // Every link of the trainer, used or not: cancelling an invite removes the trainer.
     @Modifying
     @Transactional
