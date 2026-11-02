@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.0.0] - 2026-11-02
+
+- E11 · Admin intake: the admin records new people and books their assessments; trainers no longer register walk-ins.
+- E12 · Payments and balance: the admin records and voids payments; each payment adds a package of sessions that expires after a grace month, and every rider's remaining balance is available.
+- E13 · Same-day sessions: trainers add riders to a session only on the day, from riders who can ride that day; marking a session Finished uses one session from each rider's balance.
+- E14 · Session evaluations: after a Finished session the trainer gives each rider 1–5 stars and an optional comment; the admin sees which riders and sessions still need evaluating, per trainer.
+- E15 · Rider accounts and data: every rider gets an email login when they become a rider, and the API serves the rider app's data (status, balance, sessions with evaluations, assessment, payments, profile and progress).
+- CI: GitHub Actions builds and tests every pull request.
+
+### Database
+
+- V16__applicant_intake.sql
+- V17__member_closed.sql
+- V18__assessment_cancel_reason.sql
+- V19__payments.sql
+- V20__session_finished.sql
+- V21__session_evaluation.sql
+- V22__rider_accounts.sql
+
+### Configuration
+
+- APP_RIDER_BASE_URL: public address of the rider app, used in rider invite and set-password links (default http://localhost:4202).
+
 ## 1.0.0 — 2026-10-19
 
 First release.
