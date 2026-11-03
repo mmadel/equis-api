@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.1] - 2026-11-04
+
+- No code changes. Version aligned with the 2.0.1 deployment bundle (compose hardening and HTTPS in equis-deploy).
+
 ## [2.0.0] - 2026-11-02
 
 - E11 · Admin intake: the admin records new people and books their assessments; trainers no longer register walk-ins.
