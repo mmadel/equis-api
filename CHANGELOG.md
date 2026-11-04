@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.2] - 2026-11-04
+
+- Release pipeline: publishing a GitHub Release builds ghcr.io/mmadel/equis-api:<version> from the tag and pushes it to GHCR (GitHub Actions, never tagged latest); the image digest is in the job summary.
+- No application code changes.
+
+### Database
+
+- No new Flyway scripts.
+
 ## [2.0.1] - 2026-11-04
 
 - No code changes. Version aligned with the 2.0.1 deployment bundle (compose hardening and HTTPS in equis-deploy).
