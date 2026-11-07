@@ -21,6 +21,7 @@ public class ErrorCodes {
     public static final String TRAINER_OR_RESET_REQUIRED = "trainer_or_reset_required"; // 400 field error
     public static final String INVALID_AMOUNT     = "invalid_amount";     // 400 field error
     public static final String INVALID_METHOD     = "invalid_method";     // 400 field error
+    public static final String INVALID_BILLING_PERIOD = "invalid_billing_period"; // 400: trial plan or TRIAL period
     public static final String START_MONTH_OUT_OF_RANGE = "start_month_out_of_range"; // 400 field error
     public static final String INVALID_PAYMENT_STATUS = "invalid_payment_status"; // 400 field error
     public static final String UNAUTHORIZED       = "unauthorized";          // 401
@@ -42,10 +43,15 @@ public class ErrorCodes {
     public static final String PAYMENT_NOT_FOUND  = "payment_not_found";  // 404
     public static final String ASSESSMENT_NOT_FOUND = "assessment_not_found"; // 404
     public static final String CLUB_NOT_FOUND     = "club_not_found";     // 404
+    public static final String PLAN_NOT_FOUND     = "plan_not_found";     // 404
+    public static final String SUBSCRIPTION_NOT_FOUND = "subscription_not_found"; // 404
     public static final String ENDPOINT_REMOVED   = "endpoint_removed";   // 410
     public static final String CLUB_CODE_TAKEN    = "club_code_taken";    // 409
     public static final String NO_PLANS_CONFIGURED = "no_plans_configured"; // 409: no plan with trial_days
     public static final String INVALID_CLUB_STATUS = "invalid_club_status"; // 409: already suspended / already active
+    public static final String TRIAL_CANNOT_BE_VOIDED = "trial_cannot_be_voided"; // 409
+    public static final String SUBSCRIPTION_ALREADY_VOIDED = "subscription_already_voided"; // 409
+    public static final String UPCOMING_SUBSCRIPTION_EXISTS = "upcoming_subscription_exists"; // 409: NOW while a renewal is queued
     public static final String SEAT_TAKEN        = "seat_taken";         // 409
     public static final String CAPACITY_EXCEEDED  = "capacity_exceeded";  // 409
     public static final String ALREADY_BOOKED     = "already_booked";     // 409

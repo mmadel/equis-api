@@ -27,6 +27,13 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     @Query("select max(s.endsAt) from Subscription s where s.clubId = :clubId and s.voidedAt is null")
     Optional<Instant> findLatestEnd(@Param("clubId") UUID clubId);
 
+    // A queued row that hasn't started yet: a start NOW is refused while one exists.
+    boolean existsByClubIdAndVoidedAtIsNullAndStartsAtAfter(UUID clubId, Instant now);
+
+    // The club of a subscription, read without loading the row, so the club can be locked before the row is read.
+    @Query("select s.clubId from Subscription s where s.id = :id")
+    Optional<UUID> findClubIdById(@Param("id") UUID id);
+
     // Only to undo a club whose onboarding failed half way (ClubOnboardingService); rows are never deleted otherwise.
     @Modifying
     @Query("delete from Subscription s where s.clubId = :clubId")
