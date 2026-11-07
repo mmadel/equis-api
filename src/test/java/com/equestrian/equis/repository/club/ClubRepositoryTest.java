@@ -225,7 +225,7 @@ class ClubRepositoryTest {
     }
 
     private void insertAdmin(UUID clubId, String email) {
-        jdbc.update("INSERT INTO admin_account (club_id, email, password_hash) VALUES (?, ?, 'hash')", clubId, email);
+        jdbc.update("INSERT INTO admin_account (club_id, name, email, password_hash) VALUES (?, 'Admin', ?, 'hash')", clubId, email);
     }
 
     private void insertMember(UUID clubId, String phone, String email) {

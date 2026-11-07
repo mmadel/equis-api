@@ -336,6 +336,7 @@ public class AssignmentServiceTest {
     private AdminAccount admin() {
         if (admin == null) {
             AdminAccount account = new AdminAccount();
+            account.setName("Admin");
             account.setEmail("assignment-service-test-admin@example.com");
             account.setPasswordHash("hash");
             admin = adminAccountRepository.saveAndFlush(account);

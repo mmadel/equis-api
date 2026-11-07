@@ -20,7 +20,8 @@ public class AccountLinkEmailsTest {
     // Mon 19 Oct 2026, 01:20 in Cairo (summer time, UTC+3).
     private static final Instant EXPIRES = Instant.parse("2026-10-18T22:20:00Z");
 
-    private final AccountLinkEmails emails = new AccountLinkEmails("http://test.local", "http://rider.test/", CAIRO);
+    private final AccountLinkEmails emails =
+            new AccountLinkEmails("http://test.local", "http://rider.test/", "http://admin.test", CAIRO);
 
     @Test
     void inviteEmailHasLinkAndExpiryInCairoTime() {
@@ -52,8 +53,8 @@ public class AccountLinkEmailsTest {
 
     @Test
     void trailingSlashInBaseUrlGivesNoDoubleSlash() {
-        OutgoingEmail email = new AccountLinkEmails("http://test.local/", "http://rider.test", CAIRO)
-                .build(event("Mona", InvitePurpose.INVITE));
+        OutgoingEmail email = new AccountLinkEmails("http://test.local/", "http://rider.test", "http://admin.test/",
+                CAIRO).build(event("Mona", InvitePurpose.INVITE));
 
         assertThat(email.text()).contains("http://test.local/invite/" + TOKEN).doesNotContain("local//");
     }
@@ -104,6 +105,28 @@ public class AccountLinkEmailsTest {
                 .contains("http://rider.test/invite/" + TOKEN)
                 .contains("After that, sign in on the rider app with this email.")
                 .contains("Your current password works until you set a new one.");
+    }
+
+    // E17 · a new club's first admin: the web console link, the club's name and its code.
+    @Test
+    void clubAdminInviteOpensTheConsoleAndGivesTheClubCode() {
+        OutgoingEmail email = emails.build(new AccountLinkCreatedEvent(SubjectType.ADMIN, UUID.randomUUID(), "Hany",
+                "hany@cairoeq.com", InvitePurpose.INVITE, TOKEN, EXPIRES, "Cairo <Equestrian>", "cairo-eq"));
+
+        assertThat(email.to()).isEqualTo("hany@cairoeq.com");
+        assertThat(email.subject()).isEqualTo("Your club admin account at Riding Schedule");
+        assertThat(email.text())
+                .startsWith("Hi Hany,")
+                .contains("You're the admin of Cairo <Equestrian> on Riding Schedule. Set a password to start.")
+                .contains("Set your password: http://admin.test/invite/" + TOKEN)
+                .contains("Your club code: cairo-eq")
+                .contains("After that, sign in on the web console with this email and your club code.");
+        // The club's name was typed by the super admin, so the HTML escapes it.
+        assertThat(email.html())
+                .contains("You're the admin of Cairo &lt;Equestrian&gt; on Riding Schedule.")
+                .contains("href=\"http://admin.test/invite/" + TOKEN + "\"")
+                .contains("Your club code: cairo-eq")
+                .doesNotContain("<Equestrian>");
     }
 
     private static AccountLinkCreatedEvent event(String name, InvitePurpose purpose) {

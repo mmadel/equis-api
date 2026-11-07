@@ -288,6 +288,7 @@ public class RiderBalanceServiceTest {
 
     private AdminAccount admin() {
         AdminAccount account = new AdminAccount();
+        account.setName("Admin");
         account.setEmail("balance-test-admin@example.com");
         account.setPasswordHash("hash");
         return account;

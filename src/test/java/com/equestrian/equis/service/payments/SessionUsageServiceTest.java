@@ -369,6 +369,7 @@ public class SessionUsageServiceTest {
 
     private AdminAccount admin() {
         AdminAccount account = new AdminAccount();
+        account.setName("Admin");
         account.setEmail("usage-test-admin@example.com");
         account.setPasswordHash("hash");
         return account;

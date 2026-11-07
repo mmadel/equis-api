@@ -308,6 +308,7 @@ public class PaymentRepositoryTest {
 
     private AdminAccount admin() {
         AdminAccount account = new AdminAccount();
+        account.setName("Admin");
         account.setEmail("payment-test-admin@example.com");
         account.setPasswordHash("hash");
         return account;

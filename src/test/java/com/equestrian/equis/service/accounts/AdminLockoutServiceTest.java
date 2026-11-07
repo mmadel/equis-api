@@ -152,6 +152,7 @@ public class AdminLockoutServiceTest {
 
     private AdminAccount admin() {
         AdminAccount admin = new AdminAccount();
+        admin.setName("Admin");
         admin.setEmail(EMAIL);
         admin.setPasswordHash(passwordService.hash(PASSWORD));
         return adminAccountRepository.saveAndFlush(admin);

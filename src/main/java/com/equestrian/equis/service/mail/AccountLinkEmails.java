@@ -12,7 +12,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 // The invite and set-password email. One email for both; the subject and first lines change with the purpose.
-// A trainer's link opens the trainer app (app.base-url), a rider's the rider app (app.rider-base-url).
+// A trainer's link opens the trainer app (app.base-url), a rider's the rider app (app.rider-base-url), a club admin's
+// the web console (app.admin-base-url). The admin's email also names the club and gives its code.
 @Component
 public class AccountLinkEmails {
     private static final DateTimeFormatter EXPIRES = DateTimeFormatter.ofPattern("EEE d MMM, HH:mm", Locale.ENGLISH);
@@ -31,34 +32,68 @@ public class AccountLinkEmails {
                     + "Set a password to see your sessions, balance and progress.",
             "Your admin sent you a link to set a new password for your rider account.",
             "After that, sign in on the rider app with this email.");
+    // inviteIntro is a format: the club's name goes in.
+    private static final Texts ADMIN = new Texts(
+            "Your club admin account at Riding Schedule",
+            "You're the admin of %s on Riding Schedule. Set a password to start.",
+            "You asked for a link to set a new password for your club admin account.",
+            "After that, sign in on the web console with this email and your club code.");
 
     private final String baseUrl;
     private final String riderBaseUrl;
+    private final String adminBaseUrl;
     private final ZoneId schoolZone;
 
     public AccountLinkEmails(@Value("${app.base-url}") String baseUrl,
                              @Value("${app.rider-base-url}") String riderBaseUrl,
+                             @Value("${app.admin-base-url}") String adminBaseUrl,
                              @Value("${app.time-zone}") ZoneId schoolZone) {
         this.baseUrl = stripTrailingSlash(baseUrl);
         this.riderBaseUrl = stripTrailingSlash(riderBaseUrl);
+        this.adminBaseUrl = stripTrailingSlash(adminBaseUrl);
         this.schoolZone = schoolZone;
     }
 
     public OutgoingEmail build(AccountLinkCreatedEvent e) {
-        boolean rider = e.subjectType() == SubjectType.RIDER;
-        Texts texts = rider ? RIDER : TRAINER;
+        boolean admin = e.subjectType() == SubjectType.ADMIN;
+        Texts texts = switch (e.subjectType()) {
+            case RIDER -> RIDER;
+            case ADMIN -> ADMIN;
+            default -> TRAINER;
+        };
+        String appUrl = switch (e.subjectType()) {
+            case RIDER -> riderBaseUrl;
+            case ADMIN -> adminBaseUrl;
+            default -> baseUrl;
+        };
         boolean reset = e.purpose() == InvitePurpose.RESET;
         // The token is base64url, so it is safe in a path.
-        String link = (rider ? riderBaseUrl : baseUrl) + "/invite/" + e.rawToken();
+        String link = appUrl + "/invite/" + e.rawToken();
         String expiryLine = "This link works once and expires on "
                 + EXPIRES.format(e.expiresAt().atZone(schoolZone)) + " (Cairo time).";
-        String intro = reset ? texts.resetIntro() : texts.inviteIntro();
+        String intro;
+        String htmlIntro;
+        if (reset) {
+            intro = texts.resetIntro();
+            htmlIntro = intro;
+        } else if (admin) {
+            // The club's name was typed by the super admin, so it is escaped in the HTML part.
+            intro = texts.inviteIntro().formatted(e.clubName());
+            htmlIntro = texts.inviteIntro().formatted(HtmlUtils.htmlEscape(e.clubName()));
+        } else {
+            intro = texts.inviteIntro();
+            htmlIntro = intro;
+        }
+        String clubCodeLine = admin ? "Your club code: " + e.clubCode() : null;
 
         StringBuilder text = new StringBuilder()
                 .append("Hi ").append(e.name()).append(",\n\n")
                 .append(intro).append("\n\n")
-                .append("Set your password: ").append(link).append("\n\n")
-                .append(expiryLine).append('\n')
+                .append("Set your password: ").append(link).append("\n\n");
+        if (clubCodeLine != null) {
+            text.append(clubCodeLine).append('\n');
+        }
+        text.append(expiryLine).append('\n')
                 .append(texts.signIn()).append('\n');
         if (reset) {
             text.append(RESET_NOTE).append('\n');
@@ -68,11 +103,15 @@ public class AccountLinkEmails {
         String href = HtmlUtils.htmlEscape(link);
         StringBuilder html = new StringBuilder()
                 .append("<p>Hi ").append(HtmlUtils.htmlEscape(e.name())).append(",</p>")
-                .append("<p>").append(intro).append("</p>")
+                .append("<p>").append(htmlIntro).append("</p>")
                 .append("<p><a href=\"").append(href).append("\" style=\"display:inline-block;padding:10px 18px;")
                 .append("background:#1f6f50;color:#ffffff;text-decoration:none;border-radius:6px;\">")
                 .append("Set your password</a></p>")
-                .append("<p>").append(expiryLine).append("<br>").append(texts.signIn());
+                .append("<p>");
+        if (clubCodeLine != null) {
+            html.append(HtmlUtils.htmlEscape(clubCodeLine)).append("<br>");
+        }
+        html.append(expiryLine).append("<br>").append(texts.signIn());
         if (reset) {
             html.append("<br>").append(RESET_NOTE);
         }

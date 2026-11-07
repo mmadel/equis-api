@@ -291,6 +291,7 @@ public class AuthServiceTest {
 
     private AdminAccount admin() {
         AdminAccount admin = new AdminAccount();
+        admin.setName("Admin");
         admin.setEmail(ADMIN_EMAIL);
         admin.setPasswordHash(passwordService.hash(PASSWORD));
         return adminAccountRepository.saveAndFlush(admin);
