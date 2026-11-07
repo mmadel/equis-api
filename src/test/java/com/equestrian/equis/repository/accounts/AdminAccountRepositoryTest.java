@@ -92,13 +92,14 @@ public class AdminAccountRepositoryTest {
 
     private AdminAccount admin(String email) {
         AdminAccount admin = new AdminAccount();
+        admin.setName("Admin");
         admin.setEmail(email);
         admin.setPasswordHash("hash");
         return admin;
     }
 
     private void insert(String email, String passwordHash, int failedAttempts) {
-        jdbcTemplate.update("INSERT INTO admin_account (email, password_hash, failed_attempts) VALUES (?, ?, ?)",
+        jdbcTemplate.update("INSERT INTO admin_account (name, email, password_hash, failed_attempts) VALUES ('Admin', ?, ?, ?)",
                 email, passwordHash, failedAttempts);
     }
 }

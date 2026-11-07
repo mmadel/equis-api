@@ -225,6 +225,7 @@ public class SessionDetailServiceTest {
 
     private AdminAccount admin() {
         AdminAccount account = new AdminAccount();
+        account.setName("Admin");
         account.setEmail("session-detail-service-test-admin@example.com");
         account.setPasswordHash("hash");
         return adminAccountRepository.saveAndFlush(account);

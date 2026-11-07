@@ -112,7 +112,7 @@ class TenantIsolationTest {
             levelOneSessionToday(SCHOOL);
             // Laila needs sessions left to be seated: a cairo-eq admin records October.
             UUID cairoAdmin = jdbc.queryForObject("""
-                    INSERT INTO admin_account (club_id, email, password_hash) VALUES (?, 'boss@cairo.eg', 'x')
+                    INSERT INTO admin_account (club_id, name, email, password_hash) VALUES (?, 'Boss', 'boss@cairo.eg', 'x')
                     RETURNING id""", UUID.class, cairo);
             jdbc.update("""
                     INSERT INTO payment (club_id, rider_id, amount_egp, method, start_month, months, sessions,

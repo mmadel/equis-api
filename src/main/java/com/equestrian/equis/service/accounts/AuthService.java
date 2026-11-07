@@ -81,6 +81,11 @@ public class AuthService {
             // The row lock stops two wrong tries at the same moment from reading the same counter.
             Optional<AdminAccount> admin = admins.findByEmailForUpdate(email);
             if (admin.isPresent()) {
+                // An invited admin has no password yet: the same answer and time as a wrong one, and no try counted.
+                if (admin.get().isInvited() || admin.get().getPasswordHash() == null) {
+                    passwords.matches(request.password(), null);
+                    throw invalidCredentials();
+                }
                 lockout.verifyPassword(admin.get(), request.password());
                 return tokens.issue(Role.ADMIN, admin.get().getId(), admin.get().getClubId(), request.rememberMe());
             }
@@ -163,6 +168,10 @@ public class AuthService {
             acceptRiderLink(invite, request.password());
             return;
         }
+        if (invite.isForAdmin()) {
+            acceptAdminLink(invite, request.password());
+            return;
+        }
         Trainer trainer = invite.getTrainer();
 
         trainer.setPasswordHash(passwords.hash(request.password()));
@@ -175,6 +184,16 @@ public class AuthService {
         if (invite.getPurpose() == InvitePurpose.RESET) {
             // Sign out everywhere, so a lost phone or leaked password cannot keep a session.
             tokens.revokeAll(Role.TRAINER, trainer.getId());
+        }
+    }
+
+    // A club admin's link: invited -> active, or a new password. A reset signs the admin out everywhere.
+    private void acceptAdminLink(Invite invite, String rawPassword) {
+        AdminAccount admin = invite.getAdminAccount();
+        admin.setPassword(passwords.hash(rawPassword));
+        links.markUsed(invite);
+        if (invite.getPurpose() == InvitePurpose.RESET) {
+            tokens.revokeAll(Role.ADMIN, admin.getId());
         }
     }
 

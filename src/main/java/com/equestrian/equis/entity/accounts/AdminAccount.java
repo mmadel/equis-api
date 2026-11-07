@@ -6,6 +6,8 @@ import jakarta.persistence.EntityListeners;
 import com.equestrian.equis.common.tenant.TenantGuard;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,11 +38,19 @@ public class AdminAccount implements LockableAccount {
     @Setter(AccessLevel.NONE)
     private UUID clubId;
 
+    @Column(name = "name", nullable = false, length = 120)
+    private String name;
+
     @Column(name = "email", nullable = false, unique = true, length = 254)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 100)
+    // Null while the admin is invited and has not set a password yet.
+    @Column(name = "password_hash", length = 100)
     private String passwordHash;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 10)
+    private AdminStatus status = AdminStatus.ACTIVE;
 
     @Column(name = "failed_attempts", nullable = false)
     private int failedAttempts = 0;
@@ -59,4 +69,22 @@ public class AdminAccount implements LockableAccount {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    // A new club's first admin: no password until they open their invite link.
+    public static AdminAccount invited(String name, String email) {
+        AdminAccount admin = new AdminAccount();
+        admin.name = name;
+        admin.email = email;
+        admin.status = AdminStatus.INVITED;
+        return admin;
+    }
+
+    // Set through an invite or reset link; an invited admin becomes active.
+    public void setPassword(String hash) {
+        this.passwordHash = hash;
+        this.status = AdminStatus.ACTIVE;
+    }
+
+    public boolean isInvited() {
+        return status == AdminStatus.INVITED;
+    }
 }

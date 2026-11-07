@@ -110,7 +110,7 @@ public class TwoClubFixture {
             b = jdbc.queryForObject(
                     "INSERT INTO club (code, name) VALUES ('cairo-eq', 'Cairo Equestrian') RETURNING id", UUID.class);
             for (UUID club : List.of(A, b)) {
-                jdbc.update("INSERT INTO admin_account (club_id, email, password_hash) VALUES (?, ?, ?)",
+                jdbc.update("INSERT INTO admin_account (club_id, name, email, password_hash) VALUES (?, 'Admin', ?, ?)",
                         club, adminEmail(club), passwordEncoder.encode(PASSWORD));
             }
             return null;

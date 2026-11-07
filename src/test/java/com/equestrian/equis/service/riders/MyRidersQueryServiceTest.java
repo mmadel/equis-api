@@ -306,6 +306,7 @@ public class MyRidersQueryServiceTest {
 
     private AdminAccount admin() {
         AdminAccount account = new AdminAccount();
+        account.setName("Admin");
         account.setEmail("my-riders-test-admin@example.com");
         account.setPasswordHash("hash");
         return account;

@@ -3,6 +3,7 @@ package com.equestrian.equis.service.accounts;
 import com.equestrian.equis.common.config.AuthProperties;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
+import com.equestrian.equis.entity.accounts.AdminAccount;
 import com.equestrian.equis.entity.accounts.Invite;
 import com.equestrian.equis.entity.accounts.InvitePurpose;
 import com.equestrian.equis.entity.accounts.Trainer;
@@ -69,6 +70,19 @@ public class AccountLinkService {
         return new IssuedLink(generated.raw(), invite.getExpiresAt());
     }
 
+    // A club admin's link: same rules (only the newest works, 72h invite / 24h reset).
+    @Transactional
+    public IssuedLink issue(AdminAccount admin, InvitePurpose purpose) {
+        invites.deleteByAdminAccountIdAndAcceptedAtIsNull(admin.getId());
+        GeneratedToken generated = tokenGenerator.generate();
+        Invite invite = Invite.forAdmin(admin);
+        invite.setTokenHash(generated.hash());
+        invite.setPurpose(purpose);
+        invite.setExpiresAt(clock.instant().plus(ttl(purpose)));
+        invites.save(invite);
+        return new IssuedLink(generated.raw(), invite.getExpiresAt());
+    }
+
     // The club the link belongs to, or null for an unknown link (openLink then refuses it the usual way).
     @Transactional(readOnly = true)
     public UUID clubOf(String raw) {
@@ -86,7 +100,7 @@ public class AccountLinkService {
         }
         Invite invite = invites.findByTokenHash(tokenGenerator.hash(raw))
                 .orElseThrow(AccountLinkService::invalidLink);
-        // Riders have no disabled state, so their link only has to be unused and not expired.
+        // Riders and club admins have no disabled state, so their link only has to be unused and not expired.
         if (!invite.isOpen(clock.instant())
                 || (invite.isForTrainer() && invite.getTrainer().getStatus() == TrainerStatus.DISABLED)) {
             throw invalidLink();

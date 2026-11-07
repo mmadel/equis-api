@@ -31,7 +31,7 @@ public class Invite {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    // Exactly one owner: a trainer or a rider (ck_invite_owner). Set only by the factories.
+    // Exactly one owner: a trainer, a rider or a club admin (ck_invite_owner). Set only by the factories.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trainer_id", updatable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -43,6 +43,12 @@ public class Invite {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @Setter(AccessLevel.NONE)
     private Rider rider;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_account_id", updatable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @Setter(AccessLevel.NONE)
+    private AdminAccount adminAccount;
 
     // The owner's club. A plain column, not @TenantId: links are found by token before the club is known.
     @Column(name = "club_id", nullable = false, updatable = false)
@@ -85,6 +91,16 @@ public class Invite {
         return invite;
     }
 
+    public static Invite forAdmin(AdminAccount admin) {
+        if (admin == null) {
+            throw new IllegalArgumentException("An admin link needs an admin");
+        }
+        Invite invite = new Invite();
+        invite.adminAccount = admin;
+        invite.clubId = clubOf(admin.getClubId());
+        return invite;
+    }
+
     // A trainer saved in this transaction may not have its club filled in yet; it gets the current club.
     private static UUID clubOf(UUID ownerClub) {
         UUID club = ownerClub != null ? ownerClub : TenantContext.current();
@@ -100,6 +116,10 @@ public class Invite {
 
     public boolean isForRider() {
         return rider != null;
+    }
+
+    public boolean isForAdmin() {
+        return adminAccount != null;
     }
 
     // A link works once and only until it expires.
