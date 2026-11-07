@@ -94,7 +94,7 @@ public class AuthServiceTest {
     void adminSignsInWithEmailInAnyCaseAndSpacesAround() {
         AdminAccount admin = admin();
 
-        AuthTokens tokens = authService.login(new LoginRequest("  Auth-Admin@Example.com ", PASSWORD, false));
+        AuthTokens tokens = authService.login(new LoginRequest("school", "  Auth-Admin@Example.com ", PASSWORD, false));
 
         assertThat(tokens.role()).isEqualTo(Role.ADMIN);
         assertThat(tokens.accessToken()).isNotBlank();
@@ -106,7 +106,7 @@ public class AuthServiceTest {
     void adminWrongPasswordIsCountedAndSaysHowManyAttemptsAreLeft() {
         AdminAccount admin = admin();
 
-        assertThatThrownBy(() -> authService.login(new LoginRequest(ADMIN_EMAIL, "wrong-password", false)))
+        assertThatThrownBy(() -> authService.login(new LoginRequest("school", ADMIN_EMAIL, "wrong-password", false)))
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
                     assertThat(ex.status()).isEqualTo(HttpStatus.UNAUTHORIZED);
                     assertThat(ex.code()).isEqualTo(ErrorCodes.INVALID_CREDENTIALS);
@@ -123,7 +123,7 @@ public class AuthServiceTest {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.executeWithoutResult(status -> admin());
         try {
-            assertThatThrownBy(() -> authService.login(new LoginRequest(ADMIN_EMAIL, "wrong-password", false)))
+            assertThatThrownBy(() -> authService.login(new LoginRequest("school", ADMIN_EMAIL, "wrong-password", false)))
                     .isInstanceOf(ApiException.class);
 
             assertThat(adminAccountRepository.findByEmail(ADMIN_EMAIL).orElseThrow().getFailedAttempts())
@@ -139,7 +139,7 @@ public class AuthServiceTest {
         Trainer sara = activeSara();
         Instant before = Instant.now();
 
-        AuthTokens tokens = authService.login(new LoginRequest(" Sara@Example.com", PASSWORD, true));
+        AuthTokens tokens = authService.login(new LoginRequest("school", " Sara@Example.com", PASSWORD, true));
 
         assertThat(tokens.role()).isEqualTo(Role.TRAINER);
         assertThat(tokens.refreshToken()).isNotBlank();
@@ -150,7 +150,7 @@ public class AuthServiceTest {
     void trainerSignsInWithPhoneWrittenWithSpaces() {
         Trainer sara = activeSara();
 
-        AuthTokens tokens = authService.login(new LoginRequest(" 010 0000 0001 ", PASSWORD, false));
+        AuthTokens tokens = authService.login(new LoginRequest("school", " 010 0000 0001 ", PASSWORD, false));
 
         assertThat(tokens.role()).isEqualTo(Role.TRAINER);
         assertThat(sara.getLastActiveAt()).isNotNull();
@@ -177,7 +177,7 @@ public class AuthServiceTest {
         sara.setStatus(TrainerStatus.DISABLED);
 
         assertInvalidCredentials("sara@example.com", "wrong-password");
-        assertThatThrownBy(() -> authService.login(new LoginRequest("sara@example.com", PASSWORD, false)))
+        assertThatThrownBy(() -> authService.login(new LoginRequest("school", "sara@example.com", PASSWORD, false)))
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
                     assertThat(ex.status()).isEqualTo(HttpStatus.FORBIDDEN);
                     assertThat(ex.code()).isEqualTo(ErrorCodes.ACCOUNT_DISABLED);
@@ -196,7 +196,7 @@ public class AuthServiceTest {
         assertThat(sara.getStatus()).isEqualTo(TrainerStatus.ACTIVE);
         assertThat(passwordService.matches(PASSWORD, sara.getPasswordHash())).isTrue();
         assertInvalidLink(raw, PASSWORD);
-        assertThat(authService.login(new LoginRequest("sara@example.com", PASSWORD, false)).role())
+        assertThat(authService.login(new LoginRequest("school", "sara@example.com", PASSWORD, false)).role())
                 .isEqualTo(Role.TRAINER);
     }
 
@@ -273,7 +273,7 @@ public class AuthServiceTest {
     }
 
     private void assertInvalidCredentials(String login, String password) {
-        assertThatThrownBy(() -> authService.login(new LoginRequest(login, password, false)))
+        assertThatThrownBy(() -> authService.login(new LoginRequest("school", login, password, false)))
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
                     assertThat(ex.status()).isEqualTo(HttpStatus.UNAUTHORIZED);
                     assertThat(ex.code()).isEqualTo(ErrorCodes.INVALID_CREDENTIALS);

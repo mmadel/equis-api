@@ -89,7 +89,7 @@ class TrainerResetJourneyTest {
     void usingTheResetLinkSignsOutEveryDeviceAndOnlyTheNewPasswordWorks() throws Exception {
         reset().andExpect(status().isOk());
 
-        fx.acceptInvite(fx.tokenFromLastEmail(), NEW_PASSWORD).andExpect(status().isNoContent());
+        fx.acceptInvite(fx.tokenFromLastEmail(), NEW_PASSWORD).andExpect(status().isOk());
 
         for (AuthTokens device : new AuthTokens[]{phone1, phone2}) {
             fx.refresh(device)

@@ -157,7 +157,7 @@ class RiderAccountJourneyTest {
     void acceptingTheLinkActivatesTheAccount() throws Exception {
         UUID omar = placeOmar();
 
-        fx.acceptInvite(fx.tokenFromLastEmail(), PASSWORD).andExpect(status().isNoContent());
+        fx.acceptInvite(fx.tokenFromLastEmail(), PASSWORD).andExpect(status().isOk());
 
         assertThat(accountStatus(omar)).isEqualTo("active");
         assertThat(fx.jdbc().queryForObject(
@@ -188,7 +188,7 @@ class RiderAccountJourneyTest {
         String before = detail(fx.login(OMAR_EMAIL, PASSWORD).andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("invalid_credentials")));
 
-        fx.acceptInvite(fx.tokenFromLastEmail(), PASSWORD).andExpect(status().isNoContent());
+        fx.acceptInvite(fx.tokenFromLastEmail(), PASSWORD).andExpect(status().isOk());
         String wrong = detail(fx.login(OMAR_EMAIL, "Wrong@2026").andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("invalid_credentials")));
         String unknown = detail(fx.login("nobody@gmail.com", PASSWORD).andExpect(status().isUnauthorized())
@@ -197,14 +197,14 @@ class RiderAccountJourneyTest {
         assertThat(before).isEqualTo(wrong).isEqualTo(unknown);
     }
 
-    // 6
+    // 6 (E17 · per-club sign-in: riders may now use their phone too)
     @Test
-    void ridersCannotSignInWithTheirPhone() throws Exception {
+    void ridersCanSignInWithTheirPhone() throws Exception {
         activeOmar();
 
         fx.login(OMAR_PHONE, PASSWORD)
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("invalid_credentials"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("RIDER"));
     }
 
     // 7 and 8
@@ -290,7 +290,7 @@ class RiderAccountJourneyTest {
         fx.acceptInvite(first, PASSWORD)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("invalid_link"));
-        fx.acceptInvite(second, PASSWORD).andExpect(status().isNoContent());
+        fx.acceptInvite(second, PASSWORD).andExpect(status().isOk());
     }
 
     // 13
@@ -330,7 +330,7 @@ class RiderAccountJourneyTest {
 
         fx.login(OMAR_EMAIL, PASSWORD).andExpect(status().isOk());
 
-        fx.acceptInvite(reset, "Gallop@2027").andExpect(status().isNoContent());
+        fx.acceptInvite(reset, "Gallop@2027").andExpect(status().isOk());
         assertThat(openRiderTokens(omarId)).isZero();
         fx.refresh(before).andExpect(status().isUnauthorized());
         fx.login(OMAR_EMAIL, PASSWORD).andExpect(status().isUnauthorized());
@@ -453,7 +453,7 @@ class RiderAccountJourneyTest {
 
     private UUID activeOmar() throws Exception {
         UUID omar = placeOmar();
-        fx.acceptInvite(fx.tokenFromLastEmail(), PASSWORD).andExpect(status().isNoContent());
+        fx.acceptInvite(fx.tokenFromLastEmail(), PASSWORD).andExpect(status().isOk());
         fx.recorder().clear();
         return omar;
     }

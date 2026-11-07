@@ -81,7 +81,7 @@ class TrainerInviteJourneyTest {
             assertThat(email.to()).isEqualTo("mona@example.com");
             assertThat(email.subject()).isEqualTo("You're invited to Riding Schedule");
         });
-        fx.acceptInvite(fx.tokenFromLastEmail(), PASSWORD).andExpect(status().isNoContent());
+        fx.acceptInvite(fx.tokenFromLastEmail(), PASSWORD).andExpect(status().isOk());
         fx.login("01012345678", PASSWORD)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("TRAINER"));
@@ -124,7 +124,7 @@ class TrainerInviteJourneyTest {
         fx.acceptInvite(first, PASSWORD)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("invalid_link"));
-        fx.acceptInvite(second, PASSWORD).andExpect(status().isNoContent());
+        fx.acceptInvite(second, PASSWORD).andExpect(status().isOk());
     }
 
     // I4

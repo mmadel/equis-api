@@ -232,7 +232,7 @@ class TenantIsolationTest {
     void lailaAcceptsHerInviteAndSignsInToHerClub() throws Exception {
         mvc.perform(post("/auth/invite/accept").contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"token\": \"" + LAILA_LINK + "\", \"password\": \"" + PASSWORD + "\" }"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
         String access = login("laila@cairo.eg");
 
@@ -344,9 +344,12 @@ class TenantIsolationTest {
                 VALUES (?, ?, DATE '2026-10-16', '17:00', '18:00', 6) RETURNING id""", UUID.class, club, template);
     }
 
+    // Each person's club follows from their email's domain.
     private ResultActions loginRequest(String email) throws Exception {
+        String clubCode = email.endsWith("@school.eg") ? "school" : "cairo-eq";
         return mvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON)
-                .content("{ \"login\": \"" + email + "\", \"password\": \"" + PASSWORD + "\", \"rememberMe\": false }"));
+                .content("{ \"clubCode\": \"" + clubCode + "\", \"login\": \"" + email + "\", \"password\": \""
+                        + PASSWORD + "\", \"rememberMe\": false }"));
     }
 
     private String login(String email) throws Exception {
