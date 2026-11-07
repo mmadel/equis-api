@@ -9,6 +9,7 @@ import jakarta.mail.Address;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -18,6 +19,8 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // The smtp sender against an in-memory SMTP server (plain SMTP, so STARTTLS is turned off here).
+// Mail test: left out of the default run (see the surefire config in pom.xml).
+@Tag("email")
 public class SmtpNotificationSenderTest {
     private static final String FROM = "school@example.com";
 

@@ -3,6 +3,7 @@ package com.equestrian.equis.common.config;
 import com.equestrian.equis.service.mail.LogNotificationSender;
 import com.equestrian.equis.service.mail.NotificationSender;
 import com.equestrian.equis.service.mail.SmtpNotificationSender;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.mail.autoconfigure.MailSenderAutoConfiguration;
@@ -12,6 +13,8 @@ import org.springframework.core.env.StandardEnvironment;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // Which sender runs, and the startup check in smtp mode. No database needed.
+// Mail test: left out of the default run (see the surefire config in pom.xml).
+@Tag("email")
 public class MailConfigTest {
     private final ApplicationContextRunner runner = new ApplicationContextRunner()
             // Only the values set here: APP_MAIL_* variables on the machine running the tests must not leak in.

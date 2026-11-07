@@ -15,6 +15,7 @@ import com.equestrian.equis.service.accounts.TrainerAdminService;
 import com.equestrian.equis.support.MailTestConfig;
 import com.equestrian.equis.support.RecordingNotificationSender;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(MailTestConfig.class)
 @ExtendWith(OutputCaptureExtension.class)
 @RecordApplicationEvents
+// Mail test: left out of the default run (see the surefire config in pom.xml).
+@Tag("email")
 public class AccountLinkMailListenerTest {
     static TestPostgres postgres = TestPostgres.newDatabase();
 

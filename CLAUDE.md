@@ -16,9 +16,11 @@ Most tests start a PostgreSQL Testcontainer, so Docker must be running. Use the 
    it swaps in `RecordingNotificationSender` (assert with `all()`, `last()`, `tokenFrom(...)`) and a synchronous
    `mailExecutor`, so the `@Async` `AccountLinkMailListener` has sent before the request returns. In slice tests,
    `@MockitoBean NotificationSender` and `verify(...)` is fine. Never point `spring.mail.*` at a real server.
-4. **Tests that need real SMTP use GreenMail** (see `SmtpNotificationSenderTest`) and should be tagged `@Tag("email")`
-   and left out of the default run. Run them only when the ticket touches email:
-   `./mvnw test -Dtest='SmtpNotificationSenderTest,MailConfigTest,AccountLink*Test'`.
+4. **Mail tests are tagged `@Tag("email")` and never run by default**, not even when named in `-Dtest`
+   (Surefire `excludedGroups` in `pom.xml`, so CI skips them too). Tagged today: `MailConfigTest`,
+   `SmtpNotificationSenderTest` (GreenMail), `AccountLinkEmailsTest`, `AccountLinkMailListenerTest`. Tag any new mail test
+   the same way. Run them only when the ticket touches email, with the `email-tests` profile (runs only tagged tests):
+   `./mvnw test -Pemail-tests`.
 5. **Avoid extra Spring context reloads.** Reuse the existing test setup (`MailTestConfig`,
    `TrainerAccountsFixture.Config`, `AdminOversightFixture.Config`, `MutableClock`) instead of building new
    configurations, and don't add one-off `@MockitoBean` combinations to `@SpringBootTest` classes unless needed.
@@ -26,10 +28,9 @@ Most tests start a PostgreSQL Testcontainer, so Docker must be running. Use the 
 
 ### Known gaps (not set up yet)
 
-1. No Surefire/Failsafe split: `pom.xml` configures neither plugin, so every test runs in `mvn test`.
-2. No `@Tag("email")` or exclusion of it: `SmtpNotificationSenderTest` (GreenMail, in-process) runs in the default suite.
-3. No shared `@SpringBootTest` base class: each class sets its own `adminEmail` placeholder, so each gets its own
+1. No Surefire/Failsafe split: there is no Failsafe, so every test except the `email` ones runs in `mvn test`.
+2. No shared `@SpringBootTest` base class: each class sets its own `adminEmail` placeholder, so each gets its own
    Spring context. All classes share one Postgres container through `support/TestPostgres`, which gives each
    class its own empty database (`TestPostgres.newDatabase()` + `@DynamicPropertySource`). New DB tests should do the same.
-4. No test profile: test settings live in `src/test/resources/config/application.properties`, not `application-test`.
-5. No dedicated no-op sender: `LogNotificationSender` (log mode) and `RecordingNotificationSender` fill that role.
+3. No test profile: test settings live in `src/test/resources/config/application.properties`, not `application-test`.
+4. No dedicated no-op sender: `LogNotificationSender` (log mode) and `RecordingNotificationSender` fill that role.
