@@ -8,7 +8,9 @@ import java.util.Locale;
 public enum SubjectType {
     TRAINER,
     ADMIN,
-    RIDER;
+    RIDER,
+    // Stored as super_admin.
+    SUPER_ADMIN;
 
     @Converter(autoApply = true)
     public static class DbConverter implements AttributeConverter<SubjectType, String> {

@@ -5,6 +5,7 @@ import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.riders.RiderAccountStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -27,7 +28,9 @@ public class AuthUserConverterTest {
 
     private final TrainerRepository trainerRepository = mock(TrainerRepository.class);
     private final RiderRepository riderRepository = mock(RiderRepository.class);
-    private final AuthUserConverter converter = new AuthUserConverter(trainerRepository, riderRepository);
+    private final SuperAdminRepository superAdminRepository = mock(SuperAdminRepository.class);
+    private final AuthUserConverter converter =
+            new AuthUserConverter(trainerRepository, riderRepository, superAdminRepository);
 
     @Test
     void activeTrainerBecomesAuthUserWithTrainerRole() {
@@ -99,6 +102,31 @@ public class AuthUserConverterTest {
                 .isInstanceOf(InvalidBearerTokenException.class);
         assertThatThrownBy(() -> converter.convert(jwt(ID.toString(), "ADMIN", "school")))
                 .isInstanceOf(InvalidBearerTokenException.class);
+    }
+
+    @Test
+    void superAdminWithoutAClubBecomesAuthUserWithNoClub() {
+        when(superAdminRepository.existsById(ID)).thenReturn(true);
+
+        AbstractAuthenticationToken authentication = converter.convert(jwt(ID.toString(), "SUPER_ADMIN", null));
+
+        assertThat(authentication.getPrincipal()).isEqualTo(new AuthUser(ID, Role.SUPER_ADMIN, null));
+        assertThat(authentication.getAuthorities()).extracting(GrantedAuthority::getAuthority)
+                .containsExactly("ROLE_SUPER_ADMIN");
+    }
+
+    @Test
+    void superAdminTokenWithAClubIsRejected() {
+        assertThatThrownBy(() -> converter.convert(jwt(ID.toString(), "SUPER_ADMIN")))
+                .isInstanceOf(InvalidBearerTokenException.class);
+    }
+
+    @Test
+    void superAdminWhoNoLongerExistsIsRejected() {
+        when(superAdminRepository.existsById(ID)).thenReturn(false);
+
+        assertThatThrownBy(() -> converter.convert(jwt(ID.toString(), "SUPER_ADMIN", null)))
+                .isInstanceOf(DisabledException.class);
     }
 
     // The converter runs before TenantFilter, so the status lookup must run in the token's club.

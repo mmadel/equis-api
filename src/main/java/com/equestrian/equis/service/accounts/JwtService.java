@@ -31,16 +31,18 @@ public class JwtService {
         Instant issuedAt = clock.instant().truncatedTo(ChronoUnit.SECONDS);
         Instant expiresAt = issuedAt.plus(properties.jwt().accessTtl());
 
-        JwtClaimsSet claims = JwtClaimsSet.builder()
+        JwtClaimsSet.Builder claims = JwtClaimsSet.builder()
                 .issuer(properties.jwt().issuer())
                 .subject(user.id().toString())
                 .claim(AuthUserConverter.ROLE_CLAIM, user.role().name())
-                .claim(AuthUserConverter.CLUB_CLAIM, user.clubId().toString())
                 .issuedAt(issuedAt)
-                .expiresAt(expiresAt)
-                .build();
+                .expiresAt(expiresAt);
+        // The super admin belongs to no club, so the token has no cid.
+        if (user.clubId() != null) {
+            claims.claim(AuthUserConverter.CLUB_CLAIM, user.clubId().toString());
+        }
         String token = jwtEncoder
-                .encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims))
+                .encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims.build()))
                 .getTokenValue();
         return new AccessToken(token, expiresAt);
     }

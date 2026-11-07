@@ -14,6 +14,7 @@ import com.equestrian.equis.dto.assessment.RecordResultRequest;
 import com.equestrian.equis.dto.assessment.ResultRecorded;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.assessment.RecordResultService;
@@ -64,6 +65,8 @@ public class BookingControllerTest {
     TrainerRepository trainerRepository;
     @MockitoBean
     RiderRepository riderRepository;
+    @MockitoBean
+    SuperAdminRepository superAdminRepository;
 
     @BeforeEach
     void trainerIsActive() {

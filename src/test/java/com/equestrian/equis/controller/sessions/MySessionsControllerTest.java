@@ -18,6 +18,7 @@ import com.equestrian.equis.entity.sessions.Assignment;
 import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.entity.sessions.SessionTemplate;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.evaluations.EvaluationService;
@@ -83,6 +84,8 @@ public class MySessionsControllerTest {
     TrainerRepository trainerRepository;
     @MockitoBean
     RiderRepository riderRepository;
+    @MockitoBean
+    SuperAdminRepository superAdminRepository;
 
     @BeforeEach
     void trainerIsActive() {

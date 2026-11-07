@@ -13,6 +13,7 @@ import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.riders.RiderAccountStatus;
 import com.equestrian.equis.repository.accounts.RefreshTokenRepository;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService.AccessToken;
 import com.equestrian.equis.service.accounts.TokenGenerator.GeneratedToken;
@@ -30,6 +31,7 @@ public class AuthTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final TrainerRepository trainerRepository;
     private final RiderRepository riderRepository;
+    private final SuperAdminRepository superAdminRepository;
     private final JwtService jwtService;
     private final TokenGenerator tokenGenerator;
     private final AuthProperties properties;
@@ -37,11 +39,13 @@ public class AuthTokenService {
     private final Clock clock;
 
     public AuthTokenService(RefreshTokenRepository refreshTokenRepository, TrainerRepository trainerRepository,
-                            RiderRepository riderRepository, JwtService jwtService, TokenGenerator tokenGenerator,
-                            AuthProperties properties, TenantTransactions tenants, Clock clock) {
+                            RiderRepository riderRepository, SuperAdminRepository superAdminRepository,
+                            JwtService jwtService, TokenGenerator tokenGenerator, AuthProperties properties,
+                            TenantTransactions tenants, Clock clock) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.trainerRepository = trainerRepository;
         this.riderRepository = riderRepository;
+        this.superAdminRepository = superAdminRepository;
         this.jwtService = jwtService;
         this.tokenGenerator = tokenGenerator;
         this.properties = properties;
@@ -50,6 +54,7 @@ public class AuthTokenService {
     }
 
     // clubId is the subject's club: it goes into the access token (cid) and onto the refresh row.
+    // Null for the super admin: no cid, and the refresh row's club_id stays NULL.
     @Transactional
     public AuthTokens issue(Role role, UUID subjectId, UUID clubId, boolean rememberMe) {
         return create(role, subjectId, clubId, rememberMe).tokens();
@@ -58,6 +63,7 @@ public class AuthTokenService {
     // Every failure before the disabled check gives the same answer, so a caller cannot learn why a token was refused.
     // Every refusal happens before anything is written, except the inactive rider's revoke, which must stay.
     // The refresh row tells the club first (it has no RLS); the rotation then runs in that club, in one transaction.
+    // A super admin row has no club, so it rotates with no club set (refresh_token and super_admin have no RLS).
     public AuthTokens rotate(String rawRefresh) {
         if (rawRefresh == null || rawRefresh.isBlank()) {
             throw invalidRefreshToken();
@@ -80,6 +86,10 @@ public class AuthTokenService {
         if (role == Role.TRAINER && trainerRepository.existsByIdAndStatus(old.getSubjectId(), TrainerStatus.DISABLED)) {
             throw new ApiException(HttpStatus.FORBIDDEN, ErrorCodes.ACCOUNT_DISABLED,
                     "This account has been disabled.");
+        }
+        // A deleted super admin cannot refresh: the same answer as any other refused token.
+        if (role == Role.SUPER_ADMIN && !superAdminRepository.existsById(old.getSubjectId())) {
+            throw invalidRefreshToken();
         }
         // A rider who is no longer active is signed out everywhere (noRollbackFor keeps the revoke).
         if (role == Role.RIDER
