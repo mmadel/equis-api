@@ -13,6 +13,7 @@ public class RoleTest {
         assertThat(Role.TRAINER.authority()).isEqualTo("ROLE_TRAINER");
         assertThat(Role.ADMIN.authority()).isEqualTo("ROLE_ADMIN");
         assertThat(Role.RIDER.authority()).isEqualTo("ROLE_RIDER");
+        assertThat(Role.SUPER_ADMIN.authority()).isEqualTo("ROLE_SUPER_ADMIN");
     }
 
     @Test
@@ -20,6 +21,7 @@ public class RoleTest {
         assertThat(Role.TRAINER.toSubjectType()).isEqualTo(SubjectType.TRAINER);
         assertThat(Role.ADMIN.toSubjectType()).isEqualTo(SubjectType.ADMIN);
         assertThat(Role.RIDER.toSubjectType()).isEqualTo(SubjectType.RIDER);
+        assertThat(Role.SUPER_ADMIN.toSubjectType()).isEqualTo(SubjectType.SUPER_ADMIN);
     }
 
     @ParameterizedTest

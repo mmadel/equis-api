@@ -4,10 +4,12 @@ import com.equestrian.equis.common.security.AuthUserConverter;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.common.tenant.TenantFilter;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -27,12 +29,15 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 @EnableWebSecurity
 public class SecurityConfig {
     private static final String PUBLIC_PATHS = "/auth/**";
+    // The super admin's sign-in; everything else under /platform needs a super admin token.
+    private static final String PLATFORM_LOGIN = "/platform/auth/login";
     // Used by the Docker healthcheck; prod shows only {"status":"UP"} (show-details=never).
     private static final String HEALTH_PATH = "/actuator/health";
 
     @Bean
-    public AuthUserConverter authUserConverter(TrainerRepository trainerRepository, RiderRepository riderRepository) {
-        return new AuthUserConverter(trainerRepository, riderRepository);
+    public AuthUserConverter authUserConverter(TrainerRepository trainerRepository, RiderRepository riderRepository,
+                                               SuperAdminRepository superAdminRepository) {
+        return new AuthUserConverter(trainerRepository, riderRepository, superAdminRepository);
     }
 
     @Bean
@@ -52,6 +57,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_PATHS, HEALTH_PATH).permitAll()
+                        .requestMatchers(HttpMethod.POST, PLATFORM_LOGIN).permitAll()
+                        // Club paths keep their club roles, so a super admin token gets 403 there.
+                        .requestMatchers("/platform/**").hasRole(Role.SUPER_ADMIN.name())
                         .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                         .requestMatchers("/me/**", "/assessment/**").hasRole(Role.TRAINER.name())
                         .requestMatchers("/rider/**").hasRole(Role.RIDER.name())
@@ -74,7 +82,9 @@ public class SecurityConfig {
     private static BearerTokenResolver bearerTokenResolver() {
         RequestMatcher authPaths = PathPatternRequestMatcher.withDefaults().matcher(PUBLIC_PATHS);
         RequestMatcher healthPath = PathPatternRequestMatcher.withDefaults().matcher(HEALTH_PATH);
+        RequestMatcher platformLogin = PathPatternRequestMatcher.withDefaults().matcher(PLATFORM_LOGIN);
         BearerTokenResolver delegate = new DefaultBearerTokenResolver();
-        return request -> authPaths.matches(request) || healthPath.matches(request) ? null : delegate.resolve(request);
+        return request -> authPaths.matches(request) || healthPath.matches(request) || platformLogin.matches(request)
+                ? null : delegate.resolve(request);
     }
 }

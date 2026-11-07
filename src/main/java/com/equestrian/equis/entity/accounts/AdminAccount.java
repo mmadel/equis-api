@@ -23,7 +23,7 @@ import java.util.UUID;
 @Table(name = "admin_account")
 @Getter
 @Setter
-public class AdminAccount {
+public class AdminAccount implements LockableAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false, updatable = false)

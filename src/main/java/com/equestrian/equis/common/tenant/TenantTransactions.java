@@ -27,22 +27,34 @@ public class TenantTransactions {
     // Like inClub, but an ApiException (a 4xx answer) commits what was written before it is rethrown,
     // like @Transactional(noRollbackFor = ApiException.class). Sign-in uses it to keep the failed-attempt counter.
     public <T> T inClubKeepingWritesOnApiError(UUID clubId, Supplier<T> work) {
-        Outcome<T> outcome = TenantContext.runAs(clubId, () -> transaction.execute(status -> {
-            try {
-                return new Outcome<>(work.get(), null);
-            } catch (ApiException e) {
-                return new Outcome<>(null, e);
-            }
-        }));
-        if (outcome.error() != null) {
-            throw outcome.error();
-        }
-        return outcome.value();
+        return rethrow(TenantContext.runAs(clubId, () -> executeKeepingWrites(work)));
     }
 
     // Reads across clubs. Writes of school rows are refused (TenantGuard); RLS lets every row through.
     public <T> T asRoot(Supplier<T> work) {
         return TenantContext.runAsRoot(() -> transaction.execute(status -> work.get()));
+    }
+
+    // asRoot that keeps writes on an ApiException, like inClubKeepingWritesOnApiError. The platform sign-in uses it.
+    public <T> T asRootKeepingWritesOnApiError(Supplier<T> work) {
+        return rethrow(TenantContext.runAsRoot(() -> executeKeepingWrites(work)));
+    }
+
+    private <T> Outcome<T> executeKeepingWrites(Supplier<T> work) {
+        return transaction.execute(status -> {
+            try {
+                return new Outcome<>(work.get(), null);
+            } catch (ApiException e) {
+                return new Outcome<>(null, e);
+            }
+        });
+    }
+
+    private static <T> T rethrow(Outcome<T> outcome) {
+        if (outcome.error() != null) {
+            throw outcome.error();
+        }
+        return outcome.value();
     }
 
     private record Outcome<T>(T value, ApiException error) {

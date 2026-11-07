@@ -4,7 +4,7 @@ import com.equestrian.equis.common.config.AuthProperties;
 import com.equestrian.equis.common.config.AuthProperties.Lockout;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
-import com.equestrian.equis.entity.accounts.AdminAccount;
+import com.equestrian.equis.entity.accounts.LockableAccount;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,10 +25,11 @@ public class AdminLockoutService {
         this.clock = clock;
     }
 
-    // The admin must come from findByEmailForUpdate in the caller's transaction, so the counter is saved.
+    // Club admins and the super admin follow the same rule.
+    // The account must come from findByEmailForUpdate in the caller's transaction, so the counter is saved.
     // noRollbackFor keeps the counter when the error is thrown; otherwise a wrong guess would never be counted.
     @Transactional(noRollbackFor = ApiException.class)
-    public void verifyPassword(AdminAccount admin, String rawPassword) {
+    public void verifyPassword(LockableAccount admin, String rawPassword) {
         Lockout lockout = properties.admin().lockout();
         Instant now = clock.instant();
 

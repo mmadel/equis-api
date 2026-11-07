@@ -4,6 +4,7 @@ import com.equestrian.equis.common.tenant.TenantContext;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.riders.RiderAccountStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -20,19 +21,24 @@ import java.util.UUID;
 public class AuthUserConverter implements Converter<Jwt, AbstractAuthenticationToken> {
     public static final String ROLE_CLAIM = "role";
     // The subject's club. Tokens issued before clubs existed have none and are refused, so the app refreshes them.
+    // Super admin tokens are the exception: they never have one.
     public static final String CLUB_CLAIM = "cid";
 
     private final TrainerRepository trainerRepository;
     private final RiderRepository riderRepository;
+    private final SuperAdminRepository superAdminRepository;
 
-    public AuthUserConverter(TrainerRepository trainerRepository, RiderRepository riderRepository) {
+    public AuthUserConverter(TrainerRepository trainerRepository, RiderRepository riderRepository,
+                             SuperAdminRepository superAdminRepository) {
         this.trainerRepository = trainerRepository;
         this.riderRepository = riderRepository;
+        this.superAdminRepository = superAdminRepository;
     }
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
-        AuthUser user = new AuthUser(subject(jwt), role(jwt), club(jwt));
+        Role role = role(jwt);
+        AuthUser user = new AuthUser(subject(jwt), role, club(jwt, role));
 
         // Checked on every request so a disabled trainer is stopped at once, not when the token expires.
         // This runs before TenantFilter, so the lookups run in the token's club here.
@@ -44,6 +50,10 @@ public class AuthUserConverter implements Converter<Jwt, AbstractAuthenticationT
             if (user.role() == Role.RIDER
                     && !riderRepository.existsByIdAndAccountStatus(user.id(), RiderAccountStatus.ACTIVE)) {
                 throw new DisabledException("Rider is not active");
+            }
+            // super_admin has no club and no RLS, so the lookup works with no club set.
+            if (user.role() == Role.SUPER_ADMIN && !superAdminRepository.existsById(user.id())) {
+                throw new DisabledException("Super admin no longer exists");
             }
             return null;
         });
@@ -58,7 +68,13 @@ public class AuthUserConverter implements Converter<Jwt, AbstractAuthenticationT
         }
     }
 
-    private static UUID club(Jwt jwt) {
+    private static UUID club(Jwt jwt, Role role) {
+        if (role == Role.SUPER_ADMIN) {
+            if (jwt.hasClaim(CLUB_CLAIM)) {
+                throw new InvalidBearerTokenException("Super admin token must not have a club");
+            }
+            return null;
+        }
         try {
             return UUID.fromString(jwt.getClaimAsString(CLUB_CLAIM));
         } catch (IllegalArgumentException | NullPointerException e) {
