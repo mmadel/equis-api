@@ -1,5 +1,6 @@
 package com.equestrian.equis.entity.accounts;
 
+import com.equestrian.equis.common.tenant.TenantContext;
 import com.equestrian.equis.entity.riders.Rider;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,6 +44,11 @@ public class Invite {
     @Setter(AccessLevel.NONE)
     private Rider rider;
 
+    // The owner's club. A plain column, not @TenantId: links are found by token before the club is known.
+    @Column(name = "club_id", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private UUID clubId;
+
     @Column(name = "token_hash", nullable = false, unique = true, updatable = false, length = 64)
     private String tokenHash;
 
@@ -65,6 +71,7 @@ public class Invite {
         }
         Invite invite = new Invite();
         invite.trainer = trainer;
+        invite.clubId = clubOf(trainer.getClubId());
         return invite;
     }
 
@@ -74,7 +81,17 @@ public class Invite {
         }
         Invite invite = new Invite();
         invite.rider = rider;
+        invite.clubId = clubOf(rider.getClubId());
         return invite;
+    }
+
+    // A trainer saved in this transaction may not have its club filled in yet; it gets the current club.
+    private static UUID clubOf(UUID ownerClub) {
+        UUID club = ownerClub != null ? ownerClub : TenantContext.current();
+        if (club == null) {
+            throw new IllegalStateException("No club for a new link");
+        }
+        return club;
     }
 
     public boolean isForTrainer() {

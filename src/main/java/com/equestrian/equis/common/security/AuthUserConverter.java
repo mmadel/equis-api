@@ -1,5 +1,6 @@
 package com.equestrian.equis.common.security;
 
+import com.equestrian.equis.common.tenant.TenantContext;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.riders.RiderAccountStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
@@ -18,6 +19,8 @@ import java.util.UUID;
 // Registered in SecurityConfig, not as a @Component: web test slices pick up every Converter they find.
 public class AuthUserConverter implements Converter<Jwt, AbstractAuthenticationToken> {
     public static final String ROLE_CLAIM = "role";
+    // The subject's club. Tokens issued before clubs existed have none and are refused, so the app refreshes them.
+    public static final String CLUB_CLAIM = "cid";
 
     private final TrainerRepository trainerRepository;
     private final RiderRepository riderRepository;
@@ -29,17 +32,21 @@ public class AuthUserConverter implements Converter<Jwt, AbstractAuthenticationT
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
-        AuthUser user = new AuthUser(subject(jwt), role(jwt));
+        AuthUser user = new AuthUser(subject(jwt), role(jwt), club(jwt));
 
         // Checked on every request so a disabled trainer is stopped at once, not when the token expires.
-        if (user.role() == Role.TRAINER
-                && !trainerRepository.existsByIdAndStatus(user.id(), TrainerStatus.ACTIVE)) {
-            throw new DisabledException("Trainer is not active");
-        }
-        if (user.role() == Role.RIDER
-                && !riderRepository.existsByIdAndAccountStatus(user.id(), RiderAccountStatus.ACTIVE)) {
-            throw new DisabledException("Rider is not active");
-        }
+        // This runs before TenantFilter, so the lookups run in the token's club here.
+        TenantContext.runAs(user.clubId(), () -> {
+            if (user.role() == Role.TRAINER
+                    && !trainerRepository.existsByIdAndStatus(user.id(), TrainerStatus.ACTIVE)) {
+                throw new DisabledException("Trainer is not active");
+            }
+            if (user.role() == Role.RIDER
+                    && !riderRepository.existsByIdAndAccountStatus(user.id(), RiderAccountStatus.ACTIVE)) {
+                throw new DisabledException("Rider is not active");
+            }
+            return null;
+        });
         return new AuthUserAuthentication(user, jwt);
     }
 
@@ -48,6 +55,14 @@ public class AuthUserConverter implements Converter<Jwt, AbstractAuthenticationT
             return UUID.fromString(jwt.getSubject());
         } catch (IllegalArgumentException | NullPointerException e) {
             throw new InvalidBearerTokenException("Token has no valid subject", e);
+        }
+    }
+
+    private static UUID club(Jwt jwt) {
+        try {
+            return UUID.fromString(jwt.getClaimAsString(CLUB_CLAIM));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new InvalidBearerTokenException("Token has no valid club", e);
         }
     }
 

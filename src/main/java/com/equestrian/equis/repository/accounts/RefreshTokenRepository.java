@@ -17,6 +17,10 @@ import java.util.UUID;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID> {
     Optional<RefreshToken> findByTokenHash(String tokenHash);
 
+    // The club to rotate in. refresh_token has no RLS, so this works before any club is set.
+    @Query("select r.clubId from RefreshToken r where r.tokenHash = :tokenHash")
+    Optional<UUID> findClubIdByTokenHash(@Param("tokenHash") String tokenHash);
+
     // Locks the row until the transaction ends, so two refreshes with the same token cannot both rotate it.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from RefreshToken r where r.tokenHash = :tokenHash")

@@ -1,5 +1,9 @@
 package com.equestrian.equis.entity.notices;
 
+import lombok.Setter;
+import org.hibernate.annotations.TenantId;
+import jakarta.persistence.EntityListeners;
+import com.equestrian.equis.common.tenant.TenantGuard;
 import com.equestrian.equis.entity.accounts.Trainer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,6 +25,7 @@ import java.util.UUID;
 // One in-app notice to a trainer, shown on Home (1). The message is fixed when the notice is made;
 // later changes to what it points at don't rewrite it. Only readAt ever changes.
 @Entity
+@EntityListeners(TenantGuard.class)
 @Table(name = "notice")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -31,6 +36,13 @@ public class Notice {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
+
+    // The club this row belongs to. Hibernate fills it from the current club on insert and adds
+    // "club_id = <club>" to every query (TenantIdentifierResolver).
+    @TenantId
+    @Column(name = "club_id", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private UUID clubId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "trainer_id", nullable = false, updatable = false)

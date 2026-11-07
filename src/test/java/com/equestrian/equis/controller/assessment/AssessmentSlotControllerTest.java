@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.assessment;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.common.config.ClockConfig;
 import com.equestrian.equis.common.config.JwtConfig;
 import com.equestrian.equis.common.config.SecurityBeans;
@@ -174,6 +175,6 @@ public class AssessmentSlotControllerTest {
     }
 
     private String bearer(Role role) {
-        return "Bearer " + jwtService.issue(new AuthUser(TRAINER_ID, role)).value();
+        return "Bearer " + jwtService.issue(new AuthUser(TRAINER_ID, role, Club.DEFAULT_ID)).value();
     }
 }

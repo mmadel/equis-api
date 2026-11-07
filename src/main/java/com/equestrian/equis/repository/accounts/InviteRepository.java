@@ -15,6 +15,10 @@ import java.util.UUID;
 public interface InviteRepository extends JpaRepository<Invite, UUID> {
     Optional<Invite> findByTokenHash(String tokenHash);
 
+    // The club a link belongs to. invite has no RLS, so this works before any club is set.
+    @Query("select i.clubId from Invite i where i.tokenHash = :tokenHash")
+    Optional<UUID> findClubIdByTokenHash(@Param("tokenHash") String tokenHash);
+
     // The open (unused) link of each trainer, at most one each. Don't call with an empty list.
     List<Invite> findByTrainerIdInAndAcceptedAtIsNull(Collection<UUID> trainerIds);
 

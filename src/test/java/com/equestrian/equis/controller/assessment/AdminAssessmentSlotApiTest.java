@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.assessment;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -172,11 +173,11 @@ public class AdminAssessmentSlotApiTest {
     }
 
     private MockHttpServletRequestBuilder asAdmin(MockHttpServletRequestBuilder request) {
-        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN)));
+        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID)));
     }
 
     private MockHttpServletRequestBuilder asTrainer(MockHttpServletRequestBuilder request) {
-        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(trainer, Role.TRAINER)));
+        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(trainer, Role.TRAINER, Club.DEFAULT_ID)));
     }
 
     private String bearer(AuthUser user) {

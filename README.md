@@ -30,6 +30,12 @@ The admin seed variables are read only when V5 runs on an empty database, but pr
 
 Health check: `GET /api/actuator/health` returns `{"status":"UP"}` without a token and without details.
 
+## Database role and clubs
+
+Every school table has a `club_id` and row-level security (migrations V23 and V24). The app connects with `SPRING_DATASOURCE_USERNAME`, but on every connection it switches to the role `equis_app` (`SET ROLE`), because PostgreSQL never applies row-level security to a superuser. V24 creates that role, so the user that runs Flyway (the same one) must be allowed to create roles: a superuser, as the `postgres` image creates, or a user with `CREATEROLE`. Flyway itself works as that user and sees every club.
+
+Optional: `APP_DEFAULT_CLUB_CODE` (default `school`) and `APP_DEFAULT_CLUB_NAME` (default `Riding School`) name the club the existing data belongs to, read only when V23 runs.
+
 ## Docker image
 
 ```

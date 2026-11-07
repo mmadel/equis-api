@@ -127,11 +127,12 @@ class RiderAccountJourneyTest {
     @Test
     void aRolledBackPlacementLeavesNoRiderLinkOrEmail() throws Exception {
         // Fails the rider link's insert, after the rider is saved and the event is published.
+        // DDL needs the tables' owner; the app's connections work as equis_app (V24) until the next checkout.
         fx.jdbc().execute("""
-                create or replace function fail_rider_link() returns trigger language plpgsql as
+                reset role; create or replace function fail_rider_link() returns trigger language plpgsql as
                 $$ begin raise exception 'forced failure'; end $$""");
         fx.jdbc().execute("""
-                create trigger fail_rider_link before insert on invite
+                reset role; create trigger fail_rider_link before insert on invite
                 for each row when (new.rider_id is not null) execute function fail_rider_link()""");
         try {
             UUID booking = omarsBooking();
@@ -146,8 +147,8 @@ class RiderAccountJourneyTest {
                     Integer.class)).isZero();
             assertThat(fx.recorder().all()).isEmpty();
         } finally {
-            fx.jdbc().execute("drop trigger if exists fail_rider_link on invite");
-            fx.jdbc().execute("drop function if exists fail_rider_link()");
+            fx.jdbc().execute("reset role; drop trigger if exists fail_rider_link on invite");
+            fx.jdbc().execute("reset role; drop function if exists fail_rider_link()");
         }
     }
 

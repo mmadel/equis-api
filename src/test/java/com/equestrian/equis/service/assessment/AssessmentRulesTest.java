@@ -1,5 +1,6 @@
 package com.equestrian.equis.service.assessment;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -171,9 +172,9 @@ public class AssessmentRulesTest {
     void assessorAndAdminCanRecordFromTheStartTime() {
         AssessmentBooking booking = book(member(null), sara);
 
-        assertThatCode(() -> rules.requireCanRecord(booking, new AuthUser(sara.getId(), Role.TRAINER), start))
+        assertThatCode(() -> rules.requireCanRecord(booking, new AuthUser(sara.getId(), Role.TRAINER, Club.DEFAULT_ID), start))
                 .doesNotThrowAnyException();
-        assertThatCode(() -> rules.requireCanRecord(booking, new AuthUser(UUID.randomUUID(), Role.ADMIN), start))
+        assertThatCode(() -> rules.requireCanRecord(booking, new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID), start))
                 .doesNotThrowAnyException();
     }
 
@@ -181,7 +182,7 @@ public class AssessmentRulesTest {
     void anotherTrainerCannotRecord() {
         AssessmentBooking booking = book(member(null), sara);
 
-        assertRefused(() -> rules.requireCanRecord(booking, new AuthUser(omar.getId(), Role.TRAINER), start),
+        assertRefused(() -> rules.requireCanRecord(booking, new AuthUser(omar.getId(), Role.TRAINER, Club.DEFAULT_ID), start),
                 HttpStatus.FORBIDDEN, ErrorCodes.NOT_ASSESSOR);
     }
 
@@ -189,7 +190,7 @@ public class AssessmentRulesTest {
     void resultCannotBeRecordedBeforeTheSlotStarts() {
         AssessmentBooking booking = book(member(null), sara);
 
-        assertRefused(() -> rules.requireCanRecord(booking, new AuthUser(sara.getId(), Role.TRAINER),
+        assertRefused(() -> rules.requireCanRecord(booking, new AuthUser(sara.getId(), Role.TRAINER, Club.DEFAULT_ID),
                 start.minusSeconds(1)), HttpStatus.CONFLICT, ErrorCodes.SLOT_NOT_STARTED);
     }
 
@@ -201,7 +202,7 @@ public class AssessmentRulesTest {
         placed.recordAttended(levelRepository.getReferenceById((short) 2), null, start);
         AssessmentBooking noShow = book(member(null), sara);
         noShow.recordNoShow(null, start);
-        AuthUser admin = new AuthUser(UUID.randomUUID(), Role.ADMIN);
+        AuthUser admin = new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID);
 
         assertRefused(() -> rules.requireCanRecord(cancelled, admin, start),
                 HttpStatus.CONFLICT, ErrorCodes.BOOKING_CANCELLED);

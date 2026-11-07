@@ -1,5 +1,7 @@
 package com.equestrian.equis.controller.riders;
 
+import com.equestrian.equis.support.ClubThreads;
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -390,7 +392,7 @@ public class RiderReassignApiTest {
     // Starts both calls at once and waits for both; a deadlock would surface as a 500 or a timeout.
     private static List<ResultActions> race(Request first, Request second) throws Exception {
         CountDownLatch start = new CountDownLatch(1);
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         try {
             Future<ResultActions> a = pool.submit(() -> {
                 start.await(10, TimeUnit.SECONDS);
@@ -409,11 +411,11 @@ public class RiderReassignApiTest {
 
     private ResultActions admin(MockHttpServletRequestBuilder request) throws Exception {
         return mvc.perform(request.header(HttpHeaders.AUTHORIZATION,
-                bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN))));
+                bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID))));
     }
 
     private MockHttpServletRequestBuilder asTrainer(UUID trainerId, MockHttpServletRequestBuilder request) {
-        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(trainerId, Role.TRAINER)));
+        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(trainerId, Role.TRAINER, Club.DEFAULT_ID)));
     }
 
     private String bearer(AuthUser user) {

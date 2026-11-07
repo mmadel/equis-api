@@ -1,5 +1,9 @@
 package com.equestrian.equis.entity.evaluations;
 
+import lombok.Setter;
+import org.hibernate.annotations.TenantId;
+import jakarta.persistence.EntityListeners;
+import com.equestrian.equis.common.tenant.TenantGuard;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.entity.sessions.Session;
@@ -23,6 +27,7 @@ import java.util.UUID;
 // A trainer's evaluation of one rider's ride in a finished session: 1 to 5 stars and an optional comment.
 // One per rider per session, only for a rider seated in it (both enforced by the database). Never edited.
 @Entity
+@EntityListeners(TenantGuard.class)
 @Table(name = "session_evaluation")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -35,6 +40,13 @@ public class SessionEvaluation {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
+
+    // The club this row belongs to. Hibernate fills it from the current club on insert and adds
+    // "club_id = <club>" to every query (TenantIdentifierResolver).
+    @TenantId
+    @Column(name = "club_id", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private UUID clubId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "session_id", nullable = false, updatable = false)

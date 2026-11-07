@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class AccountLinkService {
@@ -66,6 +67,15 @@ public class AccountLinkService {
         invite.setExpiresAt(clock.instant().plus(ttl(purpose)));
         invites.save(invite);
         return new IssuedLink(generated.raw(), invite.getExpiresAt());
+    }
+
+    // The club the link belongs to, or null for an unknown link (openLink then refuses it the usual way).
+    @Transactional(readOnly = true)
+    public UUID clubOf(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return invites.findClubIdByTokenHash(tokenGenerator.hash(raw)).orElse(null);
     }
 
     // Every failure gives the same answer, so a caller cannot learn why a link was refused.

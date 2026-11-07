@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.sessions;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -292,7 +293,7 @@ public class MyWeekApiTest {
         mvc.perform(get(PATH))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("unauthorized"));
-        mvc.perform(get(PATH).header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN))))
+        mvc.perform(get(PATH).header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID))))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("forbidden"));
     }
@@ -313,7 +314,7 @@ public class MyWeekApiTest {
     }
 
     private MockHttpServletRequestBuilder asTrainer(MockHttpServletRequestBuilder request) {
-        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(ahmed, Role.TRAINER)));
+        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(ahmed, Role.TRAINER, Club.DEFAULT_ID)));
     }
 
     private String bearer(AuthUser user) {

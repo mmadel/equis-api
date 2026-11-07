@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.accounts;
 
+import com.equestrian.equis.support.ClubThreads;
 import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.dto.accounts.AuthTokens;
 import com.equestrian.equis.dto.accounts.TrainerRow;
@@ -172,7 +173,7 @@ class TrainerInviteJourneyTest {
     // Starts both calls at once and gives each status code; the refused one must say phone_taken.
     private static List<Integer> race(Request first, Request second) throws Exception {
         CountDownLatch start = new CountDownLatch(1);
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         try {
             Future<Integer> a = pool.submit(() -> {
                 start.await(10, TimeUnit.SECONDS);

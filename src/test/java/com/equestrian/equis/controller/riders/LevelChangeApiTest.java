@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.riders;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -285,7 +286,7 @@ public class LevelChangeApiTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("unauthorized"));
         mvc.perform(post(path)
-                        .header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN)))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(PROMOTE))
                 .andExpect(status().isForbidden())
@@ -345,7 +346,7 @@ public class LevelChangeApiTest {
     }
 
     private MockHttpServletRequestBuilder asTrainer(MockHttpServletRequestBuilder request, Trainer trainer) {
-        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(trainer.getId(), Role.TRAINER)));
+        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(trainer.getId(), Role.TRAINER, Club.DEFAULT_ID)));
     }
 
     private String bearer(AuthUser user) {

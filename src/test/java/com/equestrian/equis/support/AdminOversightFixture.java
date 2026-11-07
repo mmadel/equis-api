@@ -383,7 +383,7 @@ public class AdminOversightFixture {
     // Like race, for calls that report their own outcome ("ok" or a code), e.g. bookMemberOutcome.
     public static List<String> raceOutcomes(Callable<String> first, Callable<String> second) throws Exception {
         CountDownLatch start = new CountDownLatch(1);
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         try {
             Future<String> a = pool.submit(() -> {
                 start.await(10, TimeUnit.SECONDS);

@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.accounts;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -363,7 +364,7 @@ public class AdminTrainerApiTest {
     @Test
     void onlyTheAdminGetsIn() throws Exception {
         Trainer ahmed = trainer("Ahmed Said", TrainerStatus.ACTIVE);
-        String asTrainer = bearer(new AuthUser(ahmed.getId(), Role.TRAINER));
+        String asTrainer = bearer(new AuthUser(ahmed.getId(), Role.TRAINER, Club.DEFAULT_ID));
 
         mvc.perform(get(PATH))
                 .andExpect(status().isUnauthorized())
@@ -386,7 +387,7 @@ public class AdminTrainerApiTest {
     @Test
     void aTokenRefreshMarksTheTrainerActive() throws Exception {
         Trainer ahmed = trainer("Ahmed Said", TrainerStatus.ACTIVE);
-        String refresh = authTokenService.issue(Role.TRAINER, ahmed.getId(), true).refreshToken();
+        String refresh = authTokenService.issue(Role.TRAINER, ahmed.getId(), Club.DEFAULT_ID, true).refreshToken();
         CLOCK.advance(Duration.ofMinutes(20));
 
         mvc.perform(post("/auth/refresh").contentType(MediaType.APPLICATION_JSON)
@@ -424,7 +425,7 @@ public class AdminTrainerApiTest {
     }
 
     private MockHttpServletRequestBuilder asAdmin(MockHttpServletRequestBuilder request) {
-        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN)));
+        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID)));
     }
 
     private String bearer(AuthUser user) {

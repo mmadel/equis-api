@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.evaluations;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -389,12 +390,12 @@ public class EvaluationFollowUpApiTest {
 
     private MockHttpServletRequestBuilder as(UUID trainer, MockHttpServletRequestBuilder request) {
         return request.header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + jwtService.issue(new AuthUser(trainer, Role.TRAINER)).value());
+                "Bearer " + jwtService.issue(new AuthUser(trainer, Role.TRAINER, Club.DEFAULT_ID)).value());
     }
 
     private MockHttpServletRequestBuilder asAdmin(MockHttpServletRequestBuilder request) {
         return request.header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + jwtService.issue(new AuthUser(admin, Role.ADMIN)).value());
+                "Bearer " + jwtService.issue(new AuthUser(admin, Role.ADMIN, Club.DEFAULT_ID)).value());
     }
 
     private UUID trainer(String name) {

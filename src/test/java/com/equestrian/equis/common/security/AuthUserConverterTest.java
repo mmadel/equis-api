@@ -1,5 +1,7 @@
 package com.equestrian.equis.common.security;
 
+import com.equestrian.equis.common.tenant.TenantContext;
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.riders.RiderAccountStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
@@ -34,7 +36,7 @@ public class AuthUserConverterTest {
         AbstractAuthenticationToken authentication = converter.convert(jwt(ID.toString(), "TRAINER"));
 
         assertThat(authentication.isAuthenticated()).isTrue();
-        assertThat(authentication.getPrincipal()).isEqualTo(new AuthUser(ID, Role.TRAINER));
+        assertThat(authentication.getPrincipal()).isEqualTo(new AuthUser(ID, Role.TRAINER, Club.DEFAULT_ID));
         assertThat(authentication.getAuthorities()).extracting(GrantedAuthority::getAuthority)
                 .containsExactly("ROLE_TRAINER");
     }
@@ -45,7 +47,7 @@ public class AuthUserConverterTest {
 
         AbstractAuthenticationToken authentication = converter.convert(jwt(ID.toString(), "RIDER"));
 
-        assertThat(authentication.getPrincipal()).isEqualTo(new AuthUser(ID, Role.RIDER));
+        assertThat(authentication.getPrincipal()).isEqualTo(new AuthUser(ID, Role.RIDER, Club.DEFAULT_ID));
         assertThat(authentication.getAuthorities()).extracting(GrantedAuthority::getAuthority)
                 .containsExactly("ROLE_RIDER");
     }
@@ -70,7 +72,7 @@ public class AuthUserConverterTest {
     void adminBecomesAuthUserWithoutATrainerLookup() {
         AbstractAuthenticationToken authentication = converter.convert(jwt(ID.toString(), "ADMIN"));
 
-        assertThat(authentication.getPrincipal()).isEqualTo(new AuthUser(ID, Role.ADMIN));
+        assertThat(authentication.getPrincipal()).isEqualTo(new AuthUser(ID, Role.ADMIN, Club.DEFAULT_ID));
         assertThat(authentication.getAuthorities()).extracting(GrantedAuthority::getAuthority)
                 .containsExactly("ROLE_ADMIN");
         verifyNoInteractions(trainerRepository);
@@ -90,7 +92,35 @@ public class AuthUserConverterTest {
                 .isInstanceOf(InvalidBearerTokenException.class);
     }
 
+    // A token issued before clubs existed: the app refreshes it (the refresh row knows the club).
+    @Test
+    void rejectsMissingOrInvalidClub() {
+        assertThatThrownBy(() -> converter.convert(jwt(ID.toString(), "ADMIN", null)))
+                .isInstanceOf(InvalidBearerTokenException.class);
+        assertThatThrownBy(() -> converter.convert(jwt(ID.toString(), "ADMIN", "school")))
+                .isInstanceOf(InvalidBearerTokenException.class);
+    }
+
+    // The converter runs before TenantFilter, so the status lookup must run in the token's club.
+    @Test
+    void checksTheTrainerInTheTokensClubAndPutsTheOuterClubBack() {
+        UUID cairo = UUID.randomUUID();
+        when(trainerRepository.existsByIdAndStatus(ID, TrainerStatus.ACTIVE)).thenAnswer(call -> {
+            assertThat(TenantContext.current()).isEqualTo(cairo);
+            return true;
+        });
+
+        AbstractAuthenticationToken authentication = converter.convert(jwt(ID.toString(), "TRAINER", cairo.toString()));
+
+        assertThat(((AuthUser) authentication.getPrincipal()).clubId()).isEqualTo(cairo);
+        assertThat(TenantContext.current()).isEqualTo(Club.DEFAULT_ID);
+    }
+
     private static Jwt jwt(String subject, String role) {
+        return jwt(subject, role, Club.DEFAULT_ID.toString());
+    }
+
+    private static Jwt jwt(String subject, String role, String club) {
         Jwt.Builder builder = Jwt.withTokenValue("token")
                 .header("alg", "HS256")
                 .subject(subject)
@@ -98,6 +128,9 @@ public class AuthUserConverterTest {
                 .expiresAt(Instant.now().plusSeconds(900));
         if (role != null) {
             builder.claim("role", role);
+        }
+        if (club != null) {
+            builder.claim("cid", club);
         }
         return builder.build();
     }

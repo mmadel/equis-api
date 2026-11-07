@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.sessions;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.common.config.ClockConfig;
 import com.equestrian.equis.common.config.JwtConfig;
 import com.equestrian.equis.common.config.SecurityBeans;
@@ -270,7 +271,7 @@ public class MySessionsControllerTest {
     }
 
     private String bearer(Role role) {
-        return "Bearer " + jwtService.issue(new AuthUser(TRAINER_ID, role)).value();
+        return "Bearer " + jwtService.issue(new AuthUser(TRAINER_ID, role, Club.DEFAULT_ID)).value();
     }
 
     // Mona (8 left) is seated by the caller, one more seat by another trainer; Zeina (1 left) is the caller's

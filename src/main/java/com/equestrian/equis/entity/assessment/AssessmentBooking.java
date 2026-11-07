@@ -1,5 +1,9 @@
 package com.equestrian.equis.entity.assessment;
 
+import lombok.Setter;
+import org.hibernate.annotations.TenantId;
+import jakarta.persistence.EntityListeners;
+import com.equestrian.equis.common.tenant.TenantGuard;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.levels.Level;
 import com.equestrian.equis.entity.sessions.Session;
@@ -27,6 +31,7 @@ import java.util.UUID;
 // One member booked into one assessment slot, plus the result.
 // The moves only protect the entity's own state; the booking rules turn IllegalStateException into a 409.
 @Entity
+@EntityListeners(TenantGuard.class)
 @Table(name = "assessment_booking")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -37,6 +42,13 @@ public class AssessmentBooking {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
+
+    // The club this row belongs to. Hibernate fills it from the current club on insert and adds
+    // "club_id = <club>" to every query (TenantIdentifierResolver).
+    @TenantId
+    @Column(name = "club_id", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private UUID clubId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "member_id", nullable = false, updatable = false)
