@@ -2,24 +2,29 @@ package com.equestrian.equis.service.accounts;
 
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
+import com.equestrian.equis.common.phone.PhoneNormalizer;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.common.tenant.TenantTransactions;
 import com.equestrian.equis.dto.accounts.AuthTokens;
 import com.equestrian.equis.dto.accounts.InviteAcceptRequest;
+import com.equestrian.equis.dto.accounts.InviteAccepted;
 import com.equestrian.equis.dto.accounts.LoginRequest;
 import com.equestrian.equis.entity.accounts.AdminAccount;
 import com.equestrian.equis.entity.accounts.Invite;
 import com.equestrian.equis.entity.accounts.InvitePurpose;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.repository.accounts.AdminAccountRepository;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.club.ClubRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,12 +38,13 @@ public class AuthService {
     private final PasswordService passwords;
     private final AuthTokenService tokens;
     private final AccountLinkService links;
+    private final ClubRepository clubs;
     private final TenantTransactions tenants;
     private final Clock clock;
 
     public AuthService(AdminAccountRepository admins, TrainerRepository trainers, RiderRepository riders,
                        AdminLockoutService lockout, PasswordService passwords, AuthTokenService tokens,
-                       AccountLinkService links, TenantTransactions tenants, Clock clock) {
+                       AccountLinkService links, ClubRepository clubs, TenantTransactions tenants, Clock clock) {
         this.admins = admins;
         this.trainers = trainers;
         this.riders = riders;
@@ -46,29 +52,24 @@ public class AuthService {
         this.passwords = passwords;
         this.tokens = tokens;
         this.links = links;
+        this.clubs = clubs;
         this.tenants = tenants;
         this.clock = clock;
     }
 
-    // The account's club is found first, across clubs (until sign-in asks for the club code); the sign-in itself
-    // then runs in that club, in one transaction. An unknown login runs with no club, finds nothing and gets the
-    // same 401. Keeping writes on an ApiException keeps the admin's failed-attempt counter when the 401 is thrown.
+    // The club comes from the code the person typed; the account is then looked up only inside that club, in one
+    // transaction. An unknown code gives the same 401 (and spends the same BCrypt time) as a wrong password, so
+    // nobody can test which codes exist. Keeping writes on an ApiException keeps the admin's failed-attempt counter
+    // when the 401 is thrown.
     public AuthTokens login(LoginRequest request) {
-        String login = request.login().trim();
-        UUID club = tenants.asRoot(() -> clubOfAccount(login));
-        return tenants.inClubKeepingWritesOnApiError(club, () -> loginInClub(login, request));
-    }
-
-    // The same lookups, in the same order, as loginInClub.
-    private UUID clubOfAccount(String login) {
-        if (!login.contains("@")) {
-            return trainers.findByPhone(login.replace(" ", "")).map(Trainer::getClubId).orElse(null);
+        Optional<Club> club = clubs.findByCode(request.clubCode().trim().toLowerCase(Locale.ROOT));
+        if (club.isEmpty()) {
+            passwords.matches(request.password(), null);
+            throw invalidCredentials();
         }
-        String email = login.toLowerCase(Locale.ROOT);
-        return admins.findByEmail(email).map(AdminAccount::getClubId)
-                .or(() -> trainers.findByEmail(email).map(Trainer::getClubId))
-                .or(() -> riders.findByEmail(email).map(Rider::getClubId))
-                .orElse(null);
+        String login = request.login().trim();
+        AuthTokens tokens = tenants.inClubKeepingWritesOnApiError(club.get().getId(), () -> loginInClub(login, request));
+        return tokens.withClub(club.get());
     }
 
     private AuthTokens loginInClub(String login, LoginRequest request) {
@@ -84,7 +85,7 @@ public class AuthService {
                 return tokens.issue(Role.ADMIN, admin.get().getId(), admin.get().getClubId(), request.rememberMe());
             }
             found = trainers.findByEmail(email);
-            // Riders sign in by email only. An email belongs to one kind of account, so at most one matches.
+            // An email belongs to one kind of account in a club, so at most one matches.
             if (found.isEmpty()) {
                 Optional<Rider> rider = riders.findByEmail(email);
                 if (rider.isPresent()) {
@@ -92,8 +93,15 @@ public class AuthService {
                 }
             }
         } else {
-            // Phones are stored without spaces: "010 0000 0001" -> "01000000001".
-            found = trainers.findByPhone(login.replace(" ", ""));
+            // Phones are stored as 01XXXXXXXXX: "+20 100 000 0001" -> "01000000001". Not a phone -> no account.
+            Optional<String> phone = PhoneNormalizer.normalize(login);
+            found = phone.flatMap(trainers::findByPhone);
+            if (found.isEmpty() && phone.isPresent()) {
+                Optional<Rider> rider = riderByPhone(phone.get());
+                if (rider.isPresent()) {
+                    return riderLogin(rider.get(), request);
+                }
+            }
         }
 
         // Null when there is no trainer, and also for an invited trainer who has not set a password yet.
@@ -115,6 +123,12 @@ public class AuthService {
         return tokens.issue(Role.TRAINER, trainer.getId(), trainer.getClubId(), request.rememberMe());
     }
 
+    // Only riders with a password can sign in; two such riders sharing a phone is not a match.
+    private Optional<Rider> riderByPhone(String phone) {
+        List<Rider> candidates = riders.findByPhoneAndPasswordHashIsNotNull(phone);
+        return candidates.size() == 1 ? Optional.of(candidates.get(0)) : Optional.empty();
+    }
+
     private AuthTokens riderLogin(Rider rider, LoginRequest request) {
         // Null for an invited rider who has not set a password yet: the same answer and time as a wrong password.
         if (!passwords.matches(request.password(), rider.getPasswordHash())) {
@@ -131,12 +145,15 @@ public class AuthService {
 
     // If any step fails nothing is saved: the password, the status and the link all stay as they were.
     // Runs in the link's club; an unknown link runs with no club and is refused by openLink.
-    public void acceptInvite(InviteAcceptRequest request) {
+    // Answers the club's code, so the app can fill it in on its sign-in page.
+    public InviteAccepted acceptInvite(InviteAcceptRequest request) {
         UUID club = links.clubOf(request.token());
         tenants.inClub(club, () -> {
             acceptInClub(request);
             return null;
         });
+        // Reached only when the link was accepted, so the club is known.
+        return new InviteAccepted(clubs.findById(club).orElseThrow().getCode());
     }
 
     private void acceptInClub(InviteAcceptRequest request) {

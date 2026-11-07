@@ -121,7 +121,7 @@ public class TwoClubFixture {
         builders.put(b, new Builder(b, "cairo-eq", "B"));
         try {
             for (Builder x : builders.values()) {
-                x.adminToken = login(adminEmail(x.club));
+                x.adminToken = login(x.code, adminEmail(x.club));
                 x.trainer1 = x.activeTrainer("Trainer One", 1);
                 x.trainer2 = x.activeTrainer("Trainer Two", 2);
                 x.signIn();
@@ -259,7 +259,7 @@ public class TwoClubFixture {
             this.tag = tag;
         }
 
-        // Phones and emails differ between the clubs: sign-in still looks them up across clubs.
+        // Phones and emails differ between the clubs; PerClubSignInTest covers clubs sharing a phone.
         String phone(int n) {
             return "0105%s00000%d".formatted(tag.equals("A") ? "1" : "2", n);
         }
@@ -324,23 +324,23 @@ public class TwoClubFixture {
             recorder.clear();
             expect(admin(post("/admin/riders/" + rider + "/invite")), 200, 201, 204);
             acceptLink();
-            return login("person1@%s.eg".formatted(code));
+            return login(code, "person1@%s.eg".formatted(code));
         }
 
         void acceptLink() throws Exception {
             String token = RecordingNotificationSender.tokenFrom(recorder.last());
             expect(mvc.perform(post("/auth/invite/accept").contentType(MediaType.APPLICATION_JSON)
-                    .content("{ \"token\": \"%s\", \"password\": \"%s\" }".formatted(token, PASSWORD))), 204);
+                    .content("{ \"token\": \"%s\", \"password\": \"%s\" }".formatted(token, PASSWORD))), 200);
             recorder.clear();
         }
 
         // Access tokens last minutes, so everyone signs in again after the clock moves.
         void signIn() throws Exception {
-            adminToken = login(adminEmail(club));
-            trainer1Token = login(phone(1));
-            trainer2Token = login(phone(2));
+            adminToken = login(code, adminEmail(club));
+            trainer1Token = login(code, phone(1));
+            trainer2Token = login(code, phone(2));
             if (riderToken != null) {
-                riderToken = login("person1@%s.eg".formatted(code));
+                riderToken = login(code, "person1@%s.eg".formatted(code));
             }
         }
 
@@ -361,9 +361,14 @@ public class TwoClubFixture {
 
     // ---- helpers
 
-    private String login(String login) throws Exception {
-        ResultActions signedIn = mvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON)
-                .content("{ \"login\": \"%s\", \"password\": \"%s\", \"rememberMe\": true }".formatted(login, PASSWORD)));
+    public ResultActions loginRequest(String clubCode, String login, String password) throws Exception {
+        return mvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"clubCode\": \"%s\", \"login\": \"%s\", \"password\": \"%s\", \"rememberMe\": true }"
+                        .formatted(clubCode, login, password)));
+    }
+
+    private String login(String clubCode, String login) throws Exception {
+        ResultActions signedIn = loginRequest(clubCode, login, PASSWORD);
         expect(signedIn, 200);
         return JsonPath.read(body(signedIn), "$.accessToken");
     }

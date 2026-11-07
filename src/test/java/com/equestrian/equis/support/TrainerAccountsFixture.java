@@ -142,7 +142,7 @@ public class TrainerAccountsFixture {
     // Invited and then set their password through the emailed link. The two emails are cleared.
     public TrainerRow activeTrainer(String name, String phone, String email, String password) throws Exception {
         TrainerRow row = invite(name, phone, email);
-        acceptInvite(tokenFromLastEmail(), password).andExpect(status().isNoContent());
+        acceptInvite(tokenFromLastEmail(), password).andExpect(status().isOk());
         recorder.clear();
         return row;
     }
@@ -159,7 +159,7 @@ public class TrainerAccountsFixture {
 
     public ResultActions login(String login, String password) throws Exception {
         return mvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON)
-                .content("{ \"login\": \"%s\", \"password\": \"%s\", \"rememberMe\": false }"
+                .content("{ \"clubCode\": \"school\", \"login\": \"%s\", \"password\": \"%s\", \"rememberMe\": false }"
                         .formatted(login, password)));
     }
 

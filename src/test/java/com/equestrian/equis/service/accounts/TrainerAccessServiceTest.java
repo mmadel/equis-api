@@ -363,7 +363,7 @@ class TrainerAccessServiceTest {
 
     private ResultActions login(Trainer trainer) throws Exception {
         return mvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON)
-                .content("{ \"login\": \"" + trainer.getPhone() + "\", \"password\": \"" + PASSWORD
+                .content("{ \"clubCode\": \"school\", \"login\": \"" + trainer.getPhone() + "\", \"password\": \"" + PASSWORD
                         + "\", \"rememberMe\": false }"));
     }
 

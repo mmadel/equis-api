@@ -76,6 +76,10 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
 
     boolean existsByEmail(String email);
 
+    // Sign-in by phone. Rider phones are not unique (they are copied from the member, and seed riders have one
+    // too), so only riders who have set a password count; the caller treats more than one as no match.
+    List<Rider> findByPhoneAndPasswordHashIsNotNull(String phone);
+
     boolean existsByIdAndAccountStatus(UUID id, RiderAccountStatus accountStatus);
 
     // Whether the member was already placed as a rider.

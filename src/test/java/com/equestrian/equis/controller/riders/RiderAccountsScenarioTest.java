@@ -273,7 +273,7 @@ class RiderAccountsScenarioTest {
         fx.accounts().refresh(before).andExpect(status().isOk());
         before = tokens(login(omar.email(), PASSWORD).andExpect(status().isOk()));
 
-        fx.accounts().acceptInvite(reset, NEW_PASSWORD).andExpect(status().isNoContent());
+        fx.accounts().acceptInvite(reset, NEW_PASSWORD).andExpect(status().isOk());
         login.changePassword(NEW_PASSWORD);
 
         fx.accounts().refresh(before)
@@ -390,14 +390,14 @@ class RiderAccountsScenarioTest {
                 omarsRide.toString(), omar.name(), omar.email(), omar.phone(), "Good start", OMAR_NOTES);
     }
 
-    // 17
+    // 17 (E17 · per-club sign-in: riders may now use their phone too)
     @Test
-    void omarCannotSignInWithHisPhone() throws Exception {
+    void omarCanSignInWithHisPhone() throws Exception {
         activeOmar();
 
         login(omar.phone(), PASSWORD)
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("invalid_credentials"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("RIDER"));
     }
 
     // 18
@@ -417,7 +417,7 @@ class RiderAccountsScenarioTest {
         // The trainer app's link, not the rider app's.
         assertThat(fx.accounts().recorder().last().text()).contains("/invite/").doesNotContain("http://rider.test/");
         fx.accounts().acceptInvite(fx.accounts().tokenFromLastEmail(), NEW_PASSWORD)
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
         login(ahmed.phone(), NEW_PASSWORD).andExpect(status().isOk()).andExpect(jsonPath("$.role").value("TRAINER"));
     }
 
@@ -530,7 +530,7 @@ class RiderAccountsScenarioTest {
 
     // The rider app's set-password page, with the token from the email; the rider counts as signed up.
     private RiderLogin acceptLink(UUID riderId, Person person, String token) throws Exception {
-        fx.accounts().acceptInvite(token, PASSWORD).andExpect(status().isNoContent());
+        fx.accounts().acceptInvite(token, PASSWORD).andExpect(status().isOk());
         RiderLogin login = new RiderLogin(riderId, person.email(), PASSWORD);
         signedUp.add(login);
         return login;
