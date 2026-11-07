@@ -3,6 +3,7 @@ package com.equestrian.equis.service.mail;
 import com.equestrian.equis.entity.accounts.InvitePurpose;
 import com.equestrian.equis.entity.accounts.SubjectType;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -11,6 +12,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+// Mail test: left out of the default run (see the surefire config in pom.xml).
+@Tag("email")
 public class AccountLinkEmailsTest {
     private static final ZoneId CAIRO = ZoneId.of("Africa/Cairo");
     private static final String TOKEN = "Zt7abc-DEF_123";
