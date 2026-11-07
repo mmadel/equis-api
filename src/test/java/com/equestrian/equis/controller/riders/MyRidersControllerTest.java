@@ -17,6 +17,7 @@ import com.equestrian.equis.dto.riders.UpcomingSeat;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.payments.RiderPaymentStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.evaluations.EvaluationHistoryQuery;
@@ -74,6 +75,8 @@ public class MyRidersControllerTest {
     TrainerRepository trainerRepository;
     @MockitoBean
     RiderRepository riderRepository;
+    @MockitoBean
+    SuperAdminRepository superAdminRepository;
 
     @BeforeEach
     void trainerIsActive() {

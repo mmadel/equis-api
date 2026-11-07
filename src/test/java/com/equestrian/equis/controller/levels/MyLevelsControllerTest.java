@@ -17,6 +17,7 @@ import com.equestrian.equis.dto.levels.LevelSessionsResponse.SessionSlot;
 import com.equestrian.equis.dto.levels.MyLevelSummary;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
+import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.levels.MyLevelsService;
@@ -64,6 +65,8 @@ public class MyLevelsControllerTest {
     TrainerRepository trainerRepository;
     @MockitoBean
     RiderRepository riderRepository;
+    @MockitoBean
+    SuperAdminRepository superAdminRepository;
 
     @BeforeEach
     void trainerIsActive() {
