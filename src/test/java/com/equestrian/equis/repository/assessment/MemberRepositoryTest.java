@@ -93,7 +93,7 @@ public class MemberRepositoryTest {
 
         assertThatThrownBy(() -> memberRepository.saveAndFlush(Member.register("Sara A.", "01033334444", "SARA@Mail.com")))
                 .isInstanceOfSatisfying(DataIntegrityViolationException.class,
-                        ex -> assertThat(Constraints.nameOf(ex)).contains("uq_member_email"));
+                        ex -> assertThat(Constraints.nameOf(ex)).contains("uq_member_club_email"));
     }
 
     // Case 5
@@ -103,7 +103,7 @@ public class MemberRepositoryTest {
 
         assertThatThrownBy(() -> memberRepository.saveAndFlush(Member.register("Sara A.", "01011112222", "other@mail.com")))
                 .isInstanceOfSatisfying(DataIntegrityViolationException.class,
-                        ex -> assertThat(Constraints.nameOf(ex)).contains("uq_member_phone"));
+                        ex -> assertThat(Constraints.nameOf(ex)).contains("uq_member_club_phone"));
     }
 
     // Case 6: the schema itself refuses bad rows, whatever writes them.

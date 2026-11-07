@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.payments;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.entity.payments.SessionUsage;
 import com.equestrian.equis.repository.payments.PaymentRepository;
@@ -354,6 +355,17 @@ class PaymentsScenarioTest {
         payments.assertPaymentInvariants();
         payments.assertBalance(omar, 16, "active", NOV_EXPIRY);
         payments.history(omar).andExpect(jsonPath("$.payments.length()").value(2));
+    }
+
+    // E17: until the tenant context fills club_id, every row the app writes lands in the default club.
+    @Test
+    void rowsWrittenThroughTheApiBelongToTheDefaultClub() throws Exception {
+        omarPaidForNovember();
+
+        for (String table : List.of("trainer", "member", "assessment_booking", "rider", "payment")) {
+            List<UUID> clubs = fx.jdbc().queryForList("SELECT DISTINCT club_id FROM " + table, UUID.class);
+            assertThat(clubs).as(table).containsExactly(Club.DEFAULT_ID);
+        }
     }
 
     // ---- Journeys several scenarios build on

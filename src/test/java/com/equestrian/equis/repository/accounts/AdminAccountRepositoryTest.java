@@ -87,7 +87,7 @@ public class AdminAccountRepositoryTest {
         insert("admin@example.com", "hash", 0);
         assertThatThrownBy(() -> insert("admin@example.com", "other-hash", 0))
                 .isInstanceOf(DataIntegrityViolationException.class)
-                .hasMessageContaining("uq_admin_account_email");
+                .hasMessageContaining("uq_admin_account_club_email");
     }
 
     private AdminAccount admin(String email) {

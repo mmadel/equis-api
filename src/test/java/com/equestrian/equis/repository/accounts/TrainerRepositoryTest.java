@@ -144,7 +144,7 @@ public class TrainerRepositoryTest {
         insert("Sara Ali", "01000000001", "sara@example.com", null, "invited");
         assertThatThrownBy(() -> insert("Omar Hassan", "01000000001", "omar@example.com", null, "invited"))
                 .isInstanceOf(DataIntegrityViolationException.class)
-                .hasMessageContaining("uq_trainer_phone");
+                .hasMessageContaining("uq_trainer_club_phone");
     }
 
     @Test
@@ -152,7 +152,7 @@ public class TrainerRepositoryTest {
         insert("Sara Ali", "01000000001", "sara@example.com", null, "invited");
         assertThatThrownBy(() -> insert("Omar Hassan", "01000000002", "sara@example.com", null, "invited"))
                 .isInstanceOf(DataIntegrityViolationException.class)
-                .hasMessageContaining("uq_trainer_email");
+                .hasMessageContaining("uq_trainer_club_email");
     }
 
     private Trainer trainer(String name, String phone, String email) {

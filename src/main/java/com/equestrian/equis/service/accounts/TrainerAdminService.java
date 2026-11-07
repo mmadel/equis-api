@@ -99,8 +99,8 @@ public class TrainerAdminService {
         } catch (DataIntegrityViolationException e) {
             // Two invites with the same phone or email at the same moment.
             throw switch (Constraints.nameOf(e).orElse("")) {
-                case "uq_trainer_phone" -> TrainerErrors.phoneTaken();
-                case "uq_trainer_email" -> TrainerErrors.emailTaken();
+                case "uq_trainer_club_phone" -> TrainerErrors.phoneTaken();
+                case "uq_trainer_club_email" -> TrainerErrors.emailTaken();
                 default -> e;
             };
         }
