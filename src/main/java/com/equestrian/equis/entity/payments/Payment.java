@@ -1,5 +1,9 @@
 package com.equestrian.equis.entity.payments;
 
+import lombok.Setter;
+import org.hibernate.annotations.TenantId;
+import jakarta.persistence.EntityListeners;
+import com.equestrian.equis.common.tenant.TenantGuard;
 import com.equestrian.equis.entity.riders.Rider;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,6 +31,7 @@ import java.util.UUID;
 // A package of sessions a rider paid for. Valid from the 1st of the start month to the end of the grace month,
 // the month after the last paid one. Never edited or deleted: a wrong payment is voided and stops counting.
 @Entity
+@EntityListeners(TenantGuard.class)
 @Table(name = "payment")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -41,6 +46,13 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
+
+    // The club this row belongs to. Hibernate fills it from the current club on insert and adds
+    // "club_id = <club>" to every query (TenantIdentifierResolver).
+    @TenantId
+    @Column(name = "club_id", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private UUID clubId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "rider_id", nullable = false, updatable = false)

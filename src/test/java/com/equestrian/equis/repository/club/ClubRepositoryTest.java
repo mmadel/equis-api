@@ -46,8 +46,11 @@ class ClubRepositoryTest {
 
     UUID cairo;
 
+    // The tests write rows of two clubs by hand, so row-level security (V24) is bypassed for this test's
+    // transaction only (set_config(..., true) ends with the rollback).
     @BeforeEach
     void secondClub() {
+        jdbc.queryForObject("select set_config('app.bypass_rls', 'on', true)", String.class);
         cairo = jdbc.queryForObject(
                 "INSERT INTO club (code, name) VALUES ('cairo-eq', 'Cairo Equestrian') RETURNING id", UUID.class);
     }

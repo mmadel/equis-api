@@ -1,5 +1,7 @@
 package com.equestrian.equis.service.riders;
 
+import com.equestrian.equis.support.ClubThreads;
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -349,7 +351,7 @@ public class LevelChangeFlowTest {
     // Starts both calls at once; each result is "ok" or the code of the rule that refused it.
     private List<String> race(Callable<?> first, Callable<?> second) throws Exception {
         CountDownLatch start = new CountDownLatch(1);
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         try {
             Future<String> a = pool.submit(() -> {
                 start.await(10, TimeUnit.SECONDS);
@@ -411,7 +413,7 @@ public class LevelChangeFlowTest {
 
     private MockHttpServletRequestBuilder asTrainer(MockHttpServletRequestBuilder request, Trainer trainer) {
         return request.header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + jwtService.issue(new AuthUser(trainer.getId(), Role.TRAINER)).value());
+                "Bearer " + jwtService.issue(new AuthUser(trainer.getId(), Role.TRAINER, Club.DEFAULT_ID)).value());
     }
 
     private void inTransaction(Runnable work) {

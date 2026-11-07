@@ -1,5 +1,9 @@
 package com.equestrian.equis.entity.riders;
 
+import lombok.AccessLevel;
+import org.hibernate.annotations.TenantId;
+import jakarta.persistence.EntityListeners;
+import com.equestrian.equis.common.tenant.TenantGuard;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.assessment.Member;
 import com.equestrian.equis.entity.levels.Level;
@@ -22,6 +26,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
+@EntityListeners(TenantGuard.class)
 @Table(name = "rider")
 @Getter
 @Setter
@@ -30,6 +35,13 @@ public class Rider {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
+
+    // The club this row belongs to. Hibernate fills it from the current club on insert and adds
+    // "club_id = <club>" to every query (TenantIdentifierResolver).
+    @TenantId
+    @Column(name = "club_id", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private UUID clubId;
 
     @Column(name = "name", nullable = false, length = 100)
     private String name;

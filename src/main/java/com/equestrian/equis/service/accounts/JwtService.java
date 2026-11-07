@@ -35,6 +35,7 @@ public class JwtService {
                 .issuer(properties.jwt().issuer())
                 .subject(user.id().toString())
                 .claim(AuthUserConverter.ROLE_CLAIM, user.role().name())
+                .claim(AuthUserConverter.CLUB_CLAIM, user.clubId().toString())
                 .issuedAt(issuedAt)
                 .expiresAt(expiresAt)
                 .build();

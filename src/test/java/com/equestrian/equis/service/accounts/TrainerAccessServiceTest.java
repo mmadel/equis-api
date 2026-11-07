@@ -1,5 +1,6 @@
 package com.equestrian.equis.service.accounts;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -141,7 +142,7 @@ class TrainerAccessServiceTest {
     void ridersNeedAConfirmAndNothingChangesWithoutIt() {
         Trainer ahmed = trainer("Ahmed Said", TrainerStatus.ACTIVE);
         riders(ahmed, 3);
-        authTokenService.issue(Role.TRAINER, ahmed.getId(), false);
+        authTokenService.issue(Role.TRAINER, ahmed.getId(), Club.DEFAULT_ID, false);
         accountLinkService.create(ahmed, InvitePurpose.RESET);
 
         assertThatThrownBy(() -> service.disable(ahmed.getId(), false))
@@ -206,8 +207,8 @@ class TrainerAccessServiceTest {
     @Test
     void disablingRevokesEveryRefreshToken() {
         Trainer ahmed = trainer("Ahmed Said", TrainerStatus.ACTIVE);
-        authTokenService.issue(Role.TRAINER, ahmed.getId(), false);
-        authTokenService.issue(Role.TRAINER, ahmed.getId(), true);
+        authTokenService.issue(Role.TRAINER, ahmed.getId(), Club.DEFAULT_ID, false);
+        authTokenService.issue(Role.TRAINER, ahmed.getId(), Club.DEFAULT_ID, true);
         afterTokensWereCreated();
 
         service.disable(ahmed.getId(), false);
@@ -222,7 +223,7 @@ class TrainerAccessServiceTest {
     @Test
     void anAccessTokenFromBeforeTheDisableIsRefused() throws Exception {
         Trainer ahmed = trainer("Ahmed Said", TrainerStatus.ACTIVE);
-        String bearer = "Bearer " + jwtService.issue(new AuthUser(ahmed.getId(), Role.TRAINER)).value();
+        String bearer = "Bearer " + jwtService.issue(new AuthUser(ahmed.getId(), Role.TRAINER, Club.DEFAULT_ID)).value();
         mvc.perform(get("/me/levels").header(HttpHeaders.AUTHORIZATION, bearer)).andExpect(status().isOk());
 
         service.disable(ahmed.getId(), false);
@@ -236,7 +237,7 @@ class TrainerAccessServiceTest {
     @Test
     void afterDisableRefreshAndLoginAreRefused() throws Exception {
         Trainer ahmed = trainer("Ahmed Said", TrainerStatus.ACTIVE);
-        String refresh = authTokenService.issue(Role.TRAINER, ahmed.getId(), false).refreshToken();
+        String refresh = authTokenService.issue(Role.TRAINER, ahmed.getId(), Club.DEFAULT_ID, false).refreshToken();
         afterTokensWereCreated();
 
         service.disable(ahmed.getId(), false);
@@ -268,7 +269,7 @@ class TrainerAccessServiceTest {
     @Test
     void disablingTwiceChangesNothingTheSecondTime() {
         Trainer ahmed = trainer("Ahmed Said", TrainerStatus.ACTIVE);
-        authTokenService.issue(Role.TRAINER, ahmed.getId(), false);
+        authTokenService.issue(Role.TRAINER, ahmed.getId(), Club.DEFAULT_ID, false);
         afterTokensWereCreated();
         service.disable(ahmed.getId(), false);
         List<Timestamp> revokedBefore = revokedAt(ahmed);
@@ -293,7 +294,7 @@ class TrainerAccessServiceTest {
     @Test
     void enablingLetsTheTrainerLogInAgainButOldTokensStayRevoked() throws Exception {
         Trainer ahmed = trainer("Ahmed Said", TrainerStatus.ACTIVE);
-        String refresh = authTokenService.issue(Role.TRAINER, ahmed.getId(), false).refreshToken();
+        String refresh = authTokenService.issue(Role.TRAINER, ahmed.getId(), Club.DEFAULT_ID, false).refreshToken();
         afterTokensWereCreated();
         service.disable(ahmed.getId(), false);
 

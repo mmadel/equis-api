@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.overview;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -280,12 +281,12 @@ public class ConsoleFinishedSessionsApiTest {
 
     private ResultActions finish(UUID session, UUID trainer) throws Exception {
         return mvc.perform(post("/me/sessions/" + session + "/finish").header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + jwtService.issue(new AuthUser(trainer, Role.TRAINER)).value()));
+                "Bearer " + jwtService.issue(new AuthUser(trainer, Role.TRAINER, Club.DEFAULT_ID)).value()));
     }
 
     private MockHttpServletRequestBuilder asAdmin(MockHttpServletRequestBuilder request) {
         return request.header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + jwtService.issue(new AuthUser(admin, Role.ADMIN)).value());
+                "Bearer " + jwtService.issue(new AuthUser(admin, Role.ADMIN, Club.DEFAULT_ID)).value());
     }
 
     private UUID trainer(String name) {

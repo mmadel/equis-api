@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.payments;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -249,7 +250,7 @@ public class AdminPaymentApiTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("unauthorized"));
         mvc.perform(post(path(sara)).contentType(MediaType.APPLICATION_JSON).content(body("2026-11", 1, null))
-                        .header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(ahmed, Role.TRAINER))))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(ahmed, Role.TRAINER, Club.DEFAULT_ID))))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("forbidden"));
         assertThat(count()).isZero();
@@ -279,7 +280,7 @@ public class AdminPaymentApiTest {
     }
 
     private ResultActions admin(MockHttpServletRequestBuilder request) throws Exception {
-        return mvc.perform(request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(admin, Role.ADMIN))));
+        return mvc.perform(request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(admin, Role.ADMIN, Club.DEFAULT_ID))));
     }
 
     private String bearer(AuthUser user) {

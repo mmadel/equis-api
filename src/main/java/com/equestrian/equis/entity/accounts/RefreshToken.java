@@ -28,6 +28,11 @@ public class RefreshToken {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
+    // The subject's club, copied into every access token made from this row. Null only for platform users later.
+    // A plain column, not @TenantId: refresh tokens are found by hash before the club is known.
+    @Column(name = "club_id", updatable = false)
+    private UUID clubId;
+
     @Column(name = "subject_type", nullable = false, updatable = false, length = 16)
     private SubjectType subjectType;
 

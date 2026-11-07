@@ -1,5 +1,7 @@
 package com.equestrian.equis.controller.assessment;
 
+import com.equestrian.equis.support.ClubThreads;
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -283,7 +285,7 @@ public class AdminMemberCloseApiTest {
         UUID noShow = latestBooking(omar);
         CountDownLatch locked = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         try {
             Future<?> closer = pool.submit(() -> new TransactionTemplate(transactionManager).executeWithoutResult(s -> {
                 jdbc.queryForObject("select id from member where id = ? for update", UUID.class, omar);
@@ -323,7 +325,7 @@ public class AdminMemberCloseApiTest {
             mvc.perform(post("/admin/members/{id}/" + action, omar))
                     .andExpect(status().isUnauthorized());
             mvc.perform(post("/admin/members/{id}/" + action, omar)
-                            .header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(ahmed, Role.TRAINER))))
+                            .header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(ahmed, Role.TRAINER, Club.DEFAULT_ID))))
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.code").value("forbidden"));
         }
@@ -353,7 +355,7 @@ public class AdminMemberCloseApiTest {
     }
 
     private MockHttpServletRequestBuilder asAdmin(MockHttpServletRequestBuilder request) {
-        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN)));
+        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID)));
     }
 
     private String bearer(AuthUser user) {
@@ -363,7 +365,7 @@ public class AdminMemberCloseApiTest {
     // Starts both calls at once; each result is "ok" or the code the API answered with.
     private static List<String> race(Callable<MvcResult> first, Callable<MvcResult> second) throws Exception {
         CountDownLatch start = new CountDownLatch(1);
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         try {
             Future<String> a = pool.submit(() -> {
                 start.await(10, TimeUnit.SECONDS);
@@ -398,9 +400,12 @@ public class AdminMemberCloseApiTest {
     private void waitForALockWaiter() throws InterruptedException {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
         while (System.nanoTime() < deadline) {
+            // pg_locks, not pg_stat_activity: the app's role (equis_app, V24) can't see other sessions' wait events.
             Integer waiting = jdbc.queryForObject("""
-                    select count(*) from pg_stat_activity
-                    where datname = current_database() and wait_event_type = 'Lock'""", Integer.class);
+                    select count(*) from pg_locks
+                    where not granted
+                      and (database is null or database = (select oid from pg_database where datname = current_database()))""",
+                    Integer.class);
             if (waiting != null && waiting > 0) {
                 return;
             }

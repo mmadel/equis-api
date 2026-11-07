@@ -1,5 +1,9 @@
 package com.equestrian.equis.entity.payments;
 
+import lombok.Setter;
+import org.hibernate.annotations.TenantId;
+import jakarta.persistence.EntityListeners;
+import com.equestrian.equis.common.tenant.TenantGuard;
 import com.equestrian.equis.entity.riders.Rider;
 import com.equestrian.equis.entity.sessions.Session;
 import jakarta.persistence.Column;
@@ -22,6 +26,7 @@ import java.util.UUID;
 // One session a rider used, and the package it came out of. A rider uses a session at most once, and the rider is
 // always the package's rider (composite foreign key). Written when a finished session is deducted (next epic).
 @Entity
+@EntityListeners(TenantGuard.class)
 @Table(name = "session_usage")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -30,6 +35,13 @@ public class SessionUsage {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
+
+    // The club this row belongs to. Hibernate fills it from the current club on insert and adds
+    // "club_id = <club>" to every query (TenantIdentifierResolver).
+    @TenantId
+    @Column(name = "club_id", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private UUID clubId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "rider_id", nullable = false, updatable = false)

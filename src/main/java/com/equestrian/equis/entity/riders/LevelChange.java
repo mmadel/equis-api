@@ -1,5 +1,9 @@
 package com.equestrian.equis.entity.riders;
 
+import lombok.Setter;
+import org.hibernate.annotations.TenantId;
+import jakarta.persistence.EntityListeners;
+import com.equestrian.equis.common.tenant.TenantGuard;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.levels.Level;
 import jakarta.persistence.Column;
@@ -22,6 +26,7 @@ import java.util.UUID;
 // One promotion or demotion of a rider. History only: rows are never updated or deleted.
 // The factory only protects the row; the level change rules turn bad input into proper errors first.
 @Entity
+@EntityListeners(TenantGuard.class)
 @Table(name = "level_change")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -32,6 +37,13 @@ public class LevelChange {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
+
+    // The club this row belongs to. Hibernate fills it from the current club on insert and adds
+    // "club_id = <club>" to every query (TenantIdentifierResolver).
+    @TenantId
+    @Column(name = "club_id", nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
+    private UUID clubId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "rider_id", nullable = false, updatable = false)

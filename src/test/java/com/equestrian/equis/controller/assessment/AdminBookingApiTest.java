@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.assessment;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -318,7 +319,7 @@ public class AdminBookingApiTest {
     // Case 13
     @Test
     void onlyTheAdminGetsIn() throws Exception {
-        String asTrainer = bearer(new AuthUser(ahmed, Role.TRAINER));
+        String asTrainer = bearer(new AuthUser(ahmed, Role.TRAINER, Club.DEFAULT_ID));
 
         mvc.perform(get(PATH))
                 .andExpect(status().isUnauthorized())
@@ -506,7 +507,7 @@ public class AdminBookingApiTest {
     }
 
     private MockHttpServletRequestBuilder asAdmin(MockHttpServletRequestBuilder request) {
-        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN)));
+        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID)));
     }
 
     private String bearer(AuthUser user) {

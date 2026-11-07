@@ -1,5 +1,7 @@
 package com.equestrian.equis.service.accounts;
 
+import com.equestrian.equis.common.tenant.TenantTransactions;
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -45,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EnableConfigurationProperties(AuthProperties.class)
-@Import({AuthService.class, AdminLockoutService.class, PasswordService.class, AuthTokenService.class,
+@Import({AuthService.class, AdminLockoutService.class, PasswordService.class, AuthTokenService.class, TenantTransactions.class,
         AccountLinkService.class, JwtService.class, TokenGenerator.class, JwtConfig.class, SecurityBeans.class,
         ClockConfig.class})
 public class AuthServiceTest {
@@ -238,8 +240,8 @@ public class AuthServiceTest {
     @Test
     void resetLinkChangesThePasswordAndSignsOutEverywhere() {
         Trainer sara = activeSara();
-        authTokenService.issue(Role.TRAINER, sara.getId(), true);
-        authTokenService.issue(Role.TRAINER, sara.getId(), false);
+        authTokenService.issue(Role.TRAINER, sara.getId(), Club.DEFAULT_ID, true);
+        authTokenService.issue(Role.TRAINER, sara.getId(), Club.DEFAULT_ID, false);
         entityManager.flush();
         assertThat(activeRefreshTokens(sara.getId())).isEqualTo(2);
         String raw = accountLinkService.create(sara, InvitePurpose.RESET);
@@ -255,7 +257,7 @@ public class AuthServiceTest {
     @Test
     void inviteLinkDoesNotRevokeSessions() {
         Trainer sara = activeSara();
-        authTokenService.issue(Role.TRAINER, sara.getId(), false);
+        authTokenService.issue(Role.TRAINER, sara.getId(), Club.DEFAULT_ID, false);
         String raw = accountLinkService.create(sara, InvitePurpose.INVITE);
 
         authService.acceptInvite(new InviteAcceptRequest(raw, "New@Password1"));

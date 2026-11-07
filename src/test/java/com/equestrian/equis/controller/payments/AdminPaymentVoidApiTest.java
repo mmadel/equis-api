@@ -1,5 +1,7 @@
 package com.equestrian.equis.controller.payments;
 
+import com.equestrian.equis.support.ClubThreads;
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -242,7 +244,7 @@ public class AdminPaymentVoidApiTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("unauthorized"));
         mvc.perform(post(path(p)).contentType(MediaType.APPLICATION_JSON).content(body)
-                        .header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(ahmed, Role.TRAINER))))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(ahmed, Role.TRAINER, Club.DEFAULT_ID))))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("forbidden"));
         assertThat(jdbc.queryForObject("select voided_at from payment where id = ?", Timestamp.class, p)).isNull();
@@ -268,7 +270,7 @@ public class AdminPaymentVoidApiTest {
     }
 
     private ResultActions admin(MockHttpServletRequestBuilder request) throws Exception {
-        return mvc.perform(request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(admin, Role.ADMIN))));
+        return mvc.perform(request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(admin, Role.ADMIN, Club.DEFAULT_ID))));
     }
 
     private String bearer(AuthUser user) {
@@ -301,7 +303,7 @@ public class AdminPaymentVoidApiTest {
     }
 
     private List<Integer> race(Request a, Request b) throws Exception {
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         CountDownLatch start = new CountDownLatch(1);
         try {
             Future<MvcResult> first = pool.submit(() -> {

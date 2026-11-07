@@ -1,5 +1,7 @@
 package com.equestrian.equis.controller.sessions;
 
+import com.equestrian.equis.support.ClubThreads;
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -379,12 +381,12 @@ public class FinishSessionApiTest {
 
     private MockHttpServletRequestBuilder as(UUID trainer, MockHttpServletRequestBuilder request) {
         return request.header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + jwtService.issue(new AuthUser(trainer, Role.TRAINER)).value());
+                "Bearer " + jwtService.issue(new AuthUser(trainer, Role.TRAINER, Club.DEFAULT_ID)).value());
     }
 
     private MockHttpServletRequestBuilder asAdmin(MockHttpServletRequestBuilder request) {
         return request.header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + jwtService.issue(new AuthUser(admin, Role.ADMIN)).value());
+                "Bearer " + jwtService.issue(new AuthUser(admin, Role.ADMIN, Club.DEFAULT_ID)).value());
     }
 
     private UUID trainer(String name) {
@@ -446,7 +448,7 @@ public class FinishSessionApiTest {
 
     // Both requests start together, without a test transaction, so each runs in its own.
     private List<MvcResult> raceResults(Request a, Request b) throws Exception {
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         CountDownLatch start = new CountDownLatch(1);
         try {
             Future<MvcResult> first = pool.submit(() -> {

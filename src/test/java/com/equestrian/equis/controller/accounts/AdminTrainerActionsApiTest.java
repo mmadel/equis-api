@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.accounts;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -155,7 +156,7 @@ class AdminTrainerActionsApiTest {
     @Test
     void resetPasswordSendsALinkAndChangesNothingElse() throws Exception {
         Trainer ahmed = trainer("Ahmed Said", TrainerStatus.ACTIVE);
-        authTokenService.issue(Role.TRAINER, ahmed.getId(), false);
+        authTokenService.issue(Role.TRAINER, ahmed.getId(), Club.DEFAULT_ID, false);
 
         action(post(PATH + "/" + ahmed.getId() + "/reset-password"))
                 .andExpect(status().isOk())
@@ -280,7 +281,7 @@ class AdminTrainerActionsApiTest {
     @Test
     void aTrainerTokenIsForbiddenOnEveryAction() throws Exception {
         Trainer ahmed = trainer("Ahmed Said", TrainerStatus.ACTIVE);
-        String asTrainer = "Bearer " + jwtService.issue(new AuthUser(ahmed.getId(), Role.TRAINER)).value();
+        String asTrainer = "Bearer " + jwtService.issue(new AuthUser(ahmed.getId(), Role.TRAINER, Club.DEFAULT_ID)).value();
 
         for (Function<String, MockHttpServletRequestBuilder> request : ACTIONS) {
             mvc.perform(request.apply(ahmed.getId().toString()).header(HttpHeaders.AUTHORIZATION, asTrainer))
@@ -311,7 +312,7 @@ class AdminTrainerActionsApiTest {
 
     private MockHttpServletRequestBuilder asAdmin(MockHttpServletRequestBuilder request) {
         return request.header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + jwtService.issue(new AuthUser(UUID.randomUUID(), Role.ADMIN)).value());
+                "Bearer " + jwtService.issue(new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID)).value());
     }
 
     private List<AccountLinkCreatedEvent> linkEvents() {

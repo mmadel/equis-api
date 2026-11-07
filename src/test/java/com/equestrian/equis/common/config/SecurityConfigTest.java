@@ -1,5 +1,6 @@
 package com.equestrian.equis.common.config;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
@@ -136,6 +137,6 @@ public class SecurityConfigTest {
     }
 
     private String bearer(Role role) {
-        return "Bearer " + jwtService.issue(new AuthUser(ID, role)).value();
+        return "Bearer " + jwtService.issue(new AuthUser(ID, role, Club.DEFAULT_ID)).value();
     }
 }

@@ -1,5 +1,6 @@
 package com.equestrian.equis.service.accounts;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.common.config.ClockConfig;
 import com.equestrian.equis.common.config.JwtConfig;
 import com.equestrian.equis.common.config.SecurityBeans;
@@ -20,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class JwtServiceTest {
     private static final AuthUser TRAINER =
-            new AuthUser(UUID.fromString("00000000-0000-0000-0000-000000000001"), Role.TRAINER);
+            new AuthUser(UUID.fromString("00000000-0000-0000-0000-000000000001"), Role.TRAINER, Club.DEFAULT_ID);
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withInitializer(new ConfigDataApplicationContextInitializer())

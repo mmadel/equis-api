@@ -1,5 +1,6 @@
 package com.equestrian.equis.service.assessment;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -94,7 +95,7 @@ public class RecordResultServiceTest {
     @BeforeEach
     void setUp() {
         sara = trainerRepository.saveAndFlush(trainer("Sara Ali", "01999990001", "record-result-test-sara@example.com"));
-        saraUser = new AuthUser(sara.getId(), Role.TRAINER);
+        saraUser = new AuthUser(sara.getId(), Role.TRAINER, Club.DEFAULT_ID);
     }
 
     @Test
@@ -150,7 +151,7 @@ public class RecordResultServiceTest {
     void theAdminMayRecordAnyBooking() {
         AssessmentBooking booking = startedBooking(null);
 
-        ResultRecorded result = service.record(booking.getId(), new AuthUser(UUID.randomUUID(), Role.ADMIN),
+        ResultRecorded result = service.record(booking.getId(), new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID),
                 new RecordResultRequest(true, 1, null));
 
         assertThat(result.status()).isEqualTo("placed");
@@ -193,7 +194,7 @@ public class RecordResultServiceTest {
         AssessmentBooking booking = startedBooking(null);
         Trainer omar = trainerRepository.saveAndFlush(trainer("Omar Nabil", "01999990002", "record-result-test-omar@example.com"));
 
-        assertRefused(() -> service.record(booking.getId(), new AuthUser(omar.getId(), Role.TRAINER),
+        assertRefused(() -> service.record(booking.getId(), new AuthUser(omar.getId(), Role.TRAINER, Club.DEFAULT_ID),
                 new RecordResultRequest(false, null, null)), HttpStatus.FORBIDDEN, ErrorCodes.NOT_ASSESSOR);
     }
 

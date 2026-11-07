@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.riders;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -223,7 +224,7 @@ public class AdminRiderBalanceApiTest {
     @Test
     void aTrainerGetsNeither() throws Exception {
         for (String path : new String[]{"/admin/riders", "/admin/riders/" + sara + "/payments"}) {
-            mvc.perform(get(path).header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(ahmed, Role.TRAINER))))
+            mvc.perform(get(path).header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(ahmed, Role.TRAINER, Club.DEFAULT_ID))))
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.code").value("forbidden"));
         }
@@ -234,7 +235,7 @@ public class AdminRiderBalanceApiTest {
     }
 
     private ResultActions list(MockHttpServletRequestBuilder request) throws Exception {
-        return mvc.perform(request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(admin, Role.ADMIN))));
+        return mvc.perform(request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(admin, Role.ADMIN, Club.DEFAULT_ID))));
     }
 
     private String bearer(AuthUser user) {

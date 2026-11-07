@@ -1,5 +1,6 @@
 package com.equestrian.equis.service.riders;
 
+import com.equestrian.equis.support.ClubThreads;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -307,7 +308,7 @@ public class LevelChangeServiceTest {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         CountDownLatch changed = new CountDownLatch(1);
         CountDownLatch saveStarted = new CountDownLatch(1);
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         try {
             Future<LevelChanged> change = pool.submit(() -> tx.execute(status -> {
                 LevelChanged result = service.change(sara.getId(), ahmed.getId(), promote());
@@ -359,7 +360,7 @@ public class LevelChangeServiceTest {
     // Starts both calls at once; each result is the return value or the thrown exception.
     private List<Object> race(Callable<?> first, Callable<?> second) throws Exception {
         CountDownLatch start = new CountDownLatch(1);
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         try {
             Future<Object> a = pool.submit(() -> {
                 await(start);

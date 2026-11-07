@@ -1,5 +1,6 @@
 package com.equestrian.equis.repository.accounts;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import com.equestrian.equis.EquisApiApplication;
 import org.junit.jupiter.api.Test;
@@ -124,8 +125,11 @@ class ProdDemoDataCleanupTest {
         return postgres.getJdbcUrl().replace("/" + postgres.getDatabaseName(), "/" + name);
     }
 
+    // Checks by hand see every club's rows, and rows inserted without club_id go to the default club
+    // (row-level security and the club_id default, V24). The app under test sets its own values per connection.
     private static JdbcTemplate jdbc(String url) {
-        return new JdbcTemplate(new DriverManagerDataSource(url, postgres.getUsername(), postgres.getPassword()));
+        String seeingAllClubs = url + "?options=-c%20app.bypass_rls%3Don%20-c%20app.club_id%3D" + Club.DEFAULT_ID;
+        return new JdbcTemplate(new DriverManagerDataSource(seeingAllClubs, postgres.getUsername(), postgres.getPassword()));
     }
 
     private static long count(JdbcTemplate db, String table) {

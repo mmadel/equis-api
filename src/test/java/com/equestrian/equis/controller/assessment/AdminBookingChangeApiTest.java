@@ -1,5 +1,7 @@
 package com.equestrian.equis.controller.assessment;
 
+import com.equestrian.equis.support.ClubThreads;
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -717,7 +719,7 @@ public class AdminBookingChangeApiTest {
     // Like race, for calls that report their own outcome ("ok" or a code).
     private static List<String> raceOutcomes(Callable<String> first, Callable<String> second) throws Exception {
         CountDownLatch start = new CountDownLatch(1);
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = ClubThreads.pool(2);
         try {
             Future<String> a = pool.submit(() -> {
                 start.await(10, TimeUnit.SECONDS);
@@ -749,11 +751,11 @@ public class AdminBookingChangeApiTest {
     }
 
     private MockHttpServletRequestBuilder asAdmin(MockHttpServletRequestBuilder request) {
-        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN)));
+        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(UUID.randomUUID(), Role.ADMIN, Club.DEFAULT_ID)));
     }
 
     private MockHttpServletRequestBuilder asTrainer(MockHttpServletRequestBuilder request, UUID trainer) {
-        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(trainer, Role.TRAINER)));
+        return request.header(HttpHeaders.AUTHORIZATION, bearer(new AuthUser(trainer, Role.TRAINER, Club.DEFAULT_ID)));
     }
 
     private String bearer(AuthUser user) {

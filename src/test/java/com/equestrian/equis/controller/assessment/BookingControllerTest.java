@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.assessment;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.common.config.ClockConfig;
 import com.equestrian.equis.common.config.JwtConfig;
 import com.equestrian.equis.common.config.SecurityBeans;
@@ -48,7 +49,7 @@ public class BookingControllerTest {
     private static final UUID BOOKING_ID = UUID.fromString("00000000-0000-0000-0000-0000000000b1");
     private static final UUID RIDER_ID = UUID.fromString("00000000-0000-0000-0000-0000000000d1");
     private static final String PATH = "/me/bookings/" + BOOKING_ID + "/result";
-    private static final AuthUser ME = new AuthUser(TRAINER_ID, Role.TRAINER);
+    private static final AuthUser ME = new AuthUser(TRAINER_ID, Role.TRAINER, Club.DEFAULT_ID);
     private static final String PLACED = """
             {"attended": true, "levelId": 3, "notes": "Good seat"}
             """;
@@ -146,6 +147,6 @@ public class BookingControllerTest {
     }
 
     private String bearer(Role role) {
-        return "Bearer " + jwtService.issue(new AuthUser(TRAINER_ID, role)).value();
+        return "Bearer " + jwtService.issue(new AuthUser(TRAINER_ID, role, Club.DEFAULT_ID)).value();
     }
 }

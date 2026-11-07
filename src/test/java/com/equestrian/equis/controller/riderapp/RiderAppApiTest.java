@@ -1,5 +1,6 @@
 package com.equestrian.equis.controller.riderapp;
 
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -412,7 +413,7 @@ class RiderAppApiTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("forbidden"));
         mvc.perform(get("/rider/me").header(HttpHeaders.AUTHORIZATION,
-                        "Bearer " + jwtService.issue(new AuthUser(admin, Role.ADMIN)).value()))
+                        "Bearer " + jwtService.issue(new AuthUser(admin, Role.ADMIN, Club.DEFAULT_ID)).value()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("forbidden"));
         mvc.perform(get("/rider/me"))
@@ -452,12 +453,12 @@ class RiderAppApiTest {
 
     private MockHttpServletRequestBuilder asRider(UUID rider, MockHttpServletRequestBuilder request) {
         return request.header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + jwtService.issue(new AuthUser(rider, Role.RIDER)).value());
+                "Bearer " + jwtService.issue(new AuthUser(rider, Role.RIDER, Club.DEFAULT_ID)).value());
     }
 
     private MockHttpServletRequestBuilder asTrainer(UUID trainer, MockHttpServletRequestBuilder request) {
         return request.header(HttpHeaders.AUTHORIZATION,
-                "Bearer " + jwtService.issue(new AuthUser(trainer, Role.TRAINER)).value());
+                "Bearer " + jwtService.issue(new AuthUser(trainer, Role.TRAINER, Club.DEFAULT_ID)).value());
     }
 
     private UUID trainer(String name) {

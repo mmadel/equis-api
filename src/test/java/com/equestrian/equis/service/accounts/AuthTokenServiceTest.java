@@ -1,5 +1,7 @@
 package com.equestrian.equis.service.accounts;
 
+import com.equestrian.equis.common.tenant.TenantTransactions;
+import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -35,7 +37,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EnableConfigurationProperties(AuthProperties.class)
-@Import({AuthTokenService.class, JwtService.class, TokenGenerator.class, JwtConfig.class, ClockConfig.class})
+@Import({AuthTokenService.class, TenantTransactions.class, JwtService.class, TokenGenerator.class, JwtConfig.class,
+        ClockConfig.class})
 public class AuthTokenServiceTest {
     // Seeded by V4 as an active trainer.
     private static final UUID TRAINER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
@@ -63,7 +66,7 @@ public class AuthTokenServiceTest {
 
     @Test
     void issueReturnsAnAccessTokenForThatPersonAndRole() {
-        AuthTokens tokens = authTokenService.issue(Role.TRAINER, TRAINER_ID, false);
+        AuthTokens tokens = authTokenService.issue(Role.TRAINER, TRAINER_ID, Club.DEFAULT_ID, false);
 
         Jwt jwt = jwtDecoder.decode(tokens.accessToken());
         assertThat(jwt.getSubject()).isEqualTo(TRAINER_ID.toString());
@@ -74,7 +77,7 @@ public class AuthTokenServiceTest {
 
     @Test
     void issueStoresOnlyTheHashOfTheRefreshToken() {
-        AuthTokens tokens = authTokenService.issue(Role.ADMIN, ADMIN_ID, false);
+        AuthTokens tokens = authTokenService.issue(Role.ADMIN, ADMIN_ID, Club.DEFAULT_ID, false);
 
         RefreshToken stored = stored(tokens);
         assertThat(stored.getTokenHash()).isNotEqualTo(tokens.refreshToken());
@@ -87,8 +90,8 @@ public class AuthTokenServiceTest {
     void refreshTokenLastsLongerWithRememberMe() {
         Instant before = Instant.now();
 
-        RefreshToken normal = stored(authTokenService.issue(Role.TRAINER, TRAINER_ID, false));
-        RefreshToken remembered = stored(authTokenService.issue(Role.TRAINER, TRAINER_ID, true));
+        RefreshToken normal = stored(authTokenService.issue(Role.TRAINER, TRAINER_ID, Club.DEFAULT_ID, false));
+        RefreshToken remembered = stored(authTokenService.issue(Role.TRAINER, TRAINER_ID, Club.DEFAULT_ID, true));
 
         Instant after = Instant.now();
         assertThat(normal.isRememberMe()).isFalse();
@@ -99,7 +102,7 @@ public class AuthTokenServiceTest {
 
     @Test
     void rotateRevokesTheOldTokenAndReturnsANewPair() {
-        AuthTokens first = authTokenService.issue(Role.TRAINER, TRAINER_ID, true);
+        AuthTokens first = authTokenService.issue(Role.TRAINER, TRAINER_ID, Club.DEFAULT_ID, true);
 
         AuthTokens second = authTokenService.rotate(first.refreshToken());
 
@@ -117,7 +120,7 @@ public class AuthTokenServiceTest {
 
     @Test
     void rotateRejectsATokenThatWasAlreadyUsed() {
-        AuthTokens first = authTokenService.issue(Role.TRAINER, TRAINER_ID, false);
+        AuthTokens first = authTokenService.issue(Role.TRAINER, TRAINER_ID, Club.DEFAULT_ID, false);
         authTokenService.rotate(first.refreshToken());
 
         assertInvalidRefreshToken(first.refreshToken());
@@ -132,7 +135,7 @@ public class AuthTokenServiceTest {
 
     @Test
     void rotateRejectsAnExpiredToken() {
-        AuthTokens tokens = authTokenService.issue(Role.TRAINER, TRAINER_ID, false);
+        AuthTokens tokens = authTokenService.issue(Role.TRAINER, TRAINER_ID, Club.DEFAULT_ID, false);
         entityManager.flush();
         jdbcTemplate.update("UPDATE refresh_token SET created_at = now() - interval '2 days', "
                 + "expires_at = now() - interval '1 day' WHERE token_hash = ?", tokenGenerator.hash(tokens.refreshToken()));
@@ -143,7 +146,7 @@ public class AuthTokenServiceTest {
 
     @Test
     void rotateRejectsADisabledTrainerAndLeavesTheTokenAlone() {
-        AuthTokens tokens = authTokenService.issue(Role.TRAINER, TRAINER_ID, false);
+        AuthTokens tokens = authTokenService.issue(Role.TRAINER, TRAINER_ID, Club.DEFAULT_ID, false);
         entityManager.flush();
         jdbcTemplate.update("UPDATE trainer SET status = 'disabled' WHERE id = ?", TRAINER_ID);
 
@@ -158,7 +161,7 @@ public class AuthTokenServiceTest {
 
     @Test
     void rotateWorksForTheAdmin() {
-        AuthTokens first = authTokenService.issue(Role.ADMIN, ADMIN_ID, false);
+        AuthTokens first = authTokenService.issue(Role.ADMIN, ADMIN_ID, Club.DEFAULT_ID, false);
 
         AuthTokens second = authTokenService.rotate(first.refreshToken());
 
@@ -168,9 +171,9 @@ public class AuthTokenServiceTest {
 
     @Test
     void revokeAllCancelsEveryTokenOfThatPersonOnly() {
-        AuthTokens phone = authTokenService.issue(Role.TRAINER, TRAINER_ID, false);
-        AuthTokens browser = authTokenService.issue(Role.TRAINER, TRAINER_ID, true);
-        AuthTokens admin = authTokenService.issue(Role.ADMIN, ADMIN_ID, false);
+        AuthTokens phone = authTokenService.issue(Role.TRAINER, TRAINER_ID, Club.DEFAULT_ID, false);
+        AuthTokens browser = authTokenService.issue(Role.TRAINER, TRAINER_ID, Club.DEFAULT_ID, true);
+        AuthTokens admin = authTokenService.issue(Role.ADMIN, ADMIN_ID, Club.DEFAULT_ID, false);
         entityManager.flush();
 
         authTokenService.revokeAll(Role.TRAINER, TRAINER_ID);
@@ -184,7 +187,7 @@ public class AuthTokenServiceTest {
 
     @Test
     void toStringDoesNotExposeTheTokens() {
-        AuthTokens tokens = authTokenService.issue(Role.TRAINER, TRAINER_ID, false);
+        AuthTokens tokens = authTokenService.issue(Role.TRAINER, TRAINER_ID, Club.DEFAULT_ID, false);
 
         assertThat(tokens.toString()).doesNotContain(tokens.accessToken(), tokens.refreshToken());
     }

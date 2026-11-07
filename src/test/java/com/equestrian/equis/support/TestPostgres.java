@@ -50,6 +50,12 @@ public final class TestPostgres {
                 + SERVER.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT) + "/" + databaseName;
     }
 
+    // The same database for code that runs SQL by hand (migration tests): every connection sees every club's rows,
+    // as Flyway does (row-level security, V24).
+    public String getJdbcUrlSeeingAllClubs() {
+        return getJdbcUrl() + "?options=-c%20app.bypass_rls%3Don";
+    }
+
     public String getDatabaseName() {
         return databaseName;
     }

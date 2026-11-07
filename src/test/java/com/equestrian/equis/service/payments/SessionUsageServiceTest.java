@@ -1,5 +1,6 @@
 package com.equestrian.equis.service.payments;
 
+import com.equestrian.equis.support.ClubThreads;
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -247,10 +248,11 @@ public class SessionUsageServiceTest {
                 service.useOneSessionEach(session, List.of(sara), NOW);
                 locked.countDown();
                 await(release);
-            }));
+            }), ClubThreads.inDefaultClub());
             assertThat(locked.await(10, TimeUnit.SECONDS)).isTrue();
             CompletableFuture<Void> voiding = CompletableFuture.runAsync(() ->
-                    adminPayments.voidPayment(only.getId(), new VoidPaymentRequest("Entered by mistake"), admin));
+                    adminPayments.voidPayment(only.getId(), new VoidPaymentRequest("Entered by mistake"), admin),
+                    ClubThreads.inDefaultClub());
             Thread.sleep(500);
             assertThat(voiding).as("the void waits for the deduction's lock").isNotDone();
 
@@ -281,10 +283,10 @@ public class SessionUsageServiceTest {
                 adminPayments.voidPayment(only.getId(), new VoidPaymentRequest("Entered by mistake"), admin);
                 locked.countDown();
                 await(release);
-            }));
+            }), ClubThreads.inDefaultClub());
             assertThat(locked.await(10, TimeUnit.SECONDS)).isTrue();
             CompletableFuture<Void> deduction = CompletableFuture.runAsync(() -> inTransaction(() ->
-                    service.useOneSessionEach(session, List.of(sara), NOW)));
+                    service.useOneSessionEach(session, List.of(sara), NOW)), ClubThreads.inDefaultClub());
             Thread.sleep(500);
             assertThat(deduction).as("the deduction waits for the void's lock").isNotDone();
 

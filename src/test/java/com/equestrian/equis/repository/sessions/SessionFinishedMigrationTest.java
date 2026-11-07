@@ -23,7 +23,7 @@ class SessionFinishedMigrationTest {
     @Test
     void laterDaySeatsAreRemovedTodaysAndPastOnesStay() {
         DriverManagerDataSource dataSource =
-                new DriverManagerDataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
+                new DriverManagerDataSource(postgres.getJdbcUrlSeeingAllClubs(), postgres.getUsername(), postgres.getPassword());
         JdbcTemplate db = new JdbcTemplate(dataSource);
 
         flyway(dataSource, "19").migrate();

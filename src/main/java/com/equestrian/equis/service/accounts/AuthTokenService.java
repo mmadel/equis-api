@@ -5,6 +5,7 @@ import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
+import com.equestrian.equis.common.tenant.TenantTransactions;
 import com.equestrian.equis.dto.accounts.AuthTokens;
 import com.equestrian.equis.entity.accounts.RefreshToken;
 import com.equestrian.equis.entity.accounts.SubjectType;
@@ -32,33 +33,42 @@ public class AuthTokenService {
     private final JwtService jwtService;
     private final TokenGenerator tokenGenerator;
     private final AuthProperties properties;
+    private final TenantTransactions tenants;
     private final Clock clock;
 
     public AuthTokenService(RefreshTokenRepository refreshTokenRepository, TrainerRepository trainerRepository,
                             RiderRepository riderRepository, JwtService jwtService, TokenGenerator tokenGenerator,
-                            AuthProperties properties, Clock clock) {
+                            AuthProperties properties, TenantTransactions tenants, Clock clock) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.trainerRepository = trainerRepository;
         this.riderRepository = riderRepository;
         this.jwtService = jwtService;
         this.tokenGenerator = tokenGenerator;
         this.properties = properties;
+        this.tenants = tenants;
         this.clock = clock;
     }
 
+    // clubId is the subject's club: it goes into the access token (cid) and onto the refresh row.
     @Transactional
-    public AuthTokens issue(Role role, UUID subjectId, boolean rememberMe) {
-        return create(role, subjectId, rememberMe).tokens();
+    public AuthTokens issue(Role role, UUID subjectId, UUID clubId, boolean rememberMe) {
+        return create(role, subjectId, clubId, rememberMe).tokens();
     }
 
     // Every failure before the disabled check gives the same answer, so a caller cannot learn why a token was refused.
     // Every refusal happens before anything is written, except the inactive rider's revoke, which must stay.
-    @Transactional(noRollbackFor = ApiException.class)
+    // The refresh row tells the club first (it has no RLS); the rotation then runs in that club, in one transaction.
     public AuthTokens rotate(String rawRefresh) {
         if (rawRefresh == null || rawRefresh.isBlank()) {
             throw invalidRefreshToken();
         }
-        RefreshToken old = refreshTokenRepository.findByTokenHashForUpdate(tokenGenerator.hash(rawRefresh))
+        String hash = tokenGenerator.hash(rawRefresh);
+        UUID club = refreshTokenRepository.findClubIdByTokenHash(hash).orElse(null);
+        return tenants.inClubKeepingWritesOnApiError(club, () -> rotateInClub(hash));
+    }
+
+    private AuthTokens rotateInClub(String hash) {
+        RefreshToken old = refreshTokenRepository.findByTokenHashForUpdate(hash)
                 .orElseThrow(AuthTokenService::invalidRefreshToken);
         // Read the time after taking the lock, so it is never earlier than the token's created_at.
         Instant now = clock.instant();
@@ -83,7 +93,7 @@ public class AuthTokenService {
         }
 
         // The new token starts a fresh lifetime of the same kind the person chose at sign-in.
-        Issued issued = create(role, old.getSubjectId(), old.isRememberMe());
+        Issued issued = create(role, old.getSubjectId(), old.getClubId(), old.isRememberMe());
         old.setRevokedAt(now);
         old.setReplacedBy(issued.refreshToken());
         return issued.tokens();
@@ -94,19 +104,20 @@ public class AuthTokenService {
         refreshTokenRepository.revokeAllActive(role.toSubjectType(), subjectId, clock.instant());
     }
 
-    private Issued create(Role role, UUID subjectId, boolean rememberMe) {
+    private Issued create(Role role, UUID subjectId, UUID clubId, boolean rememberMe) {
         GeneratedToken generated = tokenGenerator.generate();
         Duration ttl = rememberMe ? properties.refresh().rememberTtl() : properties.refresh().ttl();
 
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setSubjectType(role.toSubjectType());
         refreshToken.setSubjectId(subjectId);
+        refreshToken.setClubId(clubId);
         refreshToken.setTokenHash(generated.hash());
         refreshToken.setRememberMe(rememberMe);
         refreshToken.setExpiresAt(clock.instant().plus(ttl));
         refreshToken = refreshTokenRepository.save(refreshToken);
 
-        AccessToken accessToken = jwtService.issue(new AuthUser(subjectId, role));
+        AccessToken accessToken = jwtService.issue(new AuthUser(subjectId, role, clubId));
         long expiresIn = properties.jwt().accessTtl().toSeconds();
         return new Issued(refreshToken, new AuthTokens(accessToken.value(), expiresIn, generated.raw(), role));
     }

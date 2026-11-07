@@ -2,6 +2,7 @@ package com.equestrian.equis.common.config;
 
 import com.equestrian.equis.common.security.AuthUserConverter;
 import com.equestrian.equis.common.security.Role;
+import com.equestrian.equis.common.tenant.TenantFilter;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,6 +13,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
@@ -61,7 +63,9 @@ public class SecurityConfig {
                         .accessDeniedHandler(deniedHandler))
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(entryPoint)
-                        .accessDeniedHandler(deniedHandler));
+                        .accessDeniedHandler(deniedHandler))
+                // Right after the JWT is read: the rest of the request runs in the signed-in user's club.
+                .addFilterAfter(new TenantFilter(), BearerTokenAuthenticationFilter.class);
         return http.build();
     }
 
