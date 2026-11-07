@@ -146,7 +146,7 @@ public class AssessmentRulesTest {
 
         assertThatThrownBy(() -> memberRepository.saveAndFlush(TestMembers.member("Hady", "01011111111")))
                 .isInstanceOfSatisfying(DataIntegrityViolationException.class,
-                        ex -> assertThat(Constraints.nameOf(ex)).contains("uq_member_phone"));
+                        ex -> assertThat(Constraints.nameOf(ex)).contains("uq_member_club_phone"));
     }
 
     // ---- result ----

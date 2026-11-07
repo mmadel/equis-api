@@ -65,8 +65,8 @@ public class MemberBookingService {
             return bookings.saveAndFlush(AssessmentBooking.book(member, slot, assessor));
         } catch (DataIntegrityViolationException e) {
             throw switch (Constraints.nameOf(e).orElse("")) {
-                case "uq_member_phone" -> rules.phoneTaken(existing(() -> members.findByPhone(req.phone())));
-                case "uq_member_email" -> rules.emailTaken(existing(() -> members.findByEmail(req.email())));
+                case "uq_member_club_phone" -> rules.phoneTaken(existing(() -> members.findByPhone(req.phone())));
+                case "uq_member_club_email" -> rules.emailTaken(existing(() -> members.findByEmail(req.email())));
                 case "uq_assessment_booking_active_member" -> rules.memberAlreadyBooked(slot);
                 default -> e;
             };

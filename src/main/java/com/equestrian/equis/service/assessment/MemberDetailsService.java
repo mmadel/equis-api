@@ -76,8 +76,8 @@ public class MemberDetailsService {
             members.saveAndFlush(member);
         } catch (DataIntegrityViolationException e) {
             throw switch (Constraints.nameOf(e).orElse("")) {
-                case "uq_member_phone" -> rules.phoneTaken(existing(() -> members.findByPhone(req.phone())));
-                case "uq_member_email" -> rules.emailTaken(existing(() -> members.findByEmail(req.email())));
+                case "uq_member_club_phone" -> rules.phoneTaken(existing(() -> members.findByPhone(req.phone())));
+                case "uq_member_club_email" -> rules.emailTaken(existing(() -> members.findByEmail(req.email())));
                 default -> e;
             };
         }

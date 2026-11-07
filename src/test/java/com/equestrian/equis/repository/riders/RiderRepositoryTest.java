@@ -151,7 +151,7 @@ public class RiderRepositoryTest {
 
         assertThatThrownBy(() -> riderRepository.saveAndFlush(second))
                 .isInstanceOf(DataIntegrityViolationException.class)
-                .hasMessageContaining("uq_rider_email");
+                .hasMessageContaining("uq_rider_club_email");
     }
 
     // E15 case 4

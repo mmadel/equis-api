@@ -45,12 +45,13 @@ class RiderAccountMigrationTest {
                 Integer.class)).isZero();
     }
 
-    // The admin seed (V5) needs its placeholders; the values are test stand-ins.
+    // The admin seed (V5) and the default club (V23) need their placeholders; the values are test stand-ins.
     private static Flyway flyway(DriverManagerDataSource dataSource, String target) {
         return Flyway.configure()
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
-                .placeholders(Map.of("adminEmail", "admin@example.com", "adminPasswordHash", "not-a-real-hash"))
+                .placeholders(Map.of("adminEmail", "admin@example.com", "adminPasswordHash", "not-a-real-hash",
+                        "defaultClubCode", "school", "defaultClubName", "Riding School"))
                 .target(target)
                 .load();
     }
