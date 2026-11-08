@@ -26,6 +26,7 @@ import com.equestrian.equis.service.sessions.AssignmentService;
 import com.equestrian.equis.service.sessions.FinishSessionService;
 import com.equestrian.equis.service.sessions.SessionDetail;
 import com.equestrian.equis.service.sessions.SessionDetailService;
+import com.equestrian.equis.support.ActiveClubAccess;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
@@ -58,7 +59,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = MySessionsController.class)
-@Import({SecurityConfig.class, SecurityBeans.class, ClockConfig.class, JwtConfig.class, JwtService.class})
+@Import({SecurityConfig.class, ActiveClubAccess.Config.class, SecurityBeans.class, ClockConfig.class, JwtConfig.class, JwtService.class})
 public class MySessionsControllerTest {
     private static final UUID TRAINER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID OTHER_TRAINER_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");

@@ -24,6 +24,7 @@ import com.equestrian.equis.service.evaluations.EvaluationHistoryQuery;
 import com.equestrian.equis.service.riders.LevelChangeService;
 import com.equestrian.equis.service.riders.MyRidersQueryService;
 import com.equestrian.equis.service.riders.RiderLevelQueryService;
+import com.equestrian.equis.support.ActiveClubAccess;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = MyRidersController.class)
-@Import({SecurityConfig.class, SecurityBeans.class, ClockConfig.class, JwtConfig.class, JwtService.class})
+@Import({SecurityConfig.class, ActiveClubAccess.Config.class, SecurityBeans.class, ClockConfig.class, JwtConfig.class, JwtService.class})
 public class MyRidersControllerTest {
     private static final String PATH = "/me/riders";
     private static final UUID TRAINER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");

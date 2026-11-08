@@ -20,6 +20,11 @@ import com.equestrian.equis.repository.accounts.AdminAccountRepository;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.club.ClubRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
+import com.equestrian.equis.service.platform.AccessReason;
+import com.equestrian.equis.service.platform.AccessState;
+import com.equestrian.equis.service.platform.ClubAccess;
+import com.equestrian.equis.service.platform.ClubAccessService;
+import com.equestrian.equis.service.platform.ClubBlockedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -40,11 +45,13 @@ public class AuthService {
     private final AccountLinkService links;
     private final ClubRepository clubs;
     private final TenantTransactions tenants;
+    private final ClubAccessService clubAccess;
     private final Clock clock;
 
     public AuthService(AdminAccountRepository admins, TrainerRepository trainers, RiderRepository riders,
                        AdminLockoutService lockout, PasswordService passwords, AuthTokenService tokens,
-                       AccountLinkService links, ClubRepository clubs, TenantTransactions tenants, Clock clock) {
+                       AccountLinkService links, ClubRepository clubs, TenantTransactions tenants,
+                       ClubAccessService clubAccess, Clock clock) {
         this.admins = admins;
         this.trainers = trainers;
         this.riders = riders;
@@ -54,6 +61,7 @@ public class AuthService {
         this.links = links;
         this.clubs = clubs;
         this.tenants = tenants;
+        this.clubAccess = clubAccess;
         this.clock = clock;
     }
 
@@ -68,11 +76,27 @@ public class AuthService {
             throw invalidCredentials();
         }
         String login = request.login().trim();
-        AuthTokens tokens = tenants.inClubKeepingWritesOnApiError(club.get().getId(), () -> loginInClub(login, request));
-        return tokens.withClub(club.get());
+        // Read first but only acted on once the password is right, so nobody learns a club is blocked without it.
+        ClubAccess access = clubAccess.forClub(club.get().getId());
+        AuthTokens tokens;
+        try {
+            tokens = tenants.inClubKeepingWritesOnApiError(club.get().getId(),
+                    () -> loginInClub(login, request, access));
+        } catch (BlockedSignIn blocked) {
+            // Not an ApiException inside, so the sign-in's writes (failed-attempt counter, last active) roll back.
+            throw new ClubBlockedException(blocked.reason);
+        }
+        return tokens.withClub(club.get()).withAccess(access);
     }
 
-    private AuthTokens loginInClub(String login, LoginRequest request) {
+    // Called right after the password is verified, before anything is issued.
+    private static void requireNotBlocked(ClubAccess access) {
+        if (access.state() == AccessState.BLOCKED) {
+            throw new BlockedSignIn(access.reason());
+        }
+    }
+
+    private AuthTokens loginInClub(String login, LoginRequest request, ClubAccess access) {
         Optional<Trainer> found;
 
         if (login.contains("@")) {
@@ -87,6 +111,7 @@ public class AuthService {
                     throw invalidCredentials();
                 }
                 lockout.verifyPassword(admin.get(), request.password());
+                requireNotBlocked(access);
                 return tokens.issue(Role.ADMIN, admin.get().getId(), admin.get().getClubId(), request.rememberMe());
             }
             found = trainers.findByEmail(email);
@@ -94,7 +119,7 @@ public class AuthService {
             if (found.isEmpty()) {
                 Optional<Rider> rider = riders.findByEmail(email);
                 if (rider.isPresent()) {
-                    return riderLogin(rider.get(), request);
+                    return riderLogin(rider.get(), request, access);
                 }
             }
         } else {
@@ -104,7 +129,7 @@ public class AuthService {
             if (found.isEmpty() && phone.isPresent()) {
                 Optional<Rider> rider = riderByPhone(phone.get());
                 if (rider.isPresent()) {
-                    return riderLogin(rider.get(), request);
+                    return riderLogin(rider.get(), request, access);
                 }
             }
         }
@@ -122,6 +147,7 @@ public class AuthService {
             throw new ApiException(HttpStatus.FORBIDDEN, ErrorCodes.ACCOUNT_DISABLED,
                     "This account has been disabled.");
         }
+        requireNotBlocked(access);
 
         // The entity is managed, so this is saved when the transaction commits.
         trainer.setLastActiveAt(clock.instant());
@@ -134,13 +160,24 @@ public class AuthService {
         return candidates.size() == 1 ? Optional.of(candidates.get(0)) : Optional.empty();
     }
 
-    private AuthTokens riderLogin(Rider rider, LoginRequest request) {
+    private AuthTokens riderLogin(Rider rider, LoginRequest request, ClubAccess access) {
         // Null for an invited rider who has not set a password yet: the same answer and time as a wrong password.
         if (!passwords.matches(request.password(), rider.getPasswordHash())) {
             throw invalidCredentials();
         }
+        requireNotBlocked(access);
         rider.touch(clock.instant());
         return tokens.issue(Role.RIDER, rider.getId(), rider.getClubId(), request.rememberMe());
+    }
+
+    // Thrown inside the sign-in transaction so it rolls back; login turns it into ClubBlockedException.
+    private static final class BlockedSignIn extends RuntimeException {
+        private final AccessReason reason;
+
+        BlockedSignIn(AccessReason reason) {
+            super(null, null, false, false);
+            this.reason = reason;
+        }
     }
 
     private static ApiException invalidCredentials() {

@@ -2,10 +2,12 @@ package com.equestrian.equis.common.config;
 
 import com.equestrian.equis.common.security.AuthUserConverter;
 import com.equestrian.equis.common.security.Role;
+import com.equestrian.equis.common.tenant.ClubAccessFilter;
 import com.equestrian.equis.common.tenant.TenantFilter;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
+import com.equestrian.equis.service.platform.ClubAccessService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,6 +46,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             AuthUserConverter authUserConverter,
+            ClubAccessService clubAccess,
             @Qualifier("handlerExceptionResolver") HandlerExceptionResolver exceptionResolver) throws Exception {
         // Both pass the exception to ApiExceptionHandler, so 401 and 403 use the usual ProblemDetail shape.
         AuthenticationEntryPoint entryPoint = (request, response, ex) ->
@@ -63,6 +66,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole(Role.ADMIN.name())
                         .requestMatchers("/me/**", "/assessment/**").hasRole(Role.TRAINER.name())
                         .requestMatchers("/rider/**").hasRole(Role.RIDER.name())
+                        .requestMatchers("/club/**").hasAnyRole(Role.ADMIN.name(), Role.TRAINER.name(), Role.RIDER.name())
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(bearerTokenResolver())
@@ -73,7 +77,9 @@ public class SecurityConfig {
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(deniedHandler))
                 // Right after the JWT is read: the rest of the request runs in the signed-in user's club.
-                .addFilterAfter(new TenantFilter(), BearerTokenAuthenticationFilter.class);
+                .addFilterAfter(new TenantFilter(), BearerTokenAuthenticationFilter.class)
+                // Then the club's access state: read-only clubs can only read, blocked clubs can't be used.
+                .addFilterAfter(new ClubAccessFilter(clubAccess, exceptionResolver), TenantFilter.class);
         return http.build();
     }
 

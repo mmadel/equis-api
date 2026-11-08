@@ -29,6 +29,8 @@ public class ErrorCodes {
     public static final String INVALID_CREDENTIALS   = "invalid_credentials";   // 401
     public static final String FORBIDDEN             = "forbidden";             // 403
     public static final String ACCOUNT_DISABLED      = "account_disabled";      // 403
+    public static final String SUBSCRIPTION_EXPIRED  = "subscription_expired";  // 403: read-only club, write request; endsAt
+    public static final String CLUB_BLOCKED          = "club_blocked";          // 403: blocked club; reason
     public static final String NOT_YOUR_RIDER     = "not_your_rider";     // 403
     public static final String NOT_ASSESSOR       = "not_assessor";       // 403
     public static final String SESSION_NOT_YOURS  = "session_not_yours";  // 403
