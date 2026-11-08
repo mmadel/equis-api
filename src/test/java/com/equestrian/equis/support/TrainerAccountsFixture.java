@@ -11,8 +11,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -35,12 +33,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 // Plays both sides of the trainer-account journeys (flow W-E) over HTTP: the admin on W4, the trainer on the
 // set-password page and in the app. Rows the API has no endpoint for (riders, sessions, bookings) go in with SQL.
-// The test class gives the context a MutableClock (@TestBean) and @Import(TrainerAccountsFixture.Config.class).
+// IntegrationTestBase gives the context a MutableClock (@TestBean) and imports TrainerAccountsFixture.Config.
 public class TrainerAccountsFixture {
     public static final ZoneId CAIRO = ZoneId.of("Africa/Cairo");
     // Every scenario starts on Friday 16 Oct 2026 at 10:00 school time.
     public static final Instant START = ZonedDateTime.of(2026, 10, 16, 10, 0, 0, 0, CAIRO).toInstant();
     public static final String TRAINERS = "/admin/trainers";
+    // The admin every test database is seeded with (spring.flyway.placeholders in the test properties).
     public static final String ADMIN_EMAIL = "trainer-accounts-admin@example.com";
     public static final String ADMIN_PASSWORD = "Admin@2026";
 
@@ -77,13 +76,6 @@ public class TrainerAccountsFixture {
         HibernatePropertiesCustomizer hibernateClock(Clock clock) {
             return properties -> properties.put("hibernate.testing.clock", clock);
         }
-    }
-
-    // Stands in for APP_ADMIN_EMAIL / APP_ADMIN_PASSWORD_HASH, so the admin can sign in through /auth/login.
-    public static void adminAccount(DynamicPropertyRegistry registry) {
-        String hash = new BCryptPasswordEncoder().encode(ADMIN_PASSWORD);
-        registry.add("spring.flyway.placeholders.adminEmail", () -> ADMIN_EMAIL);
-        registry.add("spring.flyway.placeholders.adminPasswordHash", () -> hash);
     }
 
     // For @BeforeEach: the start time, no emails, and no trainers (the seeded ones and sample riders go too).

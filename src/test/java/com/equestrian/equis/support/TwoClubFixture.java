@@ -96,7 +96,13 @@ public class TwoClubFixture {
         return clubs.get(b);
     }
 
-    // Built once per Spring context (each test class has its own database). Later calls return the same clubs.
+    public synchronized void forget() {
+        clubs.clear();
+        b = null;
+    }
+
+    // Built once per test class: later calls return the same clubs. Before the next class FreshDatabase puts the
+    // migrated rows back and calls forget(), so that class builds them again.
     public synchronized void build() {
         if (!clubs.isEmpty()) {
             return;
@@ -261,7 +267,7 @@ public class TwoClubFixture {
             this.tag = tag;
         }
 
-        // Phones and emails differ between the clubs; PerClubSignInTest covers clubs sharing a phone.
+        // Phones and emails differ between the clubs; PerClubSignInIT covers clubs sharing a phone.
         String phone(int n) {
             return "0105%s00000%d".formatted(tag.equals("A") ? "1" : "2", n);
         }
