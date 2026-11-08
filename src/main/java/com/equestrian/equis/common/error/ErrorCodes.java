@@ -54,6 +54,7 @@ public class ErrorCodes {
     public static final String TRIAL_CANNOT_BE_VOIDED = "trial_cannot_be_voided"; // 409
     public static final String SUBSCRIPTION_ALREADY_VOIDED = "subscription_already_voided"; // 409
     public static final String UPCOMING_SUBSCRIPTION_EXISTS = "upcoming_subscription_exists"; // 409: NOW while a renewal is queued
+    public static final String PLAN_LIMIT_REACHED = "plan_limit_reached"; // 409: resource, limit, used
     public static final String SEAT_TAKEN        = "seat_taken";         // 409
     public static final String CAPACITY_EXCEEDED  = "capacity_exceeded";  // 409
     public static final String ALREADY_BOOKED     = "already_booked";     // 409

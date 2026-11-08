@@ -2,6 +2,7 @@ package com.equestrian.equis.service.assessment;
 
 import com.equestrian.equis.support.TestPostgres;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ApiFieldError;
@@ -19,6 +20,7 @@ import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
 import com.equestrian.equis.repository.assessment.MemberRepository;
 import com.equestrian.equis.repository.levels.LevelRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
+import com.equestrian.equis.service.club.PlanLimitService;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
 import com.equestrian.equis.support.TestMembers;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -58,6 +60,9 @@ public class MemberBookingServiceTest {
         postgres.register(registry);
     }
 
+    // The plan limit has its own tests (PlanLimitApiTest); here it lets every intake through.
+    @MockitoBean
+    PlanLimitService limits;
     @Autowired
     MemberBookingService service;
     @Autowired

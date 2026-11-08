@@ -63,6 +63,7 @@ class EndpointIsolationTest {
             // ---- admin console
             list("GET", "/admin/assessment/slots"),
             list("GET", "/admin/bookings"),
+            list("GET", "/admin/club/usage"),
             list("GET", "/admin/evaluations/follow-up"),
             list("GET", "/admin/overview"),
             list("GET", "/admin/riders"),

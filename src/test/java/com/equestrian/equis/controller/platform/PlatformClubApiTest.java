@@ -327,7 +327,8 @@ class PlatformClubApiTest {
     @Test
     void theListShowsEveryClubWithItsPlanStateAndUsage() throws Exception {
         // The school admin sets up below, which needs a subscription; it is removed again before the list.
-        paidSubscription(Club.DEFAULT_ID, "BASIC", NOV_7.minus(Duration.ofDays(1)), NOV_7.plus(Duration.ofDays(20)));
+        // Pro, so the three invites stay under the plan's trainer limit (Basic allows 2).
+        paidSubscription(Club.DEFAULT_ID, "PRO", NOV_7.minus(Duration.ofDays(1)), NOV_7.plus(Duration.ofDays(20)));
         createClub("Cairo Equestrian", "cairo-eq", "Hany", HANY).andExpect(status().isCreated());
         UUID mona = fx.invite("Mona Fathy", "01000000001", "mona@example.com").id();
         fx.invite("Omar Adel", "01000000002", "omar@example.com");

@@ -25,6 +25,9 @@ public interface TrainerRepository extends JpaRepository<Trainer, UUID> {
 
     boolean existsByIdAndStatus(UUID id, TrainerStatus status);
 
+    // The plan limit counts trainers who aren't disabled (PlanLimitService).
+    long countByStatusNot(TrainerStatus status);
+
     // W3's trainer cards: the active and disabled trainers.
     List<Trainer> findByStatusIn(Collection<TrainerStatus> statuses);
 

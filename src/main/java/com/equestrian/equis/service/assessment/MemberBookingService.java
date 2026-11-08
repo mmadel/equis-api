@@ -9,6 +9,7 @@ import com.equestrian.equis.entity.sessions.Session;
 import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
 import com.equestrian.equis.repository.assessment.MemberRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
+import com.equestrian.equis.service.club.PlanLimitService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -27,16 +28,18 @@ public class MemberBookingService {
     private final MemberRepository members;
     private final AssessmentBookingRepository bookings;
     private final AssessmentRules rules;
+    private final PlanLimitService limits;
     private final TransactionTemplate freshRead;
     private final Clock clock;
 
     public MemberBookingService(SessionRepository sessions, MemberRepository members,
-                                AssessmentBookingRepository bookings, AssessmentRules rules,
+                                AssessmentBookingRepository bookings, AssessmentRules rules, PlanLimitService limits,
                                 PlatformTransactionManager transactionManager, Clock clock) {
         this.sessions = sessions;
         this.members = members;
         this.bookings = bookings;
         this.rules = rules;
+        this.limits = limits;
         this.clock = clock;
         this.freshRead = new TransactionTemplate(transactionManager);
         this.freshRead.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -48,6 +51,8 @@ public class MemberBookingService {
     @Transactional
     public AssessmentBooking registerAndBook(AdminNewMemberRequest req) {
         Instant now = clock.instant();
+        // First, so the club row is locked before anything else: two intakes can't both take the last place.
+        limits.checkCanAddPerson();
 
         // The lock makes the seat count safe against a second booking into the same slot at the same time.
         Session slot = sessions.findByIdForUpdate(req.slotId()).orElseThrow(rules::slotNotFound);
