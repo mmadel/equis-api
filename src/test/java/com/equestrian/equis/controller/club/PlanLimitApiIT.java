@@ -4,23 +4,16 @@ import com.equestrian.equis.common.tenant.TenantContext;
 import com.equestrian.equis.dto.accounts.AuthTokens;
 import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.ClubThreads;
-import com.equestrian.equis.support.MutableClock;
-import com.equestrian.equis.support.TestPostgres;
+import com.equestrian.equis.support.IntegrationTestBase;
 import com.equestrian.equis.support.TrainerAccountsFixture;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -28,7 +21,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Timestamp;
-import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -54,10 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // Basic (2 trainers, 50 riders) from 10 days before START to 20 days after; the four plans come from
 // ops/upsert-plan.sql. Ahmed is the club's one active trainer; people are added straight into the table, so only the
 // request under test goes through the limit.
-@SpringBootTest(properties = "app.sessions.generate-cron=-")
-@AutoConfigureMockMvc
-@Import(TrainerAccountsFixture.Config.class)
-class PlanLimitApiTest {
+class PlanLimitApiIT extends IntegrationTestBase {
     private static final Path UPSERT_PLAN = Path.of("ops", "upsert-plan.sql");
     private static final String AHMED_PHONE = "01051000001";
     private static final String TRAINER_PASSWORD = "Trainer@2026";
@@ -65,21 +54,6 @@ class PlanLimitApiTest {
     private static final String SUPER_PASSWORD = "Platform@2026";
     // 20 days on the school calendar (Egypt moves its clocks back on 29 Oct, so not 20 x 24 hours).
     private static final Instant BASIC_ENDS = START.atZone(CAIRO).plusDays(20).toInstant();
-
-    static TestPostgres postgres = TestPostgres.newDatabase();
-
-    @DynamicPropertySource
-    static void datasource(DynamicPropertyRegistry registry) {
-        postgres.register(registry);
-        TrainerAccountsFixture.adminAccount(registry);
-    }
-
-    @TestBean
-    Clock clock;
-
-    static Clock clock() {
-        return new MutableClock(START);
-    }
 
     @Autowired
     TrainerAccountsFixture fx;
