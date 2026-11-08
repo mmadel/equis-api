@@ -7,6 +7,7 @@ import com.equestrian.equis.service.accounts.TokenGenerator;
 import com.equestrian.equis.service.sessions.SessionGenerationJob;
 import com.equestrian.equis.support.MutableClock;
 import com.equestrian.equis.support.TestPostgres;
+import com.equestrian.equis.support.TestSubscriptions;
 import com.equestrian.equis.support.TrainerAccountsFixture;
 import com.jayway.jsonpath.JsonPath;
 import org.flywaydb.core.Flyway;
@@ -100,7 +101,9 @@ class TenantIsolationTest {
             jdbc.update("INSERT INTO club (id, code, name) VALUES (?, 'school', 'Riding School')", SCHOOL);
             cairo = jdbc.queryForObject(
                     "INSERT INTO club (code, name) VALUES ('cairo-eq', 'Cairo Equestrian') RETURNING id", UUID.class);
-            ahmed = trainer(SCHOOL, "Ahmed Said", "01055550001", "ahmed@school.eg");
+            // The truncate removed the subscriptions too: without one a club is blocked.
+            TestSubscriptions.validFor(jdbc, SCHOOL, cairo);
+            ahmed =trainer(SCHOOL, "Ahmed Said", "01055550001", "ahmed@school.eg");
             mona = trainer(cairo, "Mona Kamal", "01055550002", "mona@cairo.eg");
             sara = rider(SCHOOL, "Sara Ali", ahmed, "sara@school.eg", "none");
             laila = rider(cairo, "Laila Fathy", mona, "laila@cairo.eg", "invited");

@@ -20,6 +20,7 @@ import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
 import com.equestrian.equis.service.assessment.AssessmentSlotQueryService;
+import com.equestrian.equis.support.ActiveClubAccess;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = AssessmentSlotController.class)
-@Import({SecurityConfig.class, SecurityBeans.class, ClockConfig.class, JwtConfig.class, JwtService.class})
+@Import({SecurityConfig.class, ActiveClubAccess.Config.class, SecurityBeans.class, ClockConfig.class, JwtConfig.class, JwtService.class})
 public class AssessmentSlotControllerTest {
     private static final String LIST = "/assessment/slots";
     private static final String DETAIL = "/me/assessment/slots/";

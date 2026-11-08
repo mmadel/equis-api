@@ -67,6 +67,9 @@ class PlanAndSubscriptionTest {
     @BeforeEach
     void setUp() {
         jdbc.queryForObject("select set_config('app.bypass_rls', 'on', true)", String.class);
+        // The test seed (db/testgrants) gives the default club a subscription; these cases start from none.
+        jdbc.update("DELETE FROM subscription");
+        jdbc.update("DELETE FROM plan");
         cairo = newClub("cairo-eq");
     }
 

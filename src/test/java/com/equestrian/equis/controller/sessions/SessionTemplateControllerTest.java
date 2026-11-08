@@ -23,6 +23,7 @@ import com.equestrian.equis.service.sessions.SaveResult;
 import com.equestrian.equis.service.sessions.SessionTemplateInput;
 import com.equestrian.equis.service.sessions.SessionTemplateService;
 import com.equestrian.equis.service.sessions.Warning;
+import com.equestrian.equis.support.ActiveClubAccess;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -52,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = SessionTemplateController.class)
-@Import({SecurityConfig.class, SecurityBeans.class, ClockConfig.class, JwtConfig.class, JwtService.class})
+@Import({SecurityConfig.class, ActiveClubAccess.Config.class, SecurityBeans.class, ClockConfig.class, JwtConfig.class, JwtService.class})
 public class SessionTemplateControllerTest {
     private static final String PATH = "/admin/session-templates";
     private static final UUID USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");

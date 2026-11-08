@@ -17,6 +17,10 @@ import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService.AccessToken;
 import com.equestrian.equis.service.accounts.TokenGenerator.GeneratedToken;
+import com.equestrian.equis.service.platform.AccessState;
+import com.equestrian.equis.service.platform.ClubAccess;
+import com.equestrian.equis.service.platform.ClubAccessService;
+import com.equestrian.equis.service.platform.ClubBlockedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,12 +40,13 @@ public class AuthTokenService {
     private final TokenGenerator tokenGenerator;
     private final AuthProperties properties;
     private final TenantTransactions tenants;
+    private final ClubAccessService clubAccess;
     private final Clock clock;
 
     public AuthTokenService(RefreshTokenRepository refreshTokenRepository, TrainerRepository trainerRepository,
                             RiderRepository riderRepository, SuperAdminRepository superAdminRepository,
                             JwtService jwtService, TokenGenerator tokenGenerator, AuthProperties properties,
-                            TenantTransactions tenants, Clock clock) {
+                            TenantTransactions tenants, ClubAccessService clubAccess, Clock clock) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.trainerRepository = trainerRepository;
         this.riderRepository = riderRepository;
@@ -50,6 +55,7 @@ public class AuthTokenService {
         this.tokenGenerator = tokenGenerator;
         this.properties = properties;
         this.tenants = tenants;
+        this.clubAccess = clubAccess;
         this.clock = clock;
     }
 
@@ -80,6 +86,14 @@ public class AuthTokenService {
         Instant now = clock.instant();
         if (old.getRevokedAt() != null || !old.getExpiresAt().isAfter(now)) {
             throw invalidRefreshToken();
+        }
+        // A blocked club can't refresh. Nothing has been written yet, so the token stays valid for when the club is
+        // active again. Read-only clubs refresh as usual.
+        if (old.getClubId() != null) {
+            ClubAccess access = clubAccess.forClub(old.getClubId());
+            if (access.state() == AccessState.BLOCKED) {
+                throw new ClubBlockedException(access.reason());
+            }
         }
 
         Role role = Role.from(old.getSubjectType());

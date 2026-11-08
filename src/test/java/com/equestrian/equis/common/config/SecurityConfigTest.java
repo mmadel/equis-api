@@ -8,6 +8,7 @@ import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
+import com.equestrian.equis.support.ActiveClubAccess;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -29,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = SecurityConfigTest.TestController.class)
-@Import({SecurityConfig.class, SecurityBeans.class, ClockConfig.class, JwtConfig.class, JwtService.class,
+@Import({SecurityConfig.class, ActiveClubAccess.Config.class, SecurityBeans.class, ClockConfig.class, JwtConfig.class, JwtService.class,
         SecurityConfigTest.TestController.class})
 public class SecurityConfigTest {
     private static final UUID ID = UUID.fromString("00000000-0000-0000-0000-000000000001");

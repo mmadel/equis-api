@@ -18,10 +18,11 @@ import java.util.TreeSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // E17 · case 8: every club endpoint has an isolation case. A new endpoint under /me, /admin, /rider or /assessment
-// fails here, by method and path, until EndpointIsolationTest covers it. /auth and /platform are not club endpoints.
+// (or /club) fails here, by method and path, until EndpointIsolationTest covers it. /auth and /platform are not club
+// endpoints.
 @SpringBootTest(properties = "app.sessions.generate-cron=-")
 class EndpointCoverageGuardTest {
-    private static final List<String> CLUB_PREFIXES = List.of("/me", "/admin", "/rider", "/assessment");
+    private static final List<String> CLUB_PREFIXES = List.of("/me", "/admin", "/rider", "/assessment", "/club");
 
     static TestPostgres postgres = TestPostgres.newDatabase();
 

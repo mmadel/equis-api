@@ -137,7 +137,10 @@ class EndpointIsolationTest {
             list(Who.RIDER, "GET", "/rider/me"),
             list(Who.RIDER, "GET", "/rider/payments"),
             list(Who.RIDER, "GET", "/rider/progress"),
-            list(Who.RIDER, "GET", "/rider/sessions"));
+            list(Who.RIDER, "GET", "/rider/sessions"),
+
+            // ---- the person's own club, any role (E17 · club access state)
+            list(Who.TRAINER, "GET", "/club/status"));
 
     // Every mapping with a case, as "METHOD /path/{id}", for the coverage guard.
     static final Set<String> COVERED = CASES.stream()

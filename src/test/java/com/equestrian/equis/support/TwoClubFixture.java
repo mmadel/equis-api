@@ -113,6 +113,8 @@ public class TwoClubFixture {
                 jdbc.update("INSERT INTO admin_account (club_id, name, email, password_hash) VALUES (?, 'Admin', ?, ?)",
                         club, adminEmail(club), passwordEncoder.encode(PASSWORD));
             }
+            // The truncate removed the subscriptions too: without one a club is blocked.
+            TestSubscriptions.validFor(jdbc, A, b);
             return null;
         });
 

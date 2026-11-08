@@ -1,5 +1,6 @@
 package com.equestrian.equis.service.platform;
 
+import com.equestrian.equis.dto.club.ClubStatusView;
 import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.entity.club.ClubStatus;
 import com.equestrian.equis.entity.platform.OnExpiry;
@@ -14,10 +15,12 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-// Works out what a club may do now. Computed on every call, never stored. Enforcing it on requests is a later ticket.
+// Works out what a club may do now. Computed on every call, never stored. ClubAccessFilter enforces it on requests;
+// sign-in and refresh check it too.
 //   club suspended                          -> BLOCKED   / SUSPENDED
 //   no current subscription                 -> BLOCKED   / NO_SUBSCRIPTION
 //   current ended, plan on_expiry BLOCK     -> BLOCKED   / TRIAL_ENDED
@@ -64,11 +67,34 @@ public class ClubAccessService {
                 daysLeft(now, sub.getEndsAt()));
     }
 
+    // One query for the club, its current subscription and the plan (ClubRepository.findWithCurrentSubscription):
+    // ClubAccessFilter calls this on every club request.
     @Transactional(readOnly = true)
     public ClubAccess forClub(UUID clubId) {
         Instant now = clock.instant();
-        Club club = clubs.findById(clubId).orElseThrow(ClubErrors::notFound);
-        return stateOf(club, subscriptions.findCurrent(clubId, now), now);
+        Object[] row = currentOf(clubId, now);
+        return stateOf((Club) row[0], Optional.ofNullable((Subscription) row[1]), now);
+    }
+
+    // GET /club/status: the signed-in person's club and its state. A blocked club never gets here (ClubAccessFilter).
+    @Transactional(readOnly = true)
+    public ClubStatusView status(UUID clubId) {
+        Instant now = clock.instant();
+        Object[] row = currentOf(clubId, now);
+        Club club = (Club) row[0];
+        ClubAccess access = stateOf(club, Optional.ofNullable((Subscription) row[1]), now);
+        return new ClubStatusView(club.getName(), club.getCode(), access.state(), access.reason(),
+                access.plan() == null ? null : access.plan().getName(), access.period(), access.endsAt(),
+                access.daysLeft());
+    }
+
+    private Object[] currentOf(UUID clubId, Instant now) {
+        List<Object[]> rows = clubs.findWithCurrentSubscription(clubId, now);
+        if (rows.isEmpty()) {
+            throw ClubErrors.notFound();
+        }
+        // Two rows only if two subscriptions start at the same instant; findCurrent picks either one too.
+        return rows.get(0);
     }
 
     // Whole days from now until the end on the school's calendar (a day stays a day across a clock change),

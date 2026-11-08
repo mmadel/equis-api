@@ -442,7 +442,8 @@ class RiderAppApiTest {
                 .andExpect(jsonPath("$.items", hasSize(40)))
                 .andExpect(jsonPath("$.totalItems").value(40));
         // The token's rider is checked before the controller runs; then the page and the count.
-        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(3);
+        // 3 for the page, +1 for the club access check every club request makes (ClubAccessFilter).
+        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(4);
     }
 
     // ---- helpers ----

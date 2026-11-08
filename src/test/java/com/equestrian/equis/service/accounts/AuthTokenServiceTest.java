@@ -3,6 +3,7 @@ package com.equestrian.equis.service.accounts;
 import com.equestrian.equis.common.tenant.TenantTransactions;
 import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.support.TestPostgres;
+import com.equestrian.equis.service.platform.ClubAccessService;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import com.equestrian.equis.common.config.AuthProperties;
@@ -37,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EnableConfigurationProperties(AuthProperties.class)
-@Import({AuthTokenService.class, TenantTransactions.class, JwtService.class, TokenGenerator.class, JwtConfig.class,
+@Import({AuthTokenService.class, ClubAccessService.class, TenantTransactions.class, JwtService.class, TokenGenerator.class, JwtConfig.class,
         ClockConfig.class})
 public class AuthTokenServiceTest {
     // Seeded by V4 as an active trainer.
