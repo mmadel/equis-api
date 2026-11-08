@@ -30,8 +30,16 @@
 		<java.version>21</java.version>
 		<spring-boot-admin.version>4.1.2</spring-boot-admin.version>
 		<greenmail.version>2.1.8</greenmail.version>
-		<!-- Mail tests (@Tag("email")) are left out of the default run. Run them with -Pemail-tests. -->
+		<jacoco.version>0.8.14</jacoco.version>
+		<!-- Line coverage floors (jacoco:check on the merged report). -->
+		<coverage.minimum.overall>0.70</coverage.minimum.overall>
+		<coverage.minimum.service>0.80</coverage.minimum.service>
+		<!-- Mail tests (@Tag("email")) are left out of the default run, by Surefire and Failsafe alike.
+		     Run them with -Pemail-tests. -->
 		<surefire.excludedGroups>email</surefire.excludedGroups>
+		<!-- -DskipUnitTests skips Surefire (*Test) and the merged coverage report and check, but still runs
+		     Failsafe (*IT). CI's integration job uses it; its coverage is merged in a later job. -->
+		<skipUnitTests>false</skipUnitTests>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -166,15 +174,151 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<!-- Run test classes in 2 JVMs at once. Each JVM starts its own Postgres container
-				     (TestPostgres) and every class gets its own database, so forks never share data. -->
+				<!-- Unit and slice tests (*Test): no database, no Docker. ./mvnw test -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
+					<skip>${skipUnitTests}</skip>
+					<includes>
+						<include>**/*Test.java</include>
+					</includes>
 					<forkCount>2</forkCount>
 					<reuseForks>true</reuseForks>
 					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
 				</configuration>
+			</plugin>
+			<plugin>
+				<!-- Database tests (*IT) on PostgreSQL: ./mvnw verify. Test classes run in 2 JVMs at once; each JVM
+				     starts its own container (support/PostgresContainer), so forks never share data. -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<includes>
+						<include>**/*IT.java</include>
+					</includes>
+					<forkCount>2</forkCount>
+					<reuseForks>true</reuseForks>
+					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- Line coverage of both test phases, merged into target/site/jacoco-merged. The build fails below
+				     the floors: 70% overall, 80% for com.equestrian.equis.service. DTOs, entities, config classes
+				     and the main class are left out. -->
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>prepare-agent-integration</id>
+						<goals>
+							<goal>prepare-agent-integration</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>merge</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>merge</goal>
+						</goals>
+						<configuration>
+							<skip>${skipUnitTests}</skip>
+							<fileSets>
+								<fileSet>
+									<directory>${project.build.directory}</directory>
+									<includes>
+										<include>jacoco.exec</include>
+										<include>jacoco-it.exec</include>
+									</includes>
+								</fileSet>
+							</fileSets>
+							<destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+						</configuration>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<skip>${skipUnitTests}</skip>
+							<dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+							<outputDirectory>${project.reporting.outputDirectory}/jacoco-merged</outputDirectory>
+							<excludes>
+								<exclude>**/dto/**</exclude>
+								<exclude>**/entity/**</exclude>
+								<exclude>**/config/**</exclude>
+								<exclude>**/EquisApiApplication.class</exclude>
+							</excludes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>check-overall</id>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<skip>${skipUnitTests}</skip>
+							<dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+							<excludes>
+								<exclude>**/dto/**</exclude>
+								<exclude>**/entity/**</exclude>
+								<exclude>**/config/**</exclude>
+								<exclude>**/EquisApiApplication.class</exclude>
+							</excludes>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${coverage.minimum.overall}</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+					<execution>
+						<!-- The service package as one bundle: the rules live in its sub-packages. -->
+						<id>check-service</id>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<skip>${skipUnitTests}</skip>
+							<dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+							<includes>
+								<include>com/equestrian/equis/service/**</include>
+							</includes>
+							<excludes>
+								<exclude>**/dto/**</exclude>
+								<exclude>**/entity/**</exclude>
+								<exclude>**/config/**</exclude>
+							</excludes>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${coverage.minimum.service}</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -192,17 +336,26 @@
 	</build>
 
 	<profiles>
-		<!-- ./mvnw test -Pemail-tests runs only the mail tests. -->
+		<!-- ./mvnw verify -Pemail-tests runs only the mail tests (*Test and *IT). No coverage: a mail-only run
+		     is always below the floors. -->
 		<profile>
 			<id>email-tests</id>
 			<properties>
 				<surefire.excludedGroups></surefire.excludedGroups>
+				<jacoco.skip>true</jacoco.skip>
 			</properties>
 			<build>
 				<plugins>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<groups>email</groups>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
 						<configuration>
 							<groups>email</groups>
 						</configuration>

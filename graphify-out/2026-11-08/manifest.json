@@ -1,0 +1,3422 @@
+{
+  ".claude/settings.json": {
+    "mtime": 1794095550.2109149,
+    "seen": 1794096195.1666214,
+    "ast_hash": "006012ec5a3dce23a1175d927b6408ad",
+    "semantic_hash": "006012ec5a3dce23a1175d927b6408ad"
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1792963387.016563,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7ccc928508b06fa517c39aec601117f5",
+    "semantic_hash": "7ccc928508b06fa517c39aec601117f5"
+  },
+  ".github/workflows/release.yml": {
+    "mtime": 1793750833.3853135,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0c68262017cec258b3cbd4ef24f3b0a0",
+    "semantic_hash": "0c68262017cec258b3cbd4ef24f3b0a0"
+  },
+  "compose.yaml": {
+    "mtime": 1791717574.8,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7629ec8bdec516698d8bc4e11697eead",
+    "semantic_hash": "7629ec8bdec516698d8bc4e11697eead"
+  },
+  "mvnw": {
+    "mtime": 1792963387.016563,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ab50dd89da7da2346b28003352eeeeeb",
+    "semantic_hash": "ab50dd89da7da2346b28003352eeeeeb"
+  },
+  "ops/create-super-admin.sql": {
+    "mtime": 1794074193.3581016,
+    "seen": 1794094957.5545533,
+    "ast_hash": "78591e129ebd21fbff2fdf3bcc1df008",
+    "semantic_hash": "78591e129ebd21fbff2fdf3bcc1df008"
+  },
+  "ops/upsert-plan.sql": {
+    "mtime": 1794077178.5878775,
+    "seen": 1794094957.5545533,
+    "ast_hash": "561e9ae4ace8335dcb8a7d554d83032b",
+    "semantic_hash": "561e9ae4ace8335dcb8a7d554d83032b"
+  },
+  "pom.xml": {
+    "mtime": 1794067747.232432,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d5def05dd1f8250319b9cbd736dc33f4",
+    "semantic_hash": "d5def05dd1f8250319b9cbd736dc33f4"
+  },
+  "postman/equis-assessment.postman_collection.json": {
+    "mtime": 1792004606.305611,
+    "seen": 1794094957.5545533,
+    "ast_hash": "107e064abc13f8ce7e8865394ae4a876",
+    "semantic_hash": "107e064abc13f8ce7e8865394ae4a876"
+  },
+  "postman/equis-my-levels-sessions.postman_collection.json": {
+    "mtime": 1791904959.2235074,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7144fe80b189d8beeb422c5d3d13ff2a",
+    "semantic_hash": "7144fe80b189d8beeb422c5d3d13ff2a"
+  },
+  "postman/equis-my-riders.postman_collection.json": {
+    "mtime": 1792060727.0665133,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e56295dccf33e2ab011bf672563791f6",
+    "semantic_hash": "e56295dccf33e2ab011bf672563791f6"
+  },
+  "postman/equis.auth.postman_collection.json": {
+    "mtime": 1791826341.9129958,
+    "seen": 1794094957.5545533,
+    "ast_hash": "46e6cd5dd738268fa9ef1480f34e8a3b",
+    "semantic_hash": "46e6cd5dd738268fa9ef1480f34e8a3b"
+  },
+  "postman/equis.session-templates.postman_collection.json": {
+    "mtime": 1791889342.241585,
+    "seen": 1794094957.5545533,
+    "ast_hash": "00e59a885523027102c53fe86252c06b",
+    "semantic_hash": "00e59a885523027102c53fe86252c06b"
+  },
+  "src/main/java/com/equestrian/equis/EquisApiApplication.java": {
+    "mtime": 1791715563.0,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8cab41e5f0913032e345213aa610555d",
+    "semantic_hash": "8cab41e5f0913032e345213aa610555d"
+  },
+  "src/main/java/com/equestrian/equis/common/config/AuthProperties.java": {
+    "mtime": 1791821800.565627,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e87578ff21d342b19cdde63575c204b9",
+    "semantic_hash": "e87578ff21d342b19cdde63575c204b9"
+  },
+  "src/main/java/com/equestrian/equis/common/config/ClockConfig.java": {
+    "mtime": 1791820556.5349803,
+    "seen": 1794094957.5545533,
+    "ast_hash": "687ebf2d58b5b44a7641f39999bb7c5e",
+    "semantic_hash": "687ebf2d58b5b44a7641f39999bb7c5e"
+  },
+  "src/main/java/com/equestrian/equis/common/config/JwtConfig.java": {
+    "mtime": 1791820556.5359807,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f5becd77fcdcdb265bcd097ef3e9922b",
+    "semantic_hash": "f5becd77fcdcdb265bcd097ef3e9922b"
+  },
+  "src/main/java/com/equestrian/equis/common/config/MailConfig.java": {
+    "mtime": 1792158527.28314,
+    "seen": 1794094957.5545533,
+    "ast_hash": "800dc1caf81bf145b99fe22a6c6a5660",
+    "semantic_hash": "800dc1caf81bf145b99fe22a6c6a5660"
+  },
+  "src/main/java/com/equestrian/equis/common/config/MailSettings.java": {
+    "mtime": 1792158527.2841437,
+    "seen": 1794094957.5545533,
+    "ast_hash": "faee3cbf450c80ddddd891527926b40b",
+    "semantic_hash": "faee3cbf450c80ddddd891527926b40b"
+  },
+  "src/main/java/com/equestrian/equis/common/config/ProdEnvironmentCheck.java": {
+    "mtime": 1792424208.0551183,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ed8b848b73df851c6bc6de457530eda6",
+    "semantic_hash": "ed8b848b73df851c6bc6de457530eda6"
+  },
+  "src/main/java/com/equestrian/equis/common/config/SchedulingConfig.java": {
+    "mtime": 1791887811.0480905,
+    "seen": 1794094957.5545533,
+    "ast_hash": "71064d024646c6f946099fdf4c16f0e7",
+    "semantic_hash": "71064d024646c6f946099fdf4c16f0e7"
+  },
+  "src/main/java/com/equestrian/equis/common/config/SecurityBeans.java": {
+    "mtime": 1791806496.672414,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0668ec93e4d82ba64866d9c528443c40",
+    "semantic_hash": "0668ec93e4d82ba64866d9c528443c40"
+  },
+  "src/main/java/com/equestrian/equis/common/config/SecurityConfig.java": {
+    "mtime": 1794095830.8915787,
+    "seen": 1794096195.1736543,
+    "ast_hash": "15484857f81955ec8e6c029bdf0ac44b",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/common/config/SessionProperties.java": {
+    "mtime": 1791887811.0490904,
+    "seen": 1794094957.5545533,
+    "ast_hash": "83464d0f8e104fe9dc5125b2f939d05b",
+    "semantic_hash": "83464d0f8e104fe9dc5125b2f939d05b"
+  },
+  "src/main/java/com/equestrian/equis/common/error/ApiException.java": {
+    "mtime": 1791821800.565627,
+    "seen": 1794094957.5545533,
+    "ast_hash": "465f8be3b0b124c46894aa0725190086",
+    "semantic_hash": "465f8be3b0b124c46894aa0725190086"
+  },
+  "src/main/java/com/equestrian/equis/common/error/ApiExceptionHandler.java": {
+    "mtime": 1792959385.4165792,
+    "seen": 1794094957.5545533,
+    "ast_hash": "eb3522ecbf934ead88babf8ada983cfa",
+    "semantic_hash": "eb3522ecbf934ead88babf8ada983cfa"
+  },
+  "src/main/java/com/equestrian/equis/common/error/ApiFieldError.java": {
+    "mtime": 1791725831.1069798,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1cdf02065547259982fa3f6c70042e6c",
+    "semantic_hash": "1cdf02065547259982fa3f6c70042e6c"
+  },
+  "src/main/java/com/equestrian/equis/common/error/Constraints.java": {
+    "mtime": 1792001445.1937025,
+    "seen": 1794094957.5545533,
+    "ast_hash": "53e07d02ca83f49c253106764856c161",
+    "semantic_hash": "53e07d02ca83f49c253106764856c161"
+  },
+  "src/main/java/com/equestrian/equis/common/error/ErrorCodes.java": {
+    "mtime": 1794095807.7849193,
+    "seen": 1794096195.1757593,
+    "ast_hash": "f296cc5616cb255e07b4990b6cf21884",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/common/error/package-info.java": {
+    "mtime": 1791718486.9823978,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e6a3db74e46d8cddc2836a91c30c2a23",
+    "semantic_hash": "e6a3db74e46d8cddc2836a91c30c2a23"
+  },
+  "src/main/java/com/equestrian/equis/common/phone/PhoneNormalizer.java": {
+    "mtime": 1794075934.8838613,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4fddc6191b96649472c3feec9355f1f8",
+    "semantic_hash": "4fddc6191b96649472c3feec9355f1f8"
+  },
+  "src/main/java/com/equestrian/equis/common/security/AuthUser.java": {
+    "mtime": 1794074193.3581016,
+    "seen": 1794094957.5545533,
+    "ast_hash": "646524531ee5a77bccc8d4494dde243c",
+    "semantic_hash": "646524531ee5a77bccc8d4494dde243c"
+  },
+  "src/main/java/com/equestrian/equis/common/security/AuthUserConverter.java": {
+    "mtime": 1794074193.3581016,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2cb8a987e4e5e41e3da76f83960e4174",
+    "semantic_hash": "2cb8a987e4e5e41e3da76f83960e4174"
+  },
+  "src/main/java/com/equestrian/equis/common/security/Role.java": {
+    "mtime": 1794074193.3581016,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3d51458572fdb62330306daceb773e8b",
+    "semantic_hash": "3d51458572fdb62330306daceb773e8b"
+  },
+  "src/main/java/com/equestrian/equis/common/security/package-info.java": {
+    "mtime": 1791718487.0534925,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fc8f8eb4fbe2a0c5cbc9894adb287a31",
+    "semantic_hash": "fc8f8eb4fbe2a0c5cbc9894adb287a31"
+  },
+  "src/main/java/com/equestrian/equis/common/tenant/TenantAutoConfiguration.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a372e8a3ad3c2ac857fcace5f081c7ff",
+    "semantic_hash": "a372e8a3ad3c2ac857fcace5f081c7ff"
+  },
+  "src/main/java/com/equestrian/equis/common/tenant/TenantAwareDataSource.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4a4c9c93728fe5eea293033ec71724e4",
+    "semantic_hash": "4a4c9c93728fe5eea293033ec71724e4"
+  },
+  "src/main/java/com/equestrian/equis/common/tenant/TenantContext.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7f5c7f79639274851db77bae1b7066eb",
+    "semantic_hash": "7f5c7f79639274851db77bae1b7066eb"
+  },
+  "src/main/java/com/equestrian/equis/common/tenant/TenantFilter.java": {
+    "mtime": 1794074193.3581016,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8d94a9d2c4663d3cfcaae0e342b5955d",
+    "semantic_hash": "8d94a9d2c4663d3cfcaae0e342b5955d"
+  },
+  "src/main/java/com/equestrian/equis/common/tenant/TenantGuard.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a7984bea2e5d2b1e2c54facbaa870170",
+    "semantic_hash": "a7984bea2e5d2b1e2c54facbaa870170"
+  },
+  "src/main/java/com/equestrian/equis/common/tenant/TenantIdentifierResolver.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c0e40541ccb750a4dfc48c19bac6373b",
+    "semantic_hash": "c0e40541ccb750a4dfc48c19bac6373b"
+  },
+  "src/main/java/com/equestrian/equis/common/tenant/TenantTransactions.java": {
+    "mtime": 1794074193.3581016,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3816af227c19bf09b2b026533507156d",
+    "semantic_hash": "3816af227c19bf09b2b026533507156d"
+  },
+  "src/main/java/com/equestrian/equis/common/time/DateRanges.java": {
+    "mtime": 1792004606.306586,
+    "seen": 1794094957.5545533,
+    "ast_hash": "65cd4603d3f1cf9d29006ae097157c50",
+    "semantic_hash": "65cd4603d3f1cf9d29006ae097157c50"
+  },
+  "src/main/java/com/equestrian/equis/common/time/SchoolWeek.java": {
+    "mtime": 1792236020.9842584,
+    "seen": 1794094957.5545533,
+    "ast_hash": "62138987a89c1aa665fc32f5dd44b439",
+    "semantic_hash": "62138987a89c1aa665fc32f5dd44b439"
+  },
+  "src/main/java/com/equestrian/equis/controller/accounts/AdminTrainerController.java": {
+    "mtime": 1792155095.4214768,
+    "seen": 1794094957.5545533,
+    "ast_hash": "400021e4158573b54529c3cebb2c6fe2",
+    "semantic_hash": "400021e4158573b54529c3cebb2c6fe2"
+  },
+  "src/main/java/com/equestrian/equis/controller/accounts/AuthController.java": {
+    "mtime": 1794075934.8838613,
+    "seen": 1794094957.5545533,
+    "ast_hash": "891624844218f12f5c6146fed63c8c15",
+    "semantic_hash": "891624844218f12f5c6146fed63c8c15"
+  },
+  "src/main/java/com/equestrian/equis/controller/assessment/AdminAssessmentSlotController.java": {
+    "mtime": 1792784895.9813538,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1ee524fae72576cd697d8b24b80d7f49",
+    "semantic_hash": "1ee524fae72576cd697d8b24b80d7f49"
+  },
+  "src/main/java/com/equestrian/equis/controller/assessment/AdminBookingController.java": {
+    "mtime": 1792802418.7085712,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6ad90c7f62a7803f1e924c5c901d630f",
+    "semantic_hash": "6ad90c7f62a7803f1e924c5c901d630f"
+  },
+  "src/main/java/com/equestrian/equis/controller/assessment/AdminMemberController.java": {
+    "mtime": 1792832840.2248104,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2ee3dc982753c72e19da8e2ac9561420",
+    "semantic_hash": "2ee3dc982753c72e19da8e2ac9561420"
+  },
+  "src/main/java/com/equestrian/equis/controller/assessment/AssessmentSlotController.java": {
+    "mtime": 1792004606.30761,
+    "seen": 1794094957.5545533,
+    "ast_hash": "05535fca6280201e15a8b5771b3917c6",
+    "semantic_hash": "05535fca6280201e15a8b5771b3917c6"
+  },
+  "src/main/java/com/equestrian/equis/controller/assessment/BookingController.java": {
+    "mtime": 1792004606.308627,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5339c0c73995da5fac6c5a67b4e9e551",
+    "semantic_hash": "5339c0c73995da5fac6c5a67b4e9e551"
+  },
+  "src/main/java/com/equestrian/equis/controller/assessment/package-info.java": {
+    "mtime": 1791718484.860153,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f9c3dbfe0c5a326692e059b4d20d74f8",
+    "semantic_hash": "f9c3dbfe0c5a326692e059b4d20d74f8"
+  },
+  "src/main/java/com/equestrian/equis/controller/evaluations/AdminEvaluationController.java": {
+    "mtime": 1793485406.8392384,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1014bbc53c72a966db9d6f4d76c6b7ab",
+    "semantic_hash": "1014bbc53c72a966db9d6f4d76c6b7ab"
+  },
+  "src/main/java/com/equestrian/equis/controller/evaluations/MyEvaluationsController.java": {
+    "mtime": 1793479786.7918124,
+    "seen": 1794094957.5545533,
+    "ast_hash": "133252481d273268c1af6eddd864d5e9",
+    "semantic_hash": "133252481d273268c1af6eddd864d5e9"
+  },
+  "src/main/java/com/equestrian/equis/controller/evaluations/package-info.java": {
+    "mtime": 1793483045.597809,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b286044579ed213f7f7ce7a08880d13b",
+    "semantic_hash": "b286044579ed213f7f7ce7a08880d13b"
+  },
+  "src/main/java/com/equestrian/equis/controller/levels/MyLevelsController.java": {
+    "mtime": 1791904959.2255185,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fed24dc64d4183d1ab1a3efccade4de7",
+    "semantic_hash": "fed24dc64d4183d1ab1a3efccade4de7"
+  },
+  "src/main/java/com/equestrian/equis/controller/notices/package-info.java": {
+    "mtime": 1791718484.9513793,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a053319ceaf0ea7df6c4b8562658b25e",
+    "semantic_hash": "a053319ceaf0ea7df6c4b8562658b25e"
+  },
+  "src/main/java/com/equestrian/equis/controller/overview/AdminOverviewController.java": {
+    "mtime": 1792406242.7832289,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c172de99be583e1fbe997ee0df4054e2",
+    "semantic_hash": "c172de99be583e1fbe997ee0df4054e2"
+  },
+  "src/main/java/com/equestrian/equis/controller/payments/AdminPaymentController.java": {
+    "mtime": 1792962356.689954,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bc05a6a5bac56bf6af09a9049d9baba9",
+    "semantic_hash": "bc05a6a5bac56bf6af09a9049d9baba9"
+  },
+  "src/main/java/com/equestrian/equis/controller/payments/package-info.java": {
+    "mtime": 1792959385.4165792,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1b847c89640cc61ed1151b9f01a242d7",
+    "semantic_hash": "1b847c89640cc61ed1151b9f01a242d7"
+  },
+  "src/main/java/com/equestrian/equis/controller/platform/PlatformAuthController.java": {
+    "mtime": 1794074193.3581016,
+    "seen": 1794094957.5545533,
+    "ast_hash": "91073ac4d69962b24d1726ec91e8ed26",
+    "semantic_hash": "91073ac4d69962b24d1726ec91e8ed26"
+  },
+  "src/main/java/com/equestrian/equis/controller/platform/PlatformClubController.java": {
+    "mtime": 1794078635.5871117,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f7c9da83176ef46af5fd702f88516005",
+    "semantic_hash": "f7c9da83176ef46af5fd702f88516005"
+  },
+  "src/main/java/com/equestrian/equis/controller/platform/PlatformSubscriptionController.java": {
+    "mtime": 1794083305.9597628,
+    "seen": 1794094957.5545533,
+    "ast_hash": "560a410d6f0db639eda2e42175876f21",
+    "semantic_hash": "560a410d6f0db639eda2e42175876f21"
+  },
+  "src/main/java/com/equestrian/equis/controller/riderapp/RiderAppController.java": {
+    "mtime": 1793544731.8609428,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c13c7209794ae439d4746ce5e00ba73c",
+    "semantic_hash": "c13c7209794ae439d4746ce5e00ba73c"
+  },
+  "src/main/java/com/equestrian/equis/controller/riderapp/package-info.java": {
+    "mtime": 1793544731.8609428,
+    "seen": 1794094957.5545533,
+    "ast_hash": "82854e51ffec7fc3d7d70734f2b7340e",
+    "semantic_hash": "82854e51ffec7fc3d7d70734f2b7340e"
+  },
+  "src/main/java/com/equestrian/equis/controller/riders/AdminRiderAccountController.java": {
+    "mtime": 1793540959.4175854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fdef67c8ba7319faddeb49c275ad4752",
+    "semantic_hash": "fdef67c8ba7319faddeb49c275ad4752"
+  },
+  "src/main/java/com/equestrian/equis/controller/riders/AdminRiderController.java": {
+    "mtime": 1792962356.690953,
+    "seen": 1794094957.5545533,
+    "ast_hash": "087a936fc21d249b538a72d3bc8bef34",
+    "semantic_hash": "087a936fc21d249b538a72d3bc8bef34"
+  },
+  "src/main/java/com/equestrian/equis/controller/riders/MyRidersController.java": {
+    "mtime": 1793483045.597809,
+    "seen": 1794094957.5545533,
+    "ast_hash": "acdf2f119fdfc984ac7b5883525ef85e",
+    "semantic_hash": "acdf2f119fdfc984ac7b5883525ef85e"
+  },
+  "src/main/java/com/equestrian/equis/controller/riders/package-info.java": {
+    "mtime": 1791718484.7838097,
+    "seen": 1794094957.5545533,
+    "ast_hash": "54a529bac6376ccd50b4479a7a3ce1dc",
+    "semantic_hash": "54a529bac6376ccd50b4479a7a3ce1dc"
+  },
+  "src/main/java/com/equestrian/equis/controller/sessions/MySessionsController.java": {
+    "mtime": 1793479786.7918124,
+    "seen": 1794094957.5545533,
+    "ast_hash": "11fe8dcfafa0f1a026283b317c09ace9",
+    "semantic_hash": "11fe8dcfafa0f1a026283b317c09ace9"
+  },
+  "src/main/java/com/equestrian/equis/controller/sessions/MyWeekController.java": {
+    "mtime": 1792236020.9852543,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b3341bd9f5cb14ece5592c128f9f830c",
+    "semantic_hash": "b3341bd9f5cb14ece5592c128f9f830c"
+  },
+  "src/main/java/com/equestrian/equis/controller/sessions/SessionDetailMapper.java": {
+    "mtime": 1793479786.7953012,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a04b8e2cb8dc9fba2bff5eefd568958d",
+    "semantic_hash": "a04b8e2cb8dc9fba2bff5eefd568958d"
+  },
+  "src/main/java/com/equestrian/equis/controller/sessions/SessionTemplateController.java": {
+    "mtime": 1792001445.195703,
+    "seen": 1794094957.5545533,
+    "ast_hash": "aeaac16b652e08a4570042135fc73b1d",
+    "semantic_hash": "aeaac16b652e08a4570042135fc73b1d"
+  },
+  "src/main/java/com/equestrian/equis/controller/sessions/SessionTemplateMapper.java": {
+    "mtime": 1791889342.243585,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e8d69801f5c648b8da73f6817a918f6f",
+    "semantic_hash": "e8d69801f5c648b8da73f6817a918f6f"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/AuthTokens.java": {
+    "mtime": 1794095856.1178424,
+    "seen": 1794096195.189527,
+    "ast_hash": "c8311e5fa5a91471b0f1739ca0b9dcbe",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/InviteAcceptRequest.java": {
+    "mtime": 1791823649.2252672,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ec2973397fdb33562ae54326db8ad825",
+    "semantic_hash": "ec2973397fdb33562ae54326db8ad825"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/InviteAccepted.java": {
+    "mtime": 1794075934.8838613,
+    "seen": 1794094957.5545533,
+    "ast_hash": "417b7bec84174996b497ab99c56bb616",
+    "semantic_hash": "417b7bec84174996b497ab99c56bb616"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/InviteTrainerRequest.java": {
+    "mtime": 1794075934.8838613,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b1a047b5494287024f91758b2318c7d6",
+    "semantic_hash": "b1a047b5494287024f91758b2318c7d6"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/LevelCount.java": {
+    "mtime": 1792153155.9920135,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d723c89b1cf426ab6728d83abfb5cc0f",
+    "semantic_hash": "d723c89b1cf426ab6728d83abfb5cc0f"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/LoginRequest.java": {
+    "mtime": 1794075934.8838613,
+    "seen": 1794094957.5545533,
+    "ast_hash": "11a2231644171ca208b0ea95fa160869",
+    "semantic_hash": "11a2231644171ca208b0ea95fa160869"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/PendingLink.java": {
+    "mtime": 1792153155.9920135,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b9b74015446d73c6ceddc33521074121",
+    "semantic_hash": "b9b74015446d73c6ceddc33521074121"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/RefreshRequest.java": {
+    "mtime": 1791823649.2263162,
+    "seen": 1794094957.5545533,
+    "ast_hash": "81aad092cbe376b47a11192f23df94d0",
+    "semantic_hash": "81aad092cbe376b47a11192f23df94d0"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/RiderCounts.java": {
+    "mtime": 1792153155.9930143,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5b92785a3d6ae2908e8535e7e9c86520",
+    "semantic_hash": "5b92785a3d6ae2908e8535e7e9c86520"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/TrainerList.java": {
+    "mtime": 1792153155.9930143,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0880fd97f9b9bfb1068da387dff6996b",
+    "semantic_hash": "0880fd97f9b9bfb1068da387dff6996b"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/TrainerRef.java": {
+    "mtime": 1792185418.3679328,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3c7cf6bb10d04ebc39df7e75f7291be4",
+    "semantic_hash": "3c7cf6bb10d04ebc39df7e75f7291be4"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/TrainerRow.java": {
+    "mtime": 1792153155.9940152,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b73913db4455f5e2ee5169978f9774d3",
+    "semantic_hash": "b73913db4455f5e2ee5169978f9774d3"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/TrainerTotals.java": {
+    "mtime": 1792153155.9940152,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4cc237679d9091d11375568e6ee18e16",
+    "semantic_hash": "4cc237679d9091d11375568e6ee18e16"
+  },
+  "src/main/java/com/equestrian/equis/dto/accounts/package-info.java": {
+    "mtime": 1791718485.0365746,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ef878b239d10acbf713838e6a86ad661",
+    "semantic_hash": "ef878b239d10acbf713838e6a86ad661"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/AdminBookingList.java": {
+    "mtime": 1792185418.3689368,
+    "seen": 1794094957.5545533,
+    "ast_hash": "58a6320c06c14575d8451cbf7734ca81",
+    "semantic_hash": "58a6320c06c14575d8451cbf7734ca81"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/AdminBookingRow.java": {
+    "mtime": 1792793331.690766,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ccf5d6591d92fe740ad795b0d16879a8",
+    "semantic_hash": "ccf5d6591d92fe740ad795b0d16879a8"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/AdminNewMemberRequest.java": {
+    "mtime": 1794075934.8838613,
+    "seen": 1794094957.5545533,
+    "ast_hash": "50559436a35c24ba29a114cea34d95dd",
+    "semantic_hash": "50559436a35c24ba29a114cea34d95dd"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/AssessmentSlotDayDto.java": {
+    "mtime": 1792004606.3095992,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c09fe8e9ca23a02d7990de43737f8cdd",
+    "semantic_hash": "c09fe8e9ca23a02d7990de43737f8cdd"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/AssessmentSlotDto.java": {
+    "mtime": 1792004606.3106062,
+    "seen": 1794094957.5545533,
+    "ast_hash": "67eeed242863879c652a161c0533e411",
+    "semantic_hash": "67eeed242863879c652a161c0533e411"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/AssessmentSlotsDto.java": {
+    "mtime": 1792004606.3106062,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6d9c3247cc781e13e183ae24fbb38a74",
+    "semantic_hash": "6d9c3247cc781e13e183ae24fbb38a74"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/BookingRowDto.java": {
+    "mtime": 1792004606.31161,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d222d9ba53df5323783cc3bac5905036",
+    "semantic_hash": "d222d9ba53df5323783cc3bac5905036"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/BookingTotals.java": {
+    "mtime": 1792793331.690766,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fadc64747d77af8f705beb351449f37e",
+    "semantic_hash": "fadc64747d77af8f705beb351449f37e"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/CancelBookingRequest.java": {
+    "mtime": 1792802418.724637,
+    "seen": 1794094957.5545533,
+    "ast_hash": "aaa2864143e721fe806f6ec78110316b",
+    "semantic_hash": "aaa2864143e721fe806f6ec78110316b"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/ChangeBookingRequest.java": {
+    "mtime": 1792186193.6277673,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d4ac64d5420b5b62a069bea64407e31f",
+    "semantic_hash": "d4ac64d5420b5b62a069bea64407e31f"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/MemberRef.java": {
+    "mtime": 1792699427.5019798,
+    "seen": 1794094957.5545533,
+    "ast_hash": "78f849c02d45c49f2342227d73447f16",
+    "semantic_hash": "78f849c02d45c49f2342227d73447f16"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/RecordResultRequest.java": {
+    "mtime": 1792001445.196702,
+    "seen": 1794094957.5545533,
+    "ast_hash": "01ab6f40434091d2381087fec3f94dfe",
+    "semantic_hash": "01ab6f40434091d2381087fec3f94dfe"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/ResultRecorded.java": {
+    "mtime": 1792002290.063887,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f1e28307982956f7243cd1b9a538cc83",
+    "semantic_hash": "f1e28307982956f7243cd1b9a538cc83"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/SlotDetailDto.java": {
+    "mtime": 1792004606.3125896,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0df26321c8c9c6c780b5ab46beb8c828",
+    "semantic_hash": "0df26321c8c9c6c780b5ab46beb8c828"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/SlotRef.java": {
+    "mtime": 1792185418.371933,
+    "seen": 1794094957.5545533,
+    "ast_hash": "897ce2c8ff72caa549802bf88987ed60",
+    "semantic_hash": "897ce2c8ff72caa549802bf88987ed60"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/UpdateMemberRequest.java": {
+    "mtime": 1794075934.8838613,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a42b52c7e98a216db257af416c458da2",
+    "semantic_hash": "a42b52c7e98a216db257af416c458da2"
+  },
+  "src/main/java/com/equestrian/equis/dto/assessment/package-info.java": {
+    "mtime": 1791718485.2728734,
+    "seen": 1794094957.5545533,
+    "ast_hash": "30da39f2277848bd6261f57d81d2d09e",
+    "semantic_hash": "30da39f2277848bd6261f57d81d2d09e"
+  },
+  "src/main/java/com/equestrian/equis/dto/evaluations/EvaluationFollowUp.java": {
+    "mtime": 1793485406.8392384,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0560727ef05e2c8783b1e94fadf48f26",
+    "semantic_hash": "0560727ef05e2c8783b1e94fadf48f26"
+  },
+  "src/main/java/com/equestrian/equis/dto/evaluations/EvaluationRequest.java": {
+    "mtime": 1793479786.7953012,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c9179d05ee1257967dada3a24eeaf05e",
+    "semantic_hash": "c9179d05ee1257967dada3a24eeaf05e"
+  },
+  "src/main/java/com/equestrian/equis/dto/evaluations/PendingEvaluations.java": {
+    "mtime": 1793479786.796981,
+    "seen": 1794094957.5545533,
+    "ast_hash": "24e8e03488beda22c384eeea74978c7a",
+    "semantic_hash": "24e8e03488beda22c384eeea74978c7a"
+  },
+  "src/main/java/com/equestrian/equis/dto/evaluations/RiderEvaluation.java": {
+    "mtime": 1793483045.597809,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8314745fdc969fa974c2ee4455f4f0ef",
+    "semantic_hash": "8314745fdc969fa974c2ee4455f4f0ef"
+  },
+  "src/main/java/com/equestrian/equis/dto/evaluations/RiderEvaluations.java": {
+    "mtime": 1793483045.597809,
+    "seen": 1794094957.5545533,
+    "ast_hash": "388d4271e29104b68dcaf32e79b1cd51",
+    "semantic_hash": "388d4271e29104b68dcaf32e79b1cd51"
+  },
+  "src/main/java/com/equestrian/equis/dto/evaluations/SeatEvaluation.java": {
+    "mtime": 1793479786.796981,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2f0b94ae879f7b4e2276f20992d4aafc",
+    "semantic_hash": "2f0b94ae879f7b4e2276f20992d4aafc"
+  },
+  "src/main/java/com/equestrian/equis/dto/evaluations/package-info.java": {
+    "mtime": 1793479786.796981,
+    "seen": 1794094957.5545533,
+    "ast_hash": "62f0a4b499538d486bb54013c4c6d5fa",
+    "semantic_hash": "62f0a4b499538d486bb54013c4c6d5fa"
+  },
+  "src/main/java/com/equestrian/equis/dto/levels/LevelRef.java": {
+    "mtime": 1791904959.2275002,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7f1764d6fce35caebf725d23b97cfc50",
+    "semantic_hash": "7f1764d6fce35caebf725d23b97cfc50"
+  },
+  "src/main/java/com/equestrian/equis/dto/levels/LevelSessionsResponse.java": {
+    "mtime": 1793452283.666804,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7a8b33b8b2da9418faf3ac090fb0b269",
+    "semantic_hash": "7a8b33b8b2da9418faf3ac090fb0b269"
+  },
+  "src/main/java/com/equestrian/equis/dto/levels/MyLevelSummary.java": {
+    "mtime": 1791904959.2285018,
+    "seen": 1794094957.5545533,
+    "ast_hash": "767a26db57848a7a318b1d87a975689d",
+    "semantic_hash": "767a26db57848a7a318b1d87a975689d"
+  },
+  "src/main/java/com/equestrian/equis/dto/notices/package-info.java": {
+    "mtime": 1791718485.3573117,
+    "seen": 1794094957.5545533,
+    "ast_hash": "677667f16e9f89541e9d5d670660e0b6",
+    "semantic_hash": "677667f16e9f89541e9d5d670660e0b6"
+  },
+  "src/main/java/com/equestrian/equis/dto/overview/ActivityItem.java": {
+    "mtime": 1792406242.7941709,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3a58bb7aba56c857d4421169afb0d813",
+    "semantic_hash": "3a58bb7aba56c857d4421169afb0d813"
+  },
+  "src/main/java/com/equestrian/equis/dto/overview/Attention.java": {
+    "mtime": 1792406242.7941709,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a81181fd753a36996aea03d813e95c9a",
+    "semantic_hash": "a81181fd753a36996aea03d813e95c9a"
+  },
+  "src/main/java/com/equestrian/equis/dto/overview/OverviewResponse.java": {
+    "mtime": 1792406242.7941709,
+    "seen": 1794094957.5545533,
+    "ast_hash": "48250e1cf0b1396ddf916f41b56e4aaf",
+    "semantic_hash": "48250e1cf0b1396ddf916f41b56e4aaf"
+  },
+  "src/main/java/com/equestrian/equis/dto/overview/PendingInvite.java": {
+    "mtime": 1792406242.7941709,
+    "seen": 1794094957.5545533,
+    "ast_hash": "de27fde599de19d38fe656be182f8da4",
+    "semantic_hash": "de27fde599de19d38fe656be182f8da4"
+  },
+  "src/main/java/com/equestrian/equis/dto/overview/TodaySession.java": {
+    "mtime": 1793465334.8460815,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2da01a8b3082034e782acaf6feacb17a",
+    "semantic_hash": "2da01a8b3082034e782acaf6feacb17a"
+  },
+  "src/main/java/com/equestrian/equis/dto/overview/TrackFill.java": {
+    "mtime": 1792406242.7941709,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b7b620963c50581957d9475b5694c3f4",
+    "semantic_hash": "b7b620963c50581957d9475b5694c3f4"
+  },
+  "src/main/java/com/equestrian/equis/dto/overview/TrainerRiderCount.java": {
+    "mtime": 1792406242.7941709,
+    "seen": 1794094957.5545533,
+    "ast_hash": "9208daceb9d813ad130ce60d7beaae2c",
+    "semantic_hash": "9208daceb9d813ad130ce60d7beaae2c"
+  },
+  "src/main/java/com/equestrian/equis/dto/overview/WeekFill.java": {
+    "mtime": 1792406242.7941709,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a1c67785870aa6c6736b5b8168242232",
+    "semantic_hash": "a1c67785870aa6c6736b5b8168242232"
+  },
+  "src/main/java/com/equestrian/equis/dto/payments/BalanceDto.java": {
+    "mtime": 1792959385.424614,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1f9483d86e6da3e1cb51c31c0690395d",
+    "semantic_hash": "1f9483d86e6da3e1cb51c31c0690395d"
+  },
+  "src/main/java/com/equestrian/equis/dto/payments/PaymentEntry.java": {
+    "mtime": 1793465334.8460815,
+    "seen": 1794094957.5545533,
+    "ast_hash": "88360a06c065e329551dceb9a88f8fad",
+    "semantic_hash": "88360a06c065e329551dceb9a88f8fad"
+  },
+  "src/main/java/com/equestrian/equis/dto/payments/PaymentResult.java": {
+    "mtime": 1792959385.4311564,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e3e9f7191876480724525e35a056e5fb",
+    "semantic_hash": "e3e9f7191876480724525e35a056e5fb"
+  },
+  "src/main/java/com/equestrian/equis/dto/payments/PaymentUsage.java": {
+    "mtime": 1793465334.8460815,
+    "seen": 1794094957.5545533,
+    "ast_hash": "df2beca87f51fc356267e84982b1c502",
+    "semantic_hash": "df2beca87f51fc356267e84982b1c502"
+  },
+  "src/main/java/com/equestrian/equis/dto/payments/RecordPaymentRequest.java": {
+    "mtime": 1792959385.4311564,
+    "seen": 1794094957.5545533,
+    "ast_hash": "87fd5aac7db7f6e888dde490e7bbc8a7",
+    "semantic_hash": "87fd5aac7db7f6e888dde490e7bbc8a7"
+  },
+  "src/main/java/com/equestrian/equis/dto/payments/RiderPayments.java": {
+    "mtime": 1792962356.6919522,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ebb0bfc856123ce76e6fefd7d8c1421d",
+    "semantic_hash": "ebb0bfc856123ce76e6fefd7d8c1421d"
+  },
+  "src/main/java/com/equestrian/equis/dto/payments/VoidPaymentRequest.java": {
+    "mtime": 1792962356.6919522,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7f95d095307d65ab6a8ea2bde6f2a604",
+    "semantic_hash": "7f95d095307d65ab6a8ea2bde6f2a604"
+  },
+  "src/main/java/com/equestrian/equis/dto/payments/package-info.java": {
+    "mtime": 1792959385.4311564,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a4c40fb6d13382e40dac0b098e2bf054",
+    "semantic_hash": "a4c40fb6d13382e40dac0b098e2bf054"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/AddSubscriptionRequest.java": {
+    "mtime": 1794083305.96076,
+    "seen": 1794094957.5545533,
+    "ast_hash": "074941edb0f2cae6241734d45819b031",
+    "semantic_hash": "074941edb0f2cae6241734d45819b031"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/ChangeClubStatusRequest.java": {
+    "mtime": 1794078635.5871117,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f2e2934530edf805afbb0406c5021bf0",
+    "semantic_hash": "f2e2934530edf805afbb0406c5021bf0"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/ClubAccessView.java": {
+    "mtime": 1794083305.9617603,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d7cfdab3eea6a301065ac0805b462b7b",
+    "semantic_hash": "d7cfdab3eea6a301065ac0805b462b7b"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/ClubAdminInput.java": {
+    "mtime": 1794078635.5893333,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c53cc1dcd2112e00b9b93fa9336fb760",
+    "semantic_hash": "c53cc1dcd2112e00b9b93fa9336fb760"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/ClubDetail.java": {
+    "mtime": 1794078635.5893333,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bd4a4d5d95a813f5ed54fc087632f8a9",
+    "semantic_hash": "bd4a4d5d95a813f5ed54fc087632f8a9"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/ClubPage.java": {
+    "mtime": 1794078635.5893333,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c66c10bc0120f3e2fe341cde2d5e0b97",
+    "semantic_hash": "c66c10bc0120f3e2fe341cde2d5e0b97"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/ClubRow.java": {
+    "mtime": 1794078635.591349,
+    "seen": 1794094957.5545533,
+    "ast_hash": "cbc9d7d359e7d21dbc485bb8540b19b2",
+    "semantic_hash": "cbc9d7d359e7d21dbc485bb8540b19b2"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/CreateClubRequest.java": {
+    "mtime": 1794078635.591349,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5f24046dde25a1a310e11fc1ec072b34",
+    "semantic_hash": "5f24046dde25a1a310e11fc1ec072b34"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/PlanView.java": {
+    "mtime": 1794083305.9617603,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ac6c466e63f692dbb44387d5a9234cf5",
+    "semantic_hash": "ac6c466e63f692dbb44387d5a9234cf5"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/PlatformLoginRequest.java": {
+    "mtime": 1794074193.3581016,
+    "seen": 1794094957.5545533,
+    "ast_hash": "35ab39c85300dc8b1bbe412ad79074bb",
+    "semantic_hash": "35ab39c85300dc8b1bbe412ad79074bb"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/StartMode.java": {
+    "mtime": 1794083305.96276,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ecae6f143fcffc4e5e89381757d9b602",
+    "semantic_hash": "ecae6f143fcffc4e5e89381757d9b602"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/SubscriptionResult.java": {
+    "mtime": 1794083305.96276,
+    "seen": 1794094957.5545533,
+    "ast_hash": "87dfe011414b52d256f1c858c284b3fb",
+    "semantic_hash": "87dfe011414b52d256f1c858c284b3fb"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/SubscriptionStatus.java": {
+    "mtime": 1794083305.9637601,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6c96605c39be01eab58b3e23abf99809",
+    "semantic_hash": "6c96605c39be01eab58b3e23abf99809"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/SubscriptionView.java": {
+    "mtime": 1794083305.9637601,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bc6f76d3bca0174a326c9c246bf738b7",
+    "semantic_hash": "bc6f76d3bca0174a326c9c246bf738b7"
+  },
+  "src/main/java/com/equestrian/equis/dto/platform/VoidSubscriptionRequest.java": {
+    "mtime": 1794083305.9637601,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f92365e45f822a25f9d44762824ede50",
+    "semantic_hash": "f92365e45f822a25f9d44762824ede50"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/ExpiringSoon.java": {
+    "mtime": 1793544731.8609428,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e88991d28ed78387c7269e57bb1eb149",
+    "semantic_hash": "e88991d28ed78387c7269e57bb1eb149"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/RiderAssessment.java": {
+    "mtime": 1793544731.8609428,
+    "seen": 1794094957.5545533,
+    "ast_hash": "583e05c99b16d3ac9dfc9ef90e62f03d",
+    "semantic_hash": "583e05c99b16d3ac9dfc9ef90e62f03d"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/RiderBanners.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "41c9b8b33994820bbd45c60db6ad1ca5",
+    "semantic_hash": "41c9b8b33994820bbd45c60db6ad1ca5"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/RiderMe.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8b4415411b657ca75a11880c99746c16",
+    "semantic_hash": "8b4415411b657ca75a11880c99746c16"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/RiderPackage.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "800aeead2aeb5e0969008b0c39d33eb5",
+    "semantic_hash": "800aeead2aeb5e0969008b0c39d33eb5"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/RiderPayment.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "950f574a693eb4e8478b649fce08a183",
+    "semantic_hash": "950f574a693eb4e8478b649fce08a183"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/RiderPayments.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "70a68626c70e4d230dceb2993c119a2d",
+    "semantic_hash": "70a68626c70e4d230dceb2993c119a2d"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/RiderProgress.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5d80143a656abe7538a098014c1eb0d8",
+    "semantic_hash": "5d80143a656abe7538a098014c1eb0d8"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/RiderSession.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "866daa8405d71b75c8f79cdfd7b7c1be",
+    "semantic_hash": "866daa8405d71b75c8f79cdfd7b7c1be"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/RiderSessionEvaluation.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d6d5f972eb8f14ead0a3b18c51f9a9ac",
+    "semantic_hash": "d6d5f972eb8f14ead0a3b18c51f9a9ac"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/RiderSessionPage.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "390019893811b47261993fdd0837ad45",
+    "semantic_hash": "390019893811b47261993fdd0837ad45"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/StarTrendPoint.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d199626985c039bc0d36e80bd8380fa3",
+    "semantic_hash": "d199626985c039bc0d36e80bd8380fa3"
+  },
+  "src/main/java/com/equestrian/equis/dto/riderapp/package-info.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0f0a744f54b853e91384e79fbd29e1fa",
+    "semantic_hash": "0f0a744f54b853e91384e79fbd29e1fa"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/AdminRiderList.java": {
+    "mtime": 1792190871.0299263,
+    "seen": 1794094957.5545533,
+    "ast_hash": "280b1e1d5071af60e06ab264e92e2c26",
+    "semantic_hash": "280b1e1d5071af60e06ab264e92e2c26"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/AdminRiderRow.java": {
+    "mtime": 1793540959.4175854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2c86856d268578754b2b0e55905a37f5",
+    "semantic_hash": "2c86856d268578754b2b0e55905a37f5"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/Direction.java": {
+    "mtime": 1792057889.6362512,
+    "seen": 1794094957.5545533,
+    "ast_hash": "209be3be011900692f20772d69ec7e85",
+    "semantic_hash": "209be3be011900692f20772d69ec7e85"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/LevelChangeRequest.java": {
+    "mtime": 1792057889.6372485,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c4f977abd5de30cb86756395a6045498",
+    "semantic_hash": "c4f977abd5de30cb86756395a6045498"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/LevelChanged.java": {
+    "mtime": 1792057889.6372485,
+    "seen": 1794094957.5545533,
+    "ast_hash": "aeceb5e0ddab5ca10ddcd18b19079a86",
+    "semantic_hash": "aeceb5e0ddab5ca10ddcd18b19079a86"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/LevelHistoryEntry.java": {
+    "mtime": 1792059473.5098467,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d7e6777bd1f23ce3bd1266743bc444ba",
+    "semantic_hash": "d7e6777bd1f23ce3bd1266743bc444ba"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/MyRiderDto.java": {
+    "mtime": 1792963966.3930326,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d1f08a9e82430870a524f96df662e5cb",
+    "semantic_hash": "d1f08a9e82430870a524f96df662e5cb"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/ReassignResult.java": {
+    "mtime": 1792192087.053983,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f6ed40158d9c45813d553d74e116e8f5",
+    "semantic_hash": "f6ed40158d9c45813d553d74e116e8f5"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/ReassignRidersRequest.java": {
+    "mtime": 1792192087.0550182,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ea1ed558395cbc076f199513edbda307",
+    "semantic_hash": "ea1ed558395cbc076f199513edbda307"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/RiderAccount.java": {
+    "mtime": 1793540959.4175854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1000f66c956ce117cd00bcaa6ceb87c6",
+    "semantic_hash": "1000f66c956ce117cd00bcaa6ceb87c6"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/RiderLevelDto.java": {
+    "mtime": 1792059473.5108433,
+    "seen": 1794094957.5545533,
+    "ast_hash": "90109a1f1f069d492bd58c43401cba72",
+    "semantic_hash": "90109a1f1f069d492bd58c43401cba72"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/RiderTotals.java": {
+    "mtime": 1792962356.6939545,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a707ac3bd2010eed95c73d487aefdd04",
+    "semantic_hash": "a707ac3bd2010eed95c73d487aefdd04"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/TrainerCard.java": {
+    "mtime": 1792190871.0309262,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6a3233a9bbedfbeab85f46d03441db12",
+    "semantic_hash": "6a3233a9bbedfbeab85f46d03441db12"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/UpcomingSeat.java": {
+    "mtime": 1792058795.2676182,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d9025981f33ca0831932d492b863bc54",
+    "semantic_hash": "d9025981f33ca0831932d492b863bc54"
+  },
+  "src/main/java/com/equestrian/equis/dto/riders/package-info.java": {
+    "mtime": 1791718485.1929727,
+    "seen": 1794094957.5545533,
+    "ast_hash": "39777b5275b48dd60c07b9f8e4313fcc",
+    "semantic_hash": "39777b5275b48dd60c07b9f8e4313fcc"
+  },
+  "src/main/java/com/equestrian/equis/dto/sessions/AssignmentsRequest.java": {
+    "mtime": 1791904959.2295039,
+    "seen": 1794094957.5545533,
+    "ast_hash": "33b08985e959ed3f0a1bf6b4c31a68cb",
+    "semantic_hash": "33b08985e959ed3f0a1bf6b4c31a68cb"
+  },
+  "src/main/java/com/equestrian/equis/dto/sessions/DeleteResponse.java": {
+    "mtime": 1791889342.2445996,
+    "seen": 1794094957.5545533,
+    "ast_hash": "683b25ff557ea9edaa940ffc8ced2d57",
+    "semantic_hash": "683b25ff557ea9edaa940ffc8ced2d57"
+  },
+  "src/main/java/com/equestrian/equis/dto/sessions/MyWeek.java": {
+    "mtime": 1792236020.9852543,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1e37bdf71c504f910159227ce6932a04",
+    "semantic_hash": "1e37bdf71c504f910159227ce6932a04"
+  },
+  "src/main/java/com/equestrian/equis/dto/sessions/SaveResponse.java": {
+    "mtime": 1791889342.2445996,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fbf9de6cff8fe9d0646f3cb79b56e18c",
+    "semantic_hash": "fbf9de6cff8fe9d0646f3cb79b56e18c"
+  },
+  "src/main/java/com/equestrian/equis/dto/sessions/SessionDetailResponse.java": {
+    "mtime": 1793479786.796981,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ddf843619a7bb995cb4adf9269b33025",
+    "semantic_hash": "ddf843619a7bb995cb4adf9269b33025"
+  },
+  "src/main/java/com/equestrian/equis/dto/sessions/SessionTemplateCreateRequest.java": {
+    "mtime": 1791889342.2455845,
+    "seen": 1794094957.5545533,
+    "ast_hash": "dbb337458a95ae532df02bb0dacdab4a",
+    "semantic_hash": "dbb337458a95ae532df02bb0dacdab4a"
+  },
+  "src/main/java/com/equestrian/equis/dto/sessions/SessionTemplateResponse.java": {
+    "mtime": 1791889342.2455845,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b34441c76fa3c69c5ee0bf5febbb43d7",
+    "semantic_hash": "b34441c76fa3c69c5ee0bf5febbb43d7"
+  },
+  "src/main/java/com/equestrian/equis/dto/sessions/SessionTemplateUpdateRequest.java": {
+    "mtime": 1791889342.2455845,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d031b1d3c5fe9082ce02155c4e2194ed",
+    "semantic_hash": "d031b1d3c5fe9082ce02155c4e2194ed"
+  },
+  "src/main/java/com/equestrian/equis/dto/sessions/package-info.java": {
+    "mtime": 1791718485.1198637,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a8741649ea0a4e113cb017b9bb6a3c06",
+    "semantic_hash": "a8741649ea0a4e113cb017b9bb6a3c06"
+  },
+  "src/main/java/com/equestrian/equis/entity/accounts/AdminAccount.java": {
+    "mtime": 1794078635.591349,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b403a630e5a808039bd0678b82a2cd42",
+    "semantic_hash": "b403a630e5a808039bd0678b82a2cd42"
+  },
+  "src/main/java/com/equestrian/equis/entity/accounts/AdminStatus.java": {
+    "mtime": 1794078635.591349,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ac98a616c2993df5d2218081426cb03b",
+    "semantic_hash": "ac98a616c2993df5d2218081426cb03b"
+  },
+  "src/main/java/com/equestrian/equis/entity/accounts/Invite.java": {
+    "mtime": 1794078635.5933537,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1edfdda41de66313ab9e9a7c72391bd6",
+    "semantic_hash": "1edfdda41de66313ab9e9a7c72391bd6"
+  },
+  "src/main/java/com/equestrian/equis/entity/accounts/InvitePurpose.java": {
+    "mtime": 1791731814.1566978,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7f64d3bcd06caa8b3740696ccae7742b",
+    "semantic_hash": "7f64d3bcd06caa8b3740696ccae7742b"
+  },
+  "src/main/java/com/equestrian/equis/entity/accounts/LockableAccount.java": {
+    "mtime": 1794074193.3581016,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4daf41715b56fd97612c74b766ef292b",
+    "semantic_hash": "4daf41715b56fd97612c74b766ef292b"
+  },
+  "src/main/java/com/equestrian/equis/entity/accounts/RefreshToken.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "da760933db37ea15640ad990d1a468cd",
+    "semantic_hash": "da760933db37ea15640ad990d1a468cd"
+  },
+  "src/main/java/com/equestrian/equis/entity/accounts/SubjectType.java": {
+    "mtime": 1794074193.3581016,
+    "seen": 1794094957.5545533,
+    "ast_hash": "eabcab02317090c47411b8e0d486b766",
+    "semantic_hash": "eabcab02317090c47411b8e0d486b766"
+  },
+  "src/main/java/com/equestrian/equis/entity/accounts/Trainer.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ca3776a6b1fb6f3ced61d8c3a7d67a3f",
+    "semantic_hash": "ca3776a6b1fb6f3ced61d8c3a7d67a3f"
+  },
+  "src/main/java/com/equestrian/equis/entity/accounts/TrainerStatus.java": {
+    "mtime": 1791731814.1577394,
+    "seen": 1794094957.5545533,
+    "ast_hash": "aeca64056fb471c665212eaad656fc1e",
+    "semantic_hash": "aeca64056fb471c665212eaad656fc1e"
+  },
+  "src/main/java/com/equestrian/equis/entity/assessment/AssessmentBooking.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "aed03869ce5f59f1ede86b3195457b2b",
+    "semantic_hash": "aed03869ce5f59f1ede86b3195457b2b"
+  },
+  "src/main/java/com/equestrian/equis/entity/assessment/BookingStatus.java": {
+    "mtime": 1792000396.3254771,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a269de79ba8b51c4a869fe116ce82320",
+    "semantic_hash": "a269de79ba8b51c4a869fe116ce82320"
+  },
+  "src/main/java/com/equestrian/equis/entity/assessment/CancelReason.java": {
+    "mtime": 1792595146.7054033,
+    "seen": 1794094957.5545533,
+    "ast_hash": "14ef19797c9133882fe3c457408717da",
+    "semantic_hash": "14ef19797c9133882fe3c457408717da"
+  },
+  "src/main/java/com/equestrian/equis/entity/assessment/Member.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "23005b7164f7d69b8c1408caff1ec571",
+    "semantic_hash": "23005b7164f7d69b8c1408caff1ec571"
+  },
+  "src/main/java/com/equestrian/equis/entity/assessment/MemberStatus.java": {
+    "mtime": 1792581138.2972753,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5c5b917317a8e135cec08b27c476a8bd",
+    "semantic_hash": "5c5b917317a8e135cec08b27c476a8bd"
+  },
+  "src/main/java/com/equestrian/equis/entity/assessment/package-info.java": {
+    "mtime": 1791718485.7658644,
+    "seen": 1794094957.5545533,
+    "ast_hash": "29d2e6158b9db77a5c5619d12bb1989f",
+    "semantic_hash": "29d2e6158b9db77a5c5619d12bb1989f"
+  },
+  "src/main/java/com/equestrian/equis/entity/club/Club.java": {
+    "mtime": 1794068223.615677,
+    "seen": 1794094957.5545533,
+    "ast_hash": "64a7bfbe3d22edde095fc45b53a6ce17",
+    "semantic_hash": "64a7bfbe3d22edde095fc45b53a6ce17"
+  },
+  "src/main/java/com/equestrian/equis/entity/club/ClubStatus.java": {
+    "mtime": 1794068223.615677,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fed2abd7068bf1cd213add85cb12b30b",
+    "semantic_hash": "fed2abd7068bf1cd213add85cb12b30b"
+  },
+  "src/main/java/com/equestrian/equis/entity/evaluations/SessionEvaluation.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f2d360a63d279e6ca70b958d95fe3f7c",
+    "semantic_hash": "f2d360a63d279e6ca70b958d95fe3f7c"
+  },
+  "src/main/java/com/equestrian/equis/entity/evaluations/package-info.java": {
+    "mtime": 1793473324.1264849,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e14387841fa9e5f748030f5d019739df",
+    "semantic_hash": "e14387841fa9e5f748030f5d019739df"
+  },
+  "src/main/java/com/equestrian/equis/entity/levels/Level.java": {
+    "mtime": 1791726586.886,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d700407005600d01aab355a8eaf7d5e3",
+    "semantic_hash": "d700407005600d01aab355a8eaf7d5e3"
+  },
+  "src/main/java/com/equestrian/equis/entity/levels/Levels.java": {
+    "mtime": 1792001445.197704,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bd22499cc318c17898389ec898b9b3eb",
+    "semantic_hash": "bd22499cc318c17898389ec898b9b3eb"
+  },
+  "src/main/java/com/equestrian/equis/entity/notices/Notice.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "faa9fb2e7f4ee14246c69b3b29e7f214",
+    "semantic_hash": "faa9fb2e7f4ee14246c69b3b29e7f214"
+  },
+  "src/main/java/com/equestrian/equis/entity/notices/NoticeType.java": {
+    "mtime": 1792189116.74089,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0317b7e4328eb4914fb607ffbe353d6e",
+    "semantic_hash": "0317b7e4328eb4914fb607ffbe353d6e"
+  },
+  "src/main/java/com/equestrian/equis/entity/notices/package-info.java": {
+    "mtime": 1791718485.8579874,
+    "seen": 1794094957.5545533,
+    "ast_hash": "cef1bf2aaaf3418cbd76a44cc9a46419",
+    "semantic_hash": "cef1bf2aaaf3418cbd76a44cc9a46419"
+  },
+  "src/main/java/com/equestrian/equis/entity/payments/Payment.java": {
+    "mtime": 1794070836.9109082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "63bc46877cd6891b864418f5ae31563c",
+    "semantic_hash": "63bc46877cd6891b864418f5ae31563c"
+  },
+  "src/main/java/com/equestrian/equis/entity/payments/PaymentMethod.java": {
+    "mtime": 1792957364.0074728,
+    "seen": 1794094957.5545533,
+    "ast_hash": "47cf77066868e3517a1c69235237165f",
+    "semantic_hash": "47cf77066868e3517a1c69235237165f"
+  },
+  "src/main/java/com/equestrian/equis/entity/payments/RiderPaymentStatus.java": {
+    "mtime": 1792957364.0095296,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fb4b0287e3db9a1d6b588f196e3b64b1",
+    "semantic_hash": "fb4b0287e3db9a1d6b588f196e3b64b1"
+  },
+  "src/main/java/com/equestrian/equis/entity/payments/SessionUsage.java": {
+    "mtime": 1794070836.918326,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3ad86a1e8de49f8cd2c1f6836eca05ff",
+    "semantic_hash": "3ad86a1e8de49f8cd2c1f6836eca05ff"
+  },
+  "src/main/java/com/equestrian/equis/entity/payments/package-info.java": {
+    "mtime": 1792957364.011505,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fc0e299790b6bb3e7f0a4945eb1292bb",
+    "semantic_hash": "fc0e299790b6bb3e7f0a4945eb1292bb"
+  },
+  "src/main/java/com/equestrian/equis/entity/platform/BillingPeriod.java": {
+    "mtime": 1794077178.5878775,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1572caaf9c97f7723590a22e257377ec",
+    "semantic_hash": "1572caaf9c97f7723590a22e257377ec"
+  },
+  "src/main/java/com/equestrian/equis/entity/platform/OnExpiry.java": {
+    "mtime": 1794077178.5878775,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1983983c6ca4bc3accccb175c14fcefc",
+    "semantic_hash": "1983983c6ca4bc3accccb175c14fcefc"
+  },
+  "src/main/java/com/equestrian/equis/entity/platform/Plan.java": {
+    "mtime": 1794077178.5878775,
+    "seen": 1794094957.5545533,
+    "ast_hash": "75db64a1272ecc7864059b9b905b66fd",
+    "semantic_hash": "75db64a1272ecc7864059b9b905b66fd"
+  },
+  "src/main/java/com/equestrian/equis/entity/platform/Subscription.java": {
+    "mtime": 1794077178.5878775,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7f1ab8e235618d5e59767a787c624a83",
+    "semantic_hash": "7f1ab8e235618d5e59767a787c624a83"
+  },
+  "src/main/java/com/equestrian/equis/entity/platform/SuperAdmin.java": {
+    "mtime": 1794074193.3672812,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c2752ac09a58db8bcbb64c43626753c8",
+    "semantic_hash": "c2752ac09a58db8bcbb64c43626753c8"
+  },
+  "src/main/java/com/equestrian/equis/entity/riders/LevelChange.java": {
+    "mtime": 1794070836.918326,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a71da1a5a934b0955ba4d04c407ec820",
+    "semantic_hash": "a71da1a5a934b0955ba4d04c407ec820"
+  },
+  "src/main/java/com/equestrian/equis/entity/riders/Rider.java": {
+    "mtime": 1794070836.918326,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ca764022c0837261c10305aca4b78690",
+    "semantic_hash": "ca764022c0837261c10305aca4b78690"
+  },
+  "src/main/java/com/equestrian/equis/entity/riders/RiderAccountStatus.java": {
+    "mtime": 1793538634.647971,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ec62ce6034eb352f74f4b93e3f06981e",
+    "semantic_hash": "ec62ce6034eb352f74f4b93e3f06981e"
+  },
+  "src/main/java/com/equestrian/equis/entity/riders/package-info.java": {
+    "mtime": 1791718485.683287,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3c1deb01663d063f83c41ecf92e7e41a",
+    "semantic_hash": "3c1deb01663d063f83c41ecf92e7e41a"
+  },
+  "src/main/java/com/equestrian/equis/entity/sessions/Assignment.java": {
+    "mtime": 1794070836.918326,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bf8da2b66ac28e39f91ffd97af60dce7",
+    "semantic_hash": "bf8da2b66ac28e39f91ffd97af60dce7"
+  },
+  "src/main/java/com/equestrian/equis/entity/sessions/DayOfWeekConverter.java": {
+    "mtime": 1791885069.4813664,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c48c63d5a0b24a228fa53b90842e45cb",
+    "semantic_hash": "c48c63d5a0b24a228fa53b90842e45cb"
+  },
+  "src/main/java/com/equestrian/equis/entity/sessions/Session.java": {
+    "mtime": 1794070836.9203305,
+    "seen": 1794094957.5545533,
+    "ast_hash": "03902228d2562951609d90c0f231e62d",
+    "semantic_hash": "03902228d2562951609d90c0f231e62d"
+  },
+  "src/main/java/com/equestrian/equis/entity/sessions/SessionStatus.java": {
+    "mtime": 1793473324.1264849,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5de452ccf6662af336bdf2f3a081bb5e",
+    "semantic_hash": "5de452ccf6662af336bdf2f3a081bb5e"
+  },
+  "src/main/java/com/equestrian/equis/entity/sessions/SessionTemplate.java": {
+    "mtime": 1794070836.9203305,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d58609caedc2962a05b3b36fc7c85461",
+    "semantic_hash": "d58609caedc2962a05b3b36fc7c85461"
+  },
+  "src/main/java/com/equestrian/equis/entity/sessions/package-info.java": {
+    "mtime": 1791718485.612648,
+    "seen": 1794094957.5545533,
+    "ast_hash": "9f2391e4e90d54a8e6da626b14627198",
+    "semantic_hash": "9f2391e4e90d54a8e6da626b14627198"
+  },
+  "src/main/java/com/equestrian/equis/event/package-info.java": {
+    "mtime": 1791718486.904566,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8216d79aec0279ed36575e6ca7e418bc",
+    "semantic_hash": "8216d79aec0279ed36575e6ca7e418bc"
+  },
+  "src/main/java/com/equestrian/equis/repository/accounts/AdminAccountRepository.java": {
+    "mtime": 1794078635.5933537,
+    "seen": 1794094957.5545533,
+    "ast_hash": "317c5ee52d40820fda9417c8e750e2ff",
+    "semantic_hash": "317c5ee52d40820fda9417c8e750e2ff"
+  },
+  "src/main/java/com/equestrian/equis/repository/accounts/InviteRepository.java": {
+    "mtime": 1794078635.5933537,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4af0cb966316691def2676657681d612",
+    "semantic_hash": "4af0cb966316691def2676657681d612"
+  },
+  "src/main/java/com/equestrian/equis/repository/accounts/RefreshTokenRepository.java": {
+    "mtime": 1794070836.9223351,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7bfa4fe963d3f3f37448fa874c2f48bd",
+    "semantic_hash": "7bfa4fe963d3f3f37448fa874c2f48bd"
+  },
+  "src/main/java/com/equestrian/equis/repository/accounts/TrainerRepository.java": {
+    "mtime": 1792406242.7941709,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3409320d6f334b60b2a0b0da51a6f985",
+    "semantic_hash": "3409320d6f334b60b2a0b0da51a6f985"
+  },
+  "src/main/java/com/equestrian/equis/repository/assessment/AssessmentBookingRepository.java": {
+    "mtime": 1792705948.9305577,
+    "seen": 1794094957.5545533,
+    "ast_hash": "9741af51432f7aa5308947a50faf3ab4",
+    "semantic_hash": "9741af51432f7aa5308947a50faf3ab4"
+  },
+  "src/main/java/com/equestrian/equis/repository/assessment/AssessorCount.java": {
+    "mtime": 1792153155.998014,
+    "seen": 1794094957.5545533,
+    "ast_hash": "376cd6cd42648bfaa3898c596ae47fb3",
+    "semantic_hash": "376cd6cd42648bfaa3898c596ae47fb3"
+  },
+  "src/main/java/com/equestrian/equis/repository/assessment/MemberRepository.java": {
+    "mtime": 1792832840.2248104,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7a7aac5fa83b1b5a1022d27cd03ca721",
+    "semantic_hash": "7a7aac5fa83b1b5a1022d27cd03ca721"
+  },
+  "src/main/java/com/equestrian/equis/repository/assessment/SlotBookedCount.java": {
+    "mtime": 1792004606.3135896,
+    "seen": 1794094957.5545533,
+    "ast_hash": "279600534b93f65ec1eee6eac0f55579",
+    "semantic_hash": "279600534b93f65ec1eee6eac0f55579"
+  },
+  "src/main/java/com/equestrian/equis/repository/assessment/package-info.java": {
+    "mtime": 1791718486.2599912,
+    "seen": 1794094957.5545533,
+    "ast_hash": "84912a96f3180fd554074abf3d776666",
+    "semantic_hash": "84912a96f3180fd554074abf3d776666"
+  },
+  "src/main/java/com/equestrian/equis/repository/club/ClubRepository.java": {
+    "mtime": 1794098096.3672278,
+    "seen": 1794098326.6886284,
+    "ast_hash": "9bd1864f02fef9586d8f56d72a2a8ea6",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/repository/evaluations/EvaluationHistoryRow.java": {
+    "mtime": 1793483045.6060684,
+    "seen": 1794094957.5545533,
+    "ast_hash": "87003c53311d2684cc23e9d39fc28884",
+    "semantic_hash": "87003c53311d2684cc23e9d39fc28884"
+  },
+  "src/main/java/com/equestrian/equis/repository/evaluations/PendingEvaluationRow.java": {
+    "mtime": 1793479786.7993617,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a7300a744792f9a99c4782675b34efb9",
+    "semantic_hash": "a7300a744792f9a99c4782675b34efb9"
+  },
+  "src/main/java/com/equestrian/equis/repository/evaluations/SessionEvaluationRepository.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ca2968bc282e8fc23ee1e6893e98f0e4",
+    "semantic_hash": "ca2968bc282e8fc23ee1e6893e98f0e4"
+  },
+  "src/main/java/com/equestrian/equis/repository/evaluations/StarTrendRow.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1f7cf108e16ce216e5c5c4a57a0b8d44",
+    "semantic_hash": "1f7cf108e16ce216e5c5c4a57a0b8d44"
+  },
+  "src/main/java/com/equestrian/equis/repository/evaluations/package-info.java": {
+    "mtime": 1793473324.1264849,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bb2c464dbc62cf67ea4b91f86ce9d599",
+    "semantic_hash": "bb2c464dbc62cf67ea4b91f86ce9d599"
+  },
+  "src/main/java/com/equestrian/equis/repository/levels/LevelRepository.java": {
+    "mtime": 1791726636.59,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f48399bb8fcfe739057574d5208d8888",
+    "semantic_hash": "f48399bb8fcfe739057574d5208d8888"
+  },
+  "src/main/java/com/equestrian/equis/repository/levels/package-info.java": {
+    "mtime": 1791718486.0213823,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d9c961d82186cc68308bb43973334231",
+    "semantic_hash": "d9c961d82186cc68308bb43973334231"
+  },
+  "src/main/java/com/equestrian/equis/repository/notices/NoticeRepository.java": {
+    "mtime": 1792189116.74089,
+    "seen": 1794094957.5545533,
+    "ast_hash": "391a82e485a0c910618882d986f4e6f8",
+    "semantic_hash": "391a82e485a0c910618882d986f4e6f8"
+  },
+  "src/main/java/com/equestrian/equis/repository/notices/RefTime.java": {
+    "mtime": 1792189116.7418897,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0be4420138aa8e84c7f2ff21d7ccf57c",
+    "semantic_hash": "0be4420138aa8e84c7f2ff21d7ccf57c"
+  },
+  "src/main/java/com/equestrian/equis/repository/notices/package-info.java": {
+    "mtime": 1791718486.3439827,
+    "seen": 1794094957.5545533,
+    "ast_hash": "04c34da826650a20c6940c95dc2cb0d7",
+    "semantic_hash": "04c34da826650a20c6940c95dc2cb0d7"
+  },
+  "src/main/java/com/equestrian/equis/repository/payments/PaymentRepository.java": {
+    "mtime": 1793544731.866552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d8579aadbb3bcbd30e329137951448d7",
+    "semantic_hash": "d8579aadbb3bcbd30e329137951448d7"
+  },
+  "src/main/java/com/equestrian/equis/repository/payments/RiderSessionRow.java": {
+    "mtime": 1793544731.8732493,
+    "seen": 1794094957.5545533,
+    "ast_hash": "161977ea7475e6347311a5d7fe2460a1",
+    "semantic_hash": "161977ea7475e6347311a5d7fe2460a1"
+  },
+  "src/main/java/com/equestrian/equis/repository/payments/SessionUsageRepository.java": {
+    "mtime": 1793544731.8732493,
+    "seen": 1794094957.5545533,
+    "ast_hash": "158ffacbd9b6204dbc4d1cbbc0db2f8f",
+    "semantic_hash": "158ffacbd9b6204dbc4d1cbbc0db2f8f"
+  },
+  "src/main/java/com/equestrian/equis/repository/payments/UsageLine.java": {
+    "mtime": 1793465334.8460815,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d844e360b86e56b0035d8c802e61a13c",
+    "semantic_hash": "d844e360b86e56b0035d8c802e61a13c"
+  },
+  "src/main/java/com/equestrian/equis/repository/payments/UsedCount.java": {
+    "mtime": 1792957364.0145195,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e1c78d6b32b8304a75f900d79bb4607f",
+    "semantic_hash": "e1c78d6b32b8304a75f900d79bb4607f"
+  },
+  "src/main/java/com/equestrian/equis/repository/payments/package-info.java": {
+    "mtime": 1792957364.0155103,
+    "seen": 1794094957.5545533,
+    "ast_hash": "76087dcb00b24d3bf44eefc6c5d98912",
+    "semantic_hash": "76087dcb00b24d3bf44eefc6c5d98912"
+  },
+  "src/main/java/com/equestrian/equis/repository/platform/PlanRepository.java": {
+    "mtime": 1794077178.5878775,
+    "seen": 1794094957.5545533,
+    "ast_hash": "37afcc8ce80f1d431723f35ab46d0b54",
+    "semantic_hash": "37afcc8ce80f1d431723f35ab46d0b54"
+  },
+  "src/main/java/com/equestrian/equis/repository/platform/SubscriptionRepository.java": {
+    "mtime": 1794083305.9647605,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a92cdf90fab39aa116ba8af0829a7279",
+    "semantic_hash": "a92cdf90fab39aa116ba8af0829a7279"
+  },
+  "src/main/java/com/equestrian/equis/repository/platform/SuperAdminRepository.java": {
+    "mtime": 1794074193.3672812,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4f469e3cd85023fdfc6861ce88a20db7",
+    "semantic_hash": "4f469e3cd85023fdfc6861ce88a20db7"
+  },
+  "src/main/java/com/equestrian/equis/repository/riders/AdminRiderView.java": {
+    "mtime": 1793540959.4175854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e2b6ec1bb1923dcc996602f67373f1d6",
+    "semantic_hash": "e2b6ec1bb1923dcc996602f67373f1d6"
+  },
+  "src/main/java/com/equestrian/equis/repository/riders/LevelChangeRepository.java": {
+    "mtime": 1792406242.7941709,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8c66191307a8c2fd240cae7f635630e6",
+    "semantic_hash": "8c66191307a8c2fd240cae7f635630e6"
+  },
+  "src/main/java/com/equestrian/equis/repository/riders/LevelRiderCount.java": {
+    "mtime": 1791900752.297642,
+    "seen": 1794094957.5545533,
+    "ast_hash": "032f6491ebe080f24061b9aa1467eb2d",
+    "semantic_hash": "032f6491ebe080f24061b9aa1467eb2d"
+  },
+  "src/main/java/com/equestrian/equis/repository/riders/MemberRider.java": {
+    "mtime": 1792185418.3729327,
+    "seen": 1794094957.5545533,
+    "ast_hash": "80647fe61a67ac39c5a4fdff3dcabc90",
+    "semantic_hash": "80647fe61a67ac39c5a4fdff3dcabc90"
+  },
+  "src/main/java/com/equestrian/equis/repository/riders/RiderRepository.java": {
+    "mtime": 1794075934.8838613,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d9337f5d268748faf0bbd9af38dad7a8",
+    "semantic_hash": "d9337f5d268748faf0bbd9af38dad7a8"
+  },
+  "src/main/java/com/equestrian/equis/repository/riders/TrainerLevelCount.java": {
+    "mtime": 1792153155.9990134,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bbf564bd635694f167664007f3437f7a",
+    "semantic_hash": "bbf564bd635694f167664007f3437f7a"
+  },
+  "src/main/java/com/equestrian/equis/repository/riders/package-info.java": {
+    "mtime": 1791718486.1816971,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a4baeda4df54390cb2980efa0355beb6",
+    "semantic_hash": "a4baeda4df54390cb2980efa0355beb6"
+  },
+  "src/main/java/com/equestrian/equis/repository/sessions/AssignmentRepository.java": {
+    "mtime": 1793485406.8392384,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c2e8215f3878624f9660c4b38254f2b5",
+    "semantic_hash": "c2e8215f3878624f9660c4b38254f2b5"
+  },
+  "src/main/java/com/equestrian/equis/repository/sessions/LevelSeatCount.java": {
+    "mtime": 1791904959.231503,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6cce54ea10c22d5be766ee05b2e470cb",
+    "semantic_hash": "6cce54ea10c22d5be766ee05b2e470cb"
+  },
+  "src/main/java/com/equestrian/equis/repository/sessions/LevelSessionCount.java": {
+    "mtime": 1791904959.231503,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b1a4dd6d686b064448f0fb530344c04f",
+    "semantic_hash": "b1a4dd6d686b064448f0fb530344c04f"
+  },
+  "src/main/java/com/equestrian/equis/repository/sessions/SeatHolder.java": {
+    "mtime": 1792406242.7941709,
+    "seen": 1794094957.5545533,
+    "ast_hash": "264729598e9e92e474a7cbbbd244b66f",
+    "semantic_hash": "264729598e9e92e474a7cbbbd244b66f"
+  },
+  "src/main/java/com/equestrian/equis/repository/sessions/SessionRepository.java": {
+    "mtime": 1793485406.8392384,
+    "seen": 1794094957.5545533,
+    "ast_hash": "018085bd921ae10b35187b402a138e55",
+    "semantic_hash": "018085bd921ae10b35187b402a138e55"
+  },
+  "src/main/java/com/equestrian/equis/repository/sessions/SessionTemplateRepository.java": {
+    "mtime": 1791885069.482366,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ebeb5e4a4e796868272fb3190554cfa7",
+    "semantic_hash": "ebeb5e4a4e796868272fb3190554cfa7"
+  },
+  "src/main/java/com/equestrian/equis/repository/sessions/package-info.java": {
+    "mtime": 1791718486.0964262,
+    "seen": 1794094957.5545533,
+    "ast_hash": "483b6a653b8d6d11af5ea0b6c13ad71d",
+    "semantic_hash": "483b6a653b8d6d11af5ea0b6c13ad71d"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/AccountErrors.java": {
+    "mtime": 1793540959.4175854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b57406f6a387fcd13bf5e5f1a995fea8",
+    "semantic_hash": "b57406f6a387fcd13bf5e5f1a995fea8"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/AccountLinkCreatedEvent.java": {
+    "mtime": 1794078635.5953586,
+    "seen": 1794094957.5545533,
+    "ast_hash": "76f8380768b78f66f28de14bad255e67",
+    "semantic_hash": "76f8380768b78f66f28de14bad255e67"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/AccountLinkService.java": {
+    "mtime": 1794078635.5953586,
+    "seen": 1794094957.5545533,
+    "ast_hash": "55898e1c8dc9b65748b1cd5daed00fe3",
+    "semantic_hash": "55898e1c8dc9b65748b1cd5daed00fe3"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/AdminLockoutService.java": {
+    "mtime": 1794074193.3672812,
+    "seen": 1794094957.5545533,
+    "ast_hash": "052ea1e1748fe8ceb186fd12757d5633",
+    "semantic_hash": "052ea1e1748fe8ceb186fd12757d5633"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/AuthService.java": {
+    "mtime": 1794095890.030239,
+    "seen": 1794096195.2511408,
+    "ast_hash": "40995aab62986927913fc4d580f7ea3c",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/AuthTokenService.java": {
+    "mtime": 1794095890.2184818,
+    "seen": 1794096195.2511408,
+    "ast_hash": "d6f18425a923db7fc01c8a2bcda85cbe",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/JwtService.java": {
+    "mtime": 1794074193.3672812,
+    "seen": 1794094957.5545533,
+    "ast_hash": "856a3d8d05e853d5116e79e3da5db1c9",
+    "semantic_hash": "856a3d8d05e853d5116e79e3da5db1c9"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/PasswordService.java": {
+    "mtime": 1791823649.2283218,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ac994c7eb3097cb86dd31590f2ed9278",
+    "semantic_hash": "ac994c7eb3097cb86dd31590f2ed9278"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/TokenGenerator.java": {
+    "mtime": 1791806496.674412,
+    "seen": 1794094957.5545533,
+    "ast_hash": "51d2fdd04aef9c5350424929ddbcef91",
+    "semantic_hash": "51d2fdd04aef9c5350424929ddbcef91"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/TrainerAccessService.java": {
+    "mtime": 1792154452.8235245,
+    "seen": 1794094957.5545533,
+    "ast_hash": "65f27128973306c7067e64aa5e3fd884",
+    "semantic_hash": "65f27128973306c7067e64aa5e3fd884"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/TrainerAdminService.java": {
+    "mtime": 1794068223.615677,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7ff36874fe3a6002d7efb79a5932691a",
+    "semantic_hash": "7ff36874fe3a6002d7efb79a5932691a"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/TrainerErrors.java": {
+    "mtime": 1792155095.4254782,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6d1540a6b9149a665694e5ad327b8e39",
+    "semantic_hash": "6d1540a6b9149a665694e5ad327b8e39"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/TrainerRowAssembler.java": {
+    "mtime": 1792153156.0030427,
+    "seen": 1794094957.5545533,
+    "ast_hash": "73ad49099ebd0b609eba129e67a12bf8",
+    "semantic_hash": "73ad49099ebd0b609eba129e67a12bf8"
+  },
+  "src/main/java/com/equestrian/equis/service/accounts/package-info.java": {
+    "mtime": 1791718486.4134247,
+    "seen": 1794094957.5545533,
+    "ast_hash": "61745ee98b8d29aa9d811eabea4ac73e",
+    "semantic_hash": "61745ee98b8d29aa9d811eabea4ac73e"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/AdminBookingCancelService.java": {
+    "mtime": 1792802418.724637,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1ec65fa6b75fb30a21781446af8511a1",
+    "semantic_hash": "1ec65fa6b75fb30a21781446af8511a1"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/AdminBookingChangeService.java": {
+    "mtime": 1792832840.2248104,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c653c2dcfd433fa87a5db0bac423e4d9",
+    "semantic_hash": "c653c2dcfd433fa87a5db0bac423e4d9"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/AdminBookingRowAssembler.java": {
+    "mtime": 1792793331.7002332,
+    "seen": 1794094957.5545533,
+    "ast_hash": "deb9b38cebb1da1dc5b3654a66c3223c",
+    "semantic_hash": "deb9b38cebb1da1dc5b3654a66c3223c"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/AdminBookingService.java": {
+    "mtime": 1792793331.7002332,
+    "seen": 1794094957.5545533,
+    "ast_hash": "120bb190835cc7db3e390f7f74a139f1",
+    "semantic_hash": "120bb190835cc7db3e390f7f74a139f1"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/AssessmentRules.java": {
+    "mtime": 1793540959.4175854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b5ccaf4b25e5cf9212cbb3172c2d1300",
+    "semantic_hash": "b5ccaf4b25e5cf9212cbb3172c2d1300"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/AssessmentSlotMapper.java": {
+    "mtime": 1792004606.3146079,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e04192a282357ce1e55fbe09ddfc29c4",
+    "semantic_hash": "e04192a282357ce1e55fbe09ddfc29c4"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/AssessmentSlotQueryService.java": {
+    "mtime": 1792004606.3146079,
+    "seen": 1794094957.5545533,
+    "ast_hash": "39245943f8dca3e845705cb068b1968b",
+    "semantic_hash": "39245943f8dca3e845705cb068b1968b"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/BookingAction.java": {
+    "mtime": 1792832840.2303295,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1ee59071a93543b565a5f5af929214ac",
+    "semantic_hash": "1ee59071a93543b565a5f5af929214ac"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/BookingActions.java": {
+    "mtime": 1792832840.2303295,
+    "seen": 1794094957.5545533,
+    "ast_hash": "454ff889bca388749de7d54857c39ba1",
+    "semantic_hash": "454ff889bca388749de7d54857c39ba1"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/BookingCancellationListener.java": {
+    "mtime": 1792000396.3413115,
+    "seen": 1794094957.5545533,
+    "ast_hash": "dbe1bbcf071f2361af9a7f48cde67822",
+    "semantic_hash": "dbe1bbcf071f2361af9a7f48cde67822"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/BookingReminderService.java": {
+    "mtime": 1792793331.701759,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d5799bfc020c34797b528272473f3b29",
+    "semantic_hash": "d5799bfc020c34797b528272473f3b29"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/BookingSeatCounts.java": {
+    "mtime": 1792000396.3413115,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4117cfa9ff02b47e6ee3e518cfd8fcb4",
+    "semantic_hash": "4117cfa9ff02b47e6ee3e518cfd8fcb4"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/MemberBookingService.java": {
+    "mtime": 1794068223.615677,
+    "seen": 1794094957.5545533,
+    "ast_hash": "983996e59a640d06e103f10b4f95ccc1",
+    "semantic_hash": "983996e59a640d06e103f10b4f95ccc1"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/MemberCloseService.java": {
+    "mtime": 1792832840.2303295,
+    "seen": 1794094957.5545533,
+    "ast_hash": "844b9c4843995ebd5106101f7761780b",
+    "semantic_hash": "844b9c4843995ebd5106101f7761780b"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/MemberDetailsService.java": {
+    "mtime": 1794068223.615677,
+    "seen": 1794094957.5545533,
+    "ast_hash": "44ae5cadf0be4fba6b4b0611b48183d3",
+    "semantic_hash": "44ae5cadf0be4fba6b4b0611b48183d3"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/MemberStatusResolver.java": {
+    "mtime": 1792581138.2972753,
+    "seen": 1794094957.5545533,
+    "ast_hash": "490de5d674ac5903432a41005e8111b3",
+    "semantic_hash": "490de5d674ac5903432a41005e8111b3"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/RecordResultService.java": {
+    "mtime": 1793540959.4175854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d65dc81346b238067b1672a0a883ac57",
+    "semantic_hash": "d65dc81346b238067b1672a0a883ac57"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/SlotLabels.java": {
+    "mtime": 1792189116.7444715,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0b57cf0abd158b7f9f206fe0ee208ff3",
+    "semantic_hash": "0b57cf0abd158b7f9f206fe0ee208ff3"
+  },
+  "src/main/java/com/equestrian/equis/service/assessment/package-info.java": {
+    "mtime": 1791718486.7487974,
+    "seen": 1794094957.5545533,
+    "ast_hash": "763ae415d2556d4b00e80d9c657f4bea",
+    "semantic_hash": "763ae415d2556d4b00e80d9c657f4bea"
+  },
+  "src/main/java/com/equestrian/equis/service/evaluations/EvaluationFollowUpQuery.java": {
+    "mtime": 1793485406.8392384,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6b8d90c6ae92b3293c47097f33dc13b5",
+    "semantic_hash": "6b8d90c6ae92b3293c47097f33dc13b5"
+  },
+  "src/main/java/com/equestrian/equis/service/evaluations/EvaluationHistoryQuery.java": {
+    "mtime": 1793483045.6077225,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8232c64cb070669535d35c9bbf458f60",
+    "semantic_hash": "8232c64cb070669535d35c9bbf458f60"
+  },
+  "src/main/java/com/equestrian/equis/service/evaluations/EvaluationService.java": {
+    "mtime": 1793479786.7993617,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3be5ee8260d8b10cbb95dacb92560f8a",
+    "semantic_hash": "3be5ee8260d8b10cbb95dacb92560f8a"
+  },
+  "src/main/java/com/equestrian/equis/service/evaluations/PendingEvaluationQuery.java": {
+    "mtime": 1793479786.7993617,
+    "seen": 1794094957.5545533,
+    "ast_hash": "053ec80888cae3a72dd8b19312482184",
+    "semantic_hash": "053ec80888cae3a72dd8b19312482184"
+  },
+  "src/main/java/com/equestrian/equis/service/evaluations/package-info.java": {
+    "mtime": 1793479786.8013668,
+    "seen": 1794094957.5545533,
+    "ast_hash": "10faf20d1983ac295b88cf4197af088d",
+    "semantic_hash": "10faf20d1983ac295b88cf4197af088d"
+  },
+  "src/main/java/com/equestrian/equis/service/levels/MyLevelsService.java": {
+    "mtime": 1793452283.666804,
+    "seen": 1794094957.5545533,
+    "ast_hash": "be473d7fed78bf171a9c3b93643858f7",
+    "semantic_hash": "be473d7fed78bf171a9c3b93643858f7"
+  },
+  "src/main/java/com/equestrian/equis/service/levels/package-info.java": {
+    "mtime": 1791718486.496379,
+    "seen": 1794094957.5545533,
+    "ast_hash": "34e82b6d433102c151ccc059666511e4",
+    "semantic_hash": "34e82b6d433102c151ccc059666511e4"
+  },
+  "src/main/java/com/equestrian/equis/service/mail/AccountLinkEmails.java": {
+    "mtime": 1794078635.5973635,
+    "seen": 1794094957.5545533,
+    "ast_hash": "54a70ba31dbdd3bc13d15a39149ee7ca",
+    "semantic_hash": "54a70ba31dbdd3bc13d15a39149ee7ca"
+  },
+  "src/main/java/com/equestrian/equis/service/mail/AccountLinkMailListener.java": {
+    "mtime": 1793540959.4175854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6cb5cef522068acf74437dd63653a12b",
+    "semantic_hash": "6cb5cef522068acf74437dd63653a12b"
+  },
+  "src/main/java/com/equestrian/equis/service/mail/LogNotificationSender.java": {
+    "mtime": 1792158527.2870793,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e58b8c11978e59b5aa432517f2083086",
+    "semantic_hash": "e58b8c11978e59b5aa432517f2083086"
+  },
+  "src/main/java/com/equestrian/equis/service/mail/NotificationSender.java": {
+    "mtime": 1792158527.2870793,
+    "seen": 1794094957.5545533,
+    "ast_hash": "527b609d7e8c682f5527b438a2e79b61",
+    "semantic_hash": "527b609d7e8c682f5527b438a2e79b61"
+  },
+  "src/main/java/com/equestrian/equis/service/mail/OutgoingEmail.java": {
+    "mtime": 1792158527.288084,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a57689b49c386508d5a816fcd937c3bf",
+    "semantic_hash": "a57689b49c386508d5a816fcd937c3bf"
+  },
+  "src/main/java/com/equestrian/equis/service/mail/SmtpNotificationSender.java": {
+    "mtime": 1792158527.288084,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4616f2a3f7b6d4449e072d22ea47a4ab",
+    "semantic_hash": "4616f2a3f7b6d4449e072d22ea47a4ab"
+  },
+  "src/main/java/com/equestrian/equis/service/mail/package-info.java": {
+    "mtime": 1792158527.2890832,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a8700179fe28444a569f57d2a42ce84c",
+    "semantic_hash": "a8700179fe28444a569f57d2a42ce84c"
+  },
+  "src/main/java/com/equestrian/equis/service/notices/package-info.java": {
+    "mtime": 1791718486.8346798,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0d5c5761a59713193b5ddb515774640a",
+    "semantic_hash": "0d5c5761a59713193b5ddb515774640a"
+  },
+  "src/main/java/com/equestrian/equis/service/overview/AdminOverviewService.java": {
+    "mtime": 1793465334.8606458,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8a56c0e5b79a139ecac5dd33c3626b7a",
+    "semantic_hash": "8a56c0e5b79a139ecac5dd33c3626b7a"
+  },
+  "src/main/java/com/equestrian/equis/service/payments/AdminPaymentService.java": {
+    "mtime": 1792962356.6965249,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a836f5c1e1864542b3d776e175daec88",
+    "semantic_hash": "a836f5c1e1864542b3d776e175daec88"
+  },
+  "src/main/java/com/equestrian/equis/service/payments/NoSessionsLeftException.java": {
+    "mtime": 1793450678.083896,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2793f1f8cd58a6b47f602dec8d97b41b",
+    "semantic_hash": "2793f1f8cd58a6b47f602dec8d97b41b"
+  },
+  "src/main/java/com/equestrian/equis/service/payments/PackageBalance.java": {
+    "mtime": 1792957364.017496,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5e29cc12787e96d30c09ffa71dbfc724",
+    "semantic_hash": "5e29cc12787e96d30c09ffa71dbfc724"
+  },
+  "src/main/java/com/equestrian/equis/service/payments/PaymentEntryAssembler.java": {
+    "mtime": 1793465334.8606458,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ec720c7888d3a5ff42073d335f482336",
+    "semantic_hash": "ec720c7888d3a5ff42073d335f482336"
+  },
+  "src/main/java/com/equestrian/equis/service/payments/PaymentState.java": {
+    "mtime": 1792959385.4311564,
+    "seen": 1794094957.5545533,
+    "ast_hash": "19b34336ce92f96936029aa207452d2b",
+    "semantic_hash": "19b34336ce92f96936029aa207452d2b"
+  },
+  "src/main/java/com/equestrian/equis/service/payments/RiderBalance.java": {
+    "mtime": 1792957364.0185082,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bf3f04816db5dbfa9a4734ed298e46bc",
+    "semantic_hash": "bf3f04816db5dbfa9a4734ed298e46bc"
+  },
+  "src/main/java/com/equestrian/equis/service/payments/RiderBalanceService.java": {
+    "mtime": 1792957364.019534,
+    "seen": 1794094957.5545533,
+    "ast_hash": "76f559b74c7ab063912f3d52756c30c0",
+    "semantic_hash": "76f559b74c7ab063912f3d52756c30c0"
+  },
+  "src/main/java/com/equestrian/equis/service/payments/SessionUsageService.java": {
+    "mtime": 1793450678.083896,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6f86f7848504d1912fc140ebd4319e69",
+    "semantic_hash": "6f86f7848504d1912fc140ebd4319e69"
+  },
+  "src/main/java/com/equestrian/equis/service/payments/package-info.java": {
+    "mtime": 1792957364.0204954,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c1279ad52d785b0bd27265537bfd21b9",
+    "semantic_hash": "c1279ad52d785b0bd27265537bfd21b9"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/AccessReason.java": {
+    "mtime": 1794078635.5973635,
+    "seen": 1794094957.5545533,
+    "ast_hash": "882ced1adf2018bb398b69bfebb0f6ba",
+    "semantic_hash": "882ced1adf2018bb398b69bfebb0f6ba"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/AccessState.java": {
+    "mtime": 1794078635.5973635,
+    "seen": 1794094957.5545533,
+    "ast_hash": "9d78f5b212644da62a284ec333bf50c0",
+    "semantic_hash": "9d78f5b212644da62a284ec333bf50c0"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/ClubAccess.java": {
+    "mtime": 1794078635.5973635,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4c01a592b0874e3cdbb82cacdad63d28",
+    "semantic_hash": "4c01a592b0874e3cdbb82cacdad63d28"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/ClubAccessService.java": {
+    "mtime": 1794098096.6055024,
+    "seen": 1794098326.7212803,
+    "ast_hash": "45153a136a4ba6441a716db12a72da3b",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/service/platform/ClubAdminService.java": {
+    "mtime": 1794078635.5998688,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b1ff71fa34fb41bdb72e6317b9d7677c",
+    "semantic_hash": "b1ff71fa34fb41bdb72e6317b9d7677c"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/ClubErrors.java": {
+    "mtime": 1794078635.5998688,
+    "seen": 1794094957.5545533,
+    "ast_hash": "438b10f4ef8109b00611acfed92b5707",
+    "semantic_hash": "438b10f4ef8109b00611acfed92b5707"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/ClubFilter.java": {
+    "mtime": 1794078635.6013944,
+    "seen": 1794094957.5545533,
+    "ast_hash": "48ff2e72de93053f8ec779c0ea0985e4",
+    "semantic_hash": "48ff2e72de93053f8ec779c0ea0985e4"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/ClubOnboardingService.java": {
+    "mtime": 1794078635.6013944,
+    "seen": 1794094957.5545533,
+    "ast_hash": "74d9e269ead3759abac3a4e43d44d9ab",
+    "semantic_hash": "74d9e269ead3759abac3a4e43d44d9ab"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/ClubSort.java": {
+    "mtime": 1794078635.6013944,
+    "seen": 1794094957.5545533,
+    "ast_hash": "efbda08802c740755ef80525d4c7bc6e",
+    "semantic_hash": "efbda08802c740755ef80525d4c7bc6e"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/ClubUsageService.java": {
+    "mtime": 1794078635.6013944,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1473d58d3eb8d4bad653774b95eead14",
+    "semantic_hash": "1473d58d3eb8d4bad653774b95eead14"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/PlatformAuthService.java": {
+    "mtime": 1794074193.3672812,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3eda7c8f82dea6ac0ac37d0bb3231012",
+    "semantic_hash": "3eda7c8f82dea6ac0ac37d0bb3231012"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/SubscriptionService.java": {
+    "mtime": 1794083305.96576,
+    "seen": 1794094957.5545533,
+    "ast_hash": "73724f25ab1e1e6232f85c8221232267",
+    "semantic_hash": "73724f25ab1e1e6232f85c8221232267"
+  },
+  "src/main/java/com/equestrian/equis/service/platform/Usage.java": {
+    "mtime": 1794078635.6013944,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f3cb237630f7adb2b818e378d90fcea4",
+    "semantic_hash": "f3cb237630f7adb2b818e378d90fcea4"
+  },
+  "src/main/java/com/equestrian/equis/service/riderapp/RiderAppQueryService.java": {
+    "mtime": 1793544731.8732493,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6b58097a1a0ceb5d2396fd7f65f02ebe",
+    "semantic_hash": "6b58097a1a0ceb5d2396fd7f65f02ebe"
+  },
+  "src/main/java/com/equestrian/equis/service/riderapp/package-info.java": {
+    "mtime": 1793544731.8747985,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5a4cc84af9ede531233fd0804441bef8",
+    "semantic_hash": "5a4cc84af9ede531233fd0804441bef8"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/AdminRiderRowAssembler.java": {
+    "mtime": 1793540959.4175854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "10211dea354c042207e4b96245c805a0",
+    "semantic_hash": "10211dea354c042207e4b96245c805a0"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/AdminRiderService.java": {
+    "mtime": 1792962356.698467,
+    "seen": 1794094957.5545533,
+    "ast_hash": "aa21ae267efefd4f0b7fbefcd8dfd300",
+    "semantic_hash": "aa21ae267efefd4f0b7fbefcd8dfd300"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/HowAssigned.java": {
+    "mtime": 1792190871.0349264,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b7ffce4699463a5eeb8464117e7822a5",
+    "semantic_hash": "b7ffce4699463a5eeb8464117e7822a5"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/LevelChangeRules.java": {
+    "mtime": 1792057889.6402488,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b65bee9024b3afc17481ea786ba3d40b",
+    "semantic_hash": "b65bee9024b3afc17481ea786ba3d40b"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/LevelChangeService.java": {
+    "mtime": 1792793331.701759,
+    "seen": 1794094957.5545533,
+    "ast_hash": "04f48ee880f51f8537cb309cf90627c1",
+    "semantic_hash": "04f48ee880f51f8537cb309cf90627c1"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/LevelHistoryQuery.java": {
+    "mtime": 1793544731.8747985,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8bf37de895bee0faf36b93cde96b51b3",
+    "semantic_hash": "8bf37de895bee0faf36b93cde96b51b3"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/MyRidersQueryService.java": {
+    "mtime": 1792963966.3930326,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d93c3885ee006514c5c6bdad44385c9b",
+    "semantic_hash": "d93c3885ee006514c5c6bdad44385c9b"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/RiderAccountService.java": {
+    "mtime": 1793540959.4175854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "564c19dda41cb8c41fdb255961020894",
+    "semantic_hash": "564c19dda41cb8c41fdb255961020894"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/RiderLevelQueryService.java": {
+    "mtime": 1793544731.8747985,
+    "seen": 1794094957.5545533,
+    "ast_hash": "69b87ef2e5bf8005ef2a5eea5002a969",
+    "semantic_hash": "69b87ef2e5bf8005ef2a5eea5002a969"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/RiderReassignService.java": {
+    "mtime": 1792192087.0569835,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f4dcd6876c782c5d804eed759becf2ea",
+    "semantic_hash": "f4dcd6876c782c5d804eed759becf2ea"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/RiderSeatQuery.java": {
+    "mtime": 1792057889.6402488,
+    "seen": 1794094957.5545533,
+    "ast_hash": "815fc010aedf0102984b00fbec467b92",
+    "semantic_hash": "815fc010aedf0102984b00fbec467b92"
+  },
+  "src/main/java/com/equestrian/equis/service/riders/package-info.java": {
+    "mtime": 1791718486.6668518,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7dd88e0a3418acfa4a53ab2ab28b0fae",
+    "semantic_hash": "7dd88e0a3418acfa4a53ab2ab28b0fae"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/AssessmentSeatCounts.java": {
+    "mtime": 1792000396.3413115,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5721f93adc40472f8c80b0ee7e299d87",
+    "semantic_hash": "5721f93adc40472f8c80b0ee7e299d87"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/AssignmentCancellationListener.java": {
+    "mtime": 1791901357.3020217,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2379d1e17f8f308788fd2a3629f76994",
+    "semantic_hash": "2379d1e17f8f308788fd2a3629f76994"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/AssignmentRules.java": {
+    "mtime": 1793452283.66982,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ad7343d79b2ac67005758eb61d52d64d",
+    "semantic_hash": "ad7343d79b2ac67005758eb61d52d64d"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/AssignmentService.java": {
+    "mtime": 1793452283.66982,
+    "seen": 1794094957.5545533,
+    "ast_hash": "38f5e1ec25bcfc7dcf25a8d20409ddfb",
+    "semantic_hash": "38f5e1ec25bcfc7dcf25a8d20409ddfb"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/BookedSeats.java": {
+    "mtime": 1791889342.2465854,
+    "seen": 1794094957.5545533,
+    "ast_hash": "12376ea30782808120657ad9b826b7dc",
+    "semantic_hash": "12376ea30782808120657ad9b826b7dc"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/DeleteImpact.java": {
+    "mtime": 1791889342.2475853,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7093c2cdfdd8d77f6b9f074da47600c1",
+    "semantic_hash": "7093c2cdfdd8d77f6b9f074da47600c1"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/FinishSessionService.java": {
+    "mtime": 1793473324.1264849,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0e0058cf9b39df2efe3b1a09616e40e5",
+    "semantic_hash": "0e0058cf9b39df2efe3b1a09616e40e5"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/GenerationResult.java": {
+    "mtime": 1791887811.0500908,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d5d86f717a583d5721e6eff2f7d90dc2",
+    "semantic_hash": "d5d86f717a583d5721e6eff2f7d90dc2"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/MyWeekService.java": {
+    "mtime": 1792236020.9882617,
+    "seen": 1794094957.5545533,
+    "ast_hash": "769c08a859740787ed44195c34bb9d6e",
+    "semantic_hash": "769c08a859740787ed44195c34bb9d6e"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/OverlapRef.java": {
+    "mtime": 1791886591.649655,
+    "seen": 1794094957.5545533,
+    "ast_hash": "45ecfca28d378b2a016270d8f33c4727",
+    "semantic_hash": "45ecfca28d378b2a016270d8f33c4727"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SaveResult.java": {
+    "mtime": 1791888420.5962114,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e76378998e44687877d3b59164f73e94",
+    "semantic_hash": "e76378998e44687877d3b59164f73e94"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionAccess.java": {
+    "mtime": 1793452283.6714182,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f2529b1646b46d171d9bf0d2c27761a0",
+    "semantic_hash": "f2529b1646b46d171d9bf0d2c27761a0"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionDetail.java": {
+    "mtime": 1793479786.8013668,
+    "seen": 1794094957.5545533,
+    "ast_hash": "039d8eccba1a0fd8f348c1560bbf6f19",
+    "semantic_hash": "039d8eccba1a0fd8f348c1560bbf6f19"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionDetailService.java": {
+    "mtime": 1793479786.8013668,
+    "seen": 1794094957.5545533,
+    "ast_hash": "79a4fd6dd17fd3444d3035656049c2a4",
+    "semantic_hash": "79a4fd6dd17fd3444d3035656049c2a4"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionGenerationJob.java": {
+    "mtime": 1794070836.9243395,
+    "seen": 1794094957.5545533,
+    "ast_hash": "72e36b7d132b60e66e249a0fc937bf73",
+    "semantic_hash": "72e36b7d132b60e66e249a0fc937bf73"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionGenerator.java": {
+    "mtime": 1791887811.051091,
+    "seen": 1794094957.5545533,
+    "ast_hash": "62739d84c1c5c9dc79c3cf7b86ea1427",
+    "semantic_hash": "62739d84c1c5c9dc79c3cf7b86ea1427"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionSeatAssembler.java": {
+    "mtime": 1792236020.9882617,
+    "seen": 1794094957.5545533,
+    "ast_hash": "50240c4c4bfeba6c25a0eb982d074933",
+    "semantic_hash": "50240c4c4bfeba6c25a0eb982d074933"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionSeats.java": {
+    "mtime": 1792236020.989256,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e6272929400a4441954e060525887ad4",
+    "semantic_hash": "e6272929400a4441954e060525887ad4"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionTemplateInput.java": {
+    "mtime": 1791886591.649655,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7f8abb87458710058cc1098f01a776bd",
+    "semantic_hash": "7f8abb87458710058cc1098f01a776bd"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionTemplateRules.java": {
+    "mtime": 1791886591.6506553,
+    "seen": 1794094957.5545533,
+    "ast_hash": "54715f922fe19eda99b0736899825310",
+    "semantic_hash": "54715f922fe19eda99b0736899825310"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionTemplateService.java": {
+    "mtime": 1792407478.6252165,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ecfa9c43a2588ef9c3ae72f9ed6c2929",
+    "semantic_hash": "ecfa9c43a2588ef9c3ae72f9ed6c2929"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/SessionsCancelledEvent.java": {
+    "mtime": 1791888420.5971923,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fcf343fbd96871df795fc4e05b8aa9cf",
+    "semantic_hash": "fcf343fbd96871df795fc4e05b8aa9cf"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/TemplateBookedSeats.java": {
+    "mtime": 1792000396.3413115,
+    "seen": 1794094957.5545533,
+    "ast_hash": "218cecfadd5c338bfc3362696ce163a0",
+    "semantic_hash": "218cecfadd5c338bfc3362696ce163a0"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/Warning.java": {
+    "mtime": 1791886591.6506553,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2cef0cdf54eb1a340b9ff1b10d2098e4",
+    "semantic_hash": "2cef0cdf54eb1a340b9ff1b10d2098e4"
+  },
+  "src/main/java/com/equestrian/equis/service/sessions/package-info.java": {
+    "mtime": 1791718486.5823035,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bf78d96c9f782819c821f003ed9acf90",
+    "semantic_hash": "bf78d96c9f782819c821f003ed9acf90"
+  },
+  "src/main/resources/db/migration/V10__create_rider.sql": {
+    "mtime": 1791900752.2986493,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6e1313a9623c514361f8a896d4a3eac8",
+    "semantic_hash": "6e1313a9623c514361f8a896d4a3eac8"
+  },
+  "src/main/resources/db/migration/V11__create_assignment.sql": {
+    "mtime": 1791901357.3029995,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b2531d9bb3f7fc370b29857d601bb385",
+    "semantic_hash": "b2531d9bb3f7fc370b29857d601bb385"
+  },
+  "src/main/resources/db/migration/V12__seed_sample_riders.sql": {
+    "mtime": 1791901579.1380632,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b8496f899f7ec994df5c977c81f47498",
+    "semantic_hash": "b8496f899f7ec994df5c977c81f47498"
+  },
+  "src/main/resources/db/migration/V13__create_member_and_assessment_booking.sql": {
+    "mtime": 1792000396.3413115,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7e6b19f616d781286b6814a2b790bad7",
+    "semantic_hash": "7e6b19f616d781286b6814a2b790bad7"
+  },
+  "src/main/resources/db/migration/V14__create_level_change.sql": {
+    "mtime": 1792012360.2632658,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ec3728a41537adc397da1121ad5a8b1a",
+    "semantic_hash": "ec3728a41537adc397da1121ad5a8b1a"
+  },
+  "src/main/resources/db/migration/V15__create_notice.sql": {
+    "mtime": 1792189116.7444715,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5df26063c80d09b15bd157ad5a38544e",
+    "semantic_hash": "5df26063c80d09b15bd157ad5a38544e"
+  },
+  "src/main/resources/db/migration/V16__applicant_intake.sql": {
+    "mtime": 1792580298.5550697,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b44de0ce6d756c2fec8a263cc133be6e",
+    "semantic_hash": "b44de0ce6d756c2fec8a263cc133be6e"
+  },
+  "src/main/resources/db/migration/V17__member_closed.sql": {
+    "mtime": 1792581138.2982752,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ae41b48a4b571bee07c3c8a9dbbc157e",
+    "semantic_hash": "ae41b48a4b571bee07c3c8a9dbbc157e"
+  },
+  "src/main/resources/db/migration/V18__assessment_cancel_reason.sql": {
+    "mtime": 1792595146.7054033,
+    "seen": 1794094957.5545533,
+    "ast_hash": "284c657e4e14b500e7c28c267a443bb0",
+    "semantic_hash": "284c657e4e14b500e7c28c267a443bb0"
+  },
+  "src/main/resources/db/migration/V19__payments.sql": {
+    "mtime": 1792957364.0214932,
+    "seen": 1794094957.5545533,
+    "ast_hash": "953f8ab65639d4694d550dccf2f62d60",
+    "semantic_hash": "953f8ab65639d4694d550dccf2f62d60"
+  },
+  "src/main/resources/db/migration/V1__create_level.sql": {
+    "mtime": 1791726287.869,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3aa1d29b50e8ad5fa8ef320c55420251",
+    "semantic_hash": "3aa1d29b50e8ad5fa8ef320c55420251"
+  },
+  "src/main/resources/db/migration/V20__session_finished.sql": {
+    "mtime": 1793450678.084401,
+    "seen": 1794094957.5545533,
+    "ast_hash": "59c318689450c28c9d118579f9095ee5",
+    "semantic_hash": "59c318689450c28c9d118579f9095ee5"
+  },
+  "src/main/resources/db/migration/V21__session_evaluation.sql": {
+    "mtime": 1793473324.1264849,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5ce9c278048199c51fd79f76d5e66e05",
+    "semantic_hash": "5ce9c278048199c51fd79f76d5e66e05"
+  },
+  "src/main/resources/db/migration/V22__rider_accounts.sql": {
+    "mtime": 1793538634.647971,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1541cee893acafaa25bed472ad3e236f",
+    "semantic_hash": "1541cee893acafaa25bed472ad3e236f"
+  },
+  "src/main/resources/db/migration/V23__club_and_club_id.sql": {
+    "mtime": 1794068223.615677,
+    "seen": 1794094957.5545533,
+    "ast_hash": "794625626a7b66b591d1e33a8fcf2cf3",
+    "semantic_hash": "794625626a7b66b591d1e33a8fcf2cf3"
+  },
+  "src/main/resources/db/migration/V24__row_level_security.sql": {
+    "mtime": 1794070836.926344,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4694ac99c65f906ce3f1f93529733c80",
+    "semantic_hash": "4694ac99c65f906ce3f1f93529733c80"
+  },
+  "src/main/resources/db/migration/V25__super_admin.sql": {
+    "mtime": 1794074193.3672812,
+    "seen": 1794094957.5545533,
+    "ast_hash": "aa186452431101fccd9e28f0d61ba7fb",
+    "semantic_hash": "aa186452431101fccd9e28f0d61ba7fb"
+  },
+  "src/main/resources/db/migration/V26__plan_and_subscription.sql": {
+    "mtime": 1794077178.5878775,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d1299487c60b8edefa732bb260932971",
+    "semantic_hash": "d1299487c60b8edefa732bb260932971"
+  },
+  "src/main/resources/db/migration/V27__admin_invite.sql": {
+    "mtime": 1794078635.6033993,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c1cc763ef045c671270a8146e6755f87",
+    "semantic_hash": "c1cc763ef045c671270a8146e6755f87"
+  },
+  "src/main/resources/db/migration/V2__seed_levels.sql": {
+    "mtime": 1791726304.866,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a7ac80c945edf63d20b94db436d2193d",
+    "semantic_hash": "a7ac80c945edf63d20b94db436d2193d"
+  },
+  "src/main/resources/db/migration/V3__create_accounts.sql": {
+    "mtime": 1791731814.1607037,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6d7edd36b9b21192f63ce13b7a26d981",
+    "semantic_hash": "6d7edd36b9b21192f63ce13b7a26d981"
+  },
+  "src/main/resources/db/migration/V4__seed_test_trainers.sql": {
+    "mtime": 1791805342.9200904,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c11374c5e08f8f57cc9d2c22ad68552f",
+    "semantic_hash": "c11374c5e08f8f57cc9d2c22ad68552f"
+  },
+  "src/main/resources/db/migration/V5__seed_admin.sql": {
+    "mtime": 1791805342.9210856,
+    "seen": 1794094957.5545533,
+    "ast_hash": "9fb4ec1d8d80269a5ce26f7926155dfc",
+    "semantic_hash": "9fb4ec1d8d80269a5ce26f7926155dfc"
+  },
+  "src/main/resources/db/migration/V6__create_refresh_token.sql": {
+    "mtime": 1791806496.675413,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f43c6eb0d8e14c8d4200761b5c594c05",
+    "semantic_hash": "f43c6eb0d8e14c8d4200761b5c594c05"
+  },
+  "src/main/resources/db/migration/V7__create_session_template.sql": {
+    "mtime": 1791885069.483366,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d76bfcaf0d152ef806f57d0590e4b8e5",
+    "semantic_hash": "d76bfcaf0d152ef806f57d0590e4b8e5"
+  },
+  "src/main/resources/db/migration/V8__seed_sample_templates.sql": {
+    "mtime": 1791885069.483366,
+    "seen": 1794094957.5545533,
+    "ast_hash": "99846b2bd36d64f273a3247e8e478c12",
+    "semantic_hash": "99846b2bd36d64f273a3247e8e478c12"
+  },
+  "src/main/resources/db/migration/V9__create_session.sql": {
+    "mtime": 1791886084.971979,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ea8b6b0da8bb36a441875807ff6a4ff1",
+    "semantic_hash": "ea8b6b0da8bb36a441875807ff6a4ff1"
+  },
+  "src/main/resources/db/prod/afterMigrate__remove_demo_data.sql": {
+    "mtime": 1792425831.5725832,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bf52001ccd3990b6ed86aa42e426a8bf",
+    "semantic_hash": "bf52001ccd3990b6ed86aa42e426a8bf"
+  },
+  "src/test/java/com/equestrian/equis/EquisApiApplicationTests.java": {
+    "mtime": 1793547345.766988,
+    "seen": 1794094957.5545533,
+    "ast_hash": "11d884858097b23148973172bcf9a00a",
+    "semantic_hash": "11d884858097b23148973172bcf9a00a"
+  },
+  "src/test/java/com/equestrian/equis/common/config/AuthPropertiesTest.java": {
+    "mtime": 1791821800.5716262,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5dd8623d2170ed6bd0bda552d0a7d71e",
+    "semantic_hash": "5dd8623d2170ed6bd0bda552d0a7d71e"
+  },
+  "src/test/java/com/equestrian/equis/common/config/JwtConfigTest.java": {
+    "mtime": 1791820556.54599,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8c01e99a0d86a24611c7c9dde1ac46a0",
+    "semantic_hash": "8c01e99a0d86a24611c7c9dde1ac46a0"
+  },
+  "src/test/java/com/equestrian/equis/common/config/MailConfigTest.java": {
+    "mtime": 1794067747.232432,
+    "seen": 1794094957.5545533,
+    "ast_hash": "db210722ad74f994174b421e7a5dbe20",
+    "semantic_hash": "db210722ad74f994174b421e7a5dbe20"
+  },
+  "src/test/java/com/equestrian/equis/common/config/ProdEnvironmentCheckTest.java": {
+    "mtime": 1792424208.0551183,
+    "seen": 1794094957.5545533,
+    "ast_hash": "17c7d9ebf6280bd3809413673cd11d75",
+    "semantic_hash": "17c7d9ebf6280bd3809413673cd11d75"
+  },
+  "src/test/java/com/equestrian/equis/common/config/SecurityConfigTest.java": {
+    "mtime": 1794095975.9870915,
+    "seen": 1794096195.2893264,
+    "ast_hash": "d6ded8ea6a45f2517d6d9821fd8a246b",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/common/error/ApiExceptionHandlerTest.java": {
+    "mtime": 1792190871.0349264,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2f315fcd4061db481afb708ecef2aefb",
+    "semantic_hash": "2f315fcd4061db481afb708ecef2aefb"
+  },
+  "src/test/java/com/equestrian/equis/common/phone/PhoneNormalizerTest.java": {
+    "mtime": 1794075934.8924165,
+    "seen": 1794094957.5545533,
+    "ast_hash": "05ca56d66c75e9e3b630a078f47b53cc",
+    "semantic_hash": "05ca56d66c75e9e3b630a078f47b53cc"
+  },
+  "src/test/java/com/equestrian/equis/common/security/AuthUserConverterTest.java": {
+    "mtime": 1794074193.3672812,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5e9fe6da072d8c2458187c099ab12759",
+    "semantic_hash": "5e9fe6da072d8c2458187c099ab12759"
+  },
+  "src/test/java/com/equestrian/equis/common/security/RoleTest.java": {
+    "mtime": 1794074193.3672812,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8b07aa7c5421c2ffdc9c6f24a9fa2f59",
+    "semantic_hash": "8b07aa7c5421c2ffdc9c6f24a9fa2f59"
+  },
+  "src/test/java/com/equestrian/equis/common/tenant/TenantContextTest.java": {
+    "mtime": 1794070836.9283495,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4ef477dd01f045ff21854260c13478b2",
+    "semantic_hash": "4ef477dd01f045ff21854260c13478b2"
+  },
+  "src/test/java/com/equestrian/equis/common/tenant/TenantFilterTest.java": {
+    "mtime": 1794070836.9283495,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1ecdab5bcf06ebbf6e4dea40f8aa2563",
+    "semantic_hash": "1ecdab5bcf06ebbf6e4dea40f8aa2563"
+  },
+  "src/test/java/com/equestrian/equis/common/tenant/TenantIsolationTest.java": {
+    "mtime": 1794095976.488045,
+    "seen": 1794096195.2893264,
+    "ast_hash": "abaf03639f0d3f8c0ec39acd85e4abb4",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/accounts/AdminTrainerActionsApiTest.java": {
+    "mtime": 1794075934.8931253,
+    "seen": 1794094957.5545533,
+    "ast_hash": "9ae0761c103c8fc8bbbf77da0b037fec",
+    "semantic_hash": "9ae0761c103c8fc8bbbf77da0b037fec"
+  },
+  "src/test/java/com/equestrian/equis/controller/accounts/AdminTrainerApiTest.java": {
+    "mtime": 1794070836.9283495,
+    "seen": 1794094957.5545533,
+    "ast_hash": "be0370c4c909c6e46b53da08351cf6a7",
+    "semantic_hash": "be0370c4c909c6e46b53da08351cf6a7"
+  },
+  "src/test/java/com/equestrian/equis/controller/accounts/PerClubSignInTest.java": {
+    "mtime": 1794075934.8931253,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d00dd2de01db33bb9a9e9bf419855442",
+    "semantic_hash": "d00dd2de01db33bb9a9e9bf419855442"
+  },
+  "src/test/java/com/equestrian/equis/controller/accounts/TrainerAdminAccessTest.java": {
+    "mtime": 1793547345.766988,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4b9d8e77dedc57de81369d581cad48f7",
+    "semantic_hash": "4b9d8e77dedc57de81369d581cad48f7"
+  },
+  "src/test/java/com/equestrian/equis/controller/accounts/TrainerDisableJourneyTest.java": {
+    "mtime": 1794075257.8542953,
+    "seen": 1794094957.5545533,
+    "ast_hash": "cfed641aaa17dbbb7bb72c3916152f40",
+    "semantic_hash": "cfed641aaa17dbbb7bb72c3916152f40"
+  },
+  "src/test/java/com/equestrian/equis/controller/accounts/TrainerInviteJourneyTest.java": {
+    "mtime": 1794075934.895524,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ca20f5696ef32136d779ab4e52a0b8e0",
+    "semantic_hash": "ca20f5696ef32136d779ab4e52a0b8e0"
+  },
+  "src/test/java/com/equestrian/equis/controller/accounts/TrainerResetJourneyTest.java": {
+    "mtime": 1794075934.895524,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bd2db699c3587234f48ebc46b0363949",
+    "semantic_hash": "bd2db699c3587234f48ebc46b0363949"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/AdminAssessmentSlotApiTest.java": {
+    "mtime": 1794070836.9317095,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4ef94723acad4be4325bad059ed89a6a",
+    "semantic_hash": "4ef94723acad4be4325bad059ed89a6a"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/AdminBookingApiTest.java": {
+    "mtime": 1794070836.9317095,
+    "seen": 1794094957.5545533,
+    "ast_hash": "af0f2a442255a6f88ccecc25115d1540",
+    "semantic_hash": "af0f2a442255a6f88ccecc25115d1540"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/AdminBookingChangeApiTest.java": {
+    "mtime": 1794070836.9337144,
+    "seen": 1794094957.5545533,
+    "ast_hash": "44ed6ed998ad410d804e70d088170700",
+    "semantic_hash": "44ed6ed998ad410d804e70d088170700"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/AdminMemberApiTest.java": {
+    "mtime": 1794070836.9337144,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f3d0f7461a108d50c00e7061d2063625",
+    "semantic_hash": "f3d0f7461a108d50c00e7061d2063625"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/AdminMemberCloseApiTest.java": {
+    "mtime": 1794070836.9337144,
+    "seen": 1794094957.5545533,
+    "ast_hash": "35d142055c7e8b3e60f5892b77db13de",
+    "semantic_hash": "35d142055c7e8b3e60f5892b77db13de"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/AdminMemberEditApiTest.java": {
+    "mtime": 1794070836.9337144,
+    "seen": 1794094957.5545533,
+    "ast_hash": "767a20b1875b91cfbad58719cbbd4655",
+    "semantic_hash": "767a20b1875b91cfbad58719cbbd4655"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/AdminOversightAccessTest.java": {
+    "mtime": 1793547345.783018,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7df8569332ed9c67c3c735ace5f844d6",
+    "semantic_hash": "7df8569332ed9c67c3c735ace5f844d6"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/AssessmentSlotControllerTest.java": {
+    "mtime": 1794095976.0670116,
+    "seen": 1794096195.297803,
+    "ast_hash": "d25f8ee66f329a13d4f3ec491ae4d10d",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/BookingControllerTest.java": {
+    "mtime": 1794095976.143264,
+    "seen": 1794096195.297803,
+    "ast_hash": "17d4fb0f3b525d3d752cbb5f2318dbe6",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/BookingOversightJourneyTest.java": {
+    "mtime": 1793547345.783018,
+    "seen": 1794094957.5545533,
+    "ast_hash": "09d9b5447a4c9e8f63423907bf66d8ae",
+    "semantic_hash": "09d9b5447a4c9e8f63423907bf66d8ae"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/BookingReminderApiTest.java": {
+    "mtime": 1794070836.9357195,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5f6051418a5fd07ce27a3146ad152146",
+    "semantic_hash": "5f6051418a5fd07ce27a3146ad152146"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/IntakeScenarioTest.java": {
+    "mtime": 1793547345.7865174,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b6c8ef9cc5f9a1eec497093758e3b568",
+    "semantic_hash": "b6c8ef9cc5f9a1eec497093758e3b568"
+  },
+  "src/test/java/com/equestrian/equis/controller/assessment/ReminderJourneyTest.java": {
+    "mtime": 1793547345.7865174,
+    "seen": 1794094957.5545533,
+    "ast_hash": "30c92fa9cb2379eac1c6b347775b8b8c",
+    "semantic_hash": "30c92fa9cb2379eac1c6b347775b8b8c"
+  },
+  "src/test/java/com/equestrian/equis/controller/evaluations/EvaluationFollowUpApiTest.java": {
+    "mtime": 1794098116.9921427,
+    "seen": 1794098326.7443736,
+    "ast_hash": "dad5d138109e095282ff3d1bfff984f8",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/evaluations/RiderEvaluationHistoryApiTest.java": {
+    "mtime": 1794098117.0196059,
+    "seen": 1794098326.7443736,
+    "ast_hash": "1b1b1e55f5c8c70be6c4f27f5192901f",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/evaluations/SessionEvaluationApiTest.java": {
+    "mtime": 1794070836.937725,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1e452f22a68889ce2ea25beddf06c23f",
+    "semantic_hash": "1e452f22a68889ce2ea25beddf06c23f"
+  },
+  "src/test/java/com/equestrian/equis/controller/evaluations/SessionEvaluationsScenarioTest.java": {
+    "mtime": 1793547345.7880807,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c523a67eb42e0a2c834806132bbcb274",
+    "semantic_hash": "c523a67eb42e0a2c834806132bbcb274"
+  },
+  "src/test/java/com/equestrian/equis/controller/levels/MyLevelsControllerTest.java": {
+    "mtime": 1794095976.2136703,
+    "seen": 1794096195.3005848,
+    "ast_hash": "2b88a61030ac3a9a4bfc9983233c6dd4",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/overview/AdminOverviewApiTest.java": {
+    "mtime": 1794070836.9397297,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d46eba626243c1658995fdaba5e73e76",
+    "semantic_hash": "d46eba626243c1658995fdaba5e73e76"
+  },
+  "src/test/java/com/equestrian/equis/controller/overview/ConsoleFinishedSessionsApiTest.java": {
+    "mtime": 1794070836.9397297,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fe4d995f7854c3baa06bca1af7cc0933",
+    "semantic_hash": "fe4d995f7854c3baa06bca1af7cc0933"
+  },
+  "src/test/java/com/equestrian/equis/controller/payments/AdminPaymentApiTest.java": {
+    "mtime": 1794070836.9397297,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bdb34aaf2be17cb2c3a8150c6a3b755b",
+    "semantic_hash": "bdb34aaf2be17cb2c3a8150c6a3b755b"
+  },
+  "src/test/java/com/equestrian/equis/controller/payments/AdminPaymentVoidApiTest.java": {
+    "mtime": 1794070836.9397297,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e3824034ce623b8fc6526dd88e06774c",
+    "semantic_hash": "e3824034ce623b8fc6526dd88e06774c"
+  },
+  "src/test/java/com/equestrian/equis/controller/payments/PaymentsScenarioTest.java": {
+    "mtime": 1794068223.6313136,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b112c2166aeeae8c0c1b94dd5eca1b42",
+    "semantic_hash": "b112c2166aeeae8c0c1b94dd5eca1b42"
+  },
+  "src/test/java/com/equestrian/equis/controller/platform/PlatformClubApiTest.java": {
+    "mtime": 1794098129.9399796,
+    "seen": 1794098326.7443736,
+    "ast_hash": "44d7f38ab771e83feb1d336b1e64159a",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/platform/PlatformSignInJourneyTest.java": {
+    "mtime": 1794074193.3741233,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e28b81b4397d9dd9322b9b2fa5ea66c8",
+    "semantic_hash": "e28b81b4397d9dd9322b9b2fa5ea66c8"
+  },
+  "src/test/java/com/equestrian/equis/controller/platform/PlatformSubscriptionApiTest.java": {
+    "mtime": 1794098241.9489639,
+    "seen": 1794098326.7443736,
+    "ast_hash": "f718f916dc21071f97185572d8e655cc",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/riderapp/RiderAppApiTest.java": {
+    "mtime": 1794098117.0466075,
+    "seen": 1794098326.7443736,
+    "ast_hash": "8dc52cbaa00164be0cd8127dba730c74",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/riders/AdminRiderApiTest.java": {
+    "mtime": 1794070836.942235,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5ba370b93eb17fdbf4ff464dab3d47d7",
+    "semantic_hash": "5ba370b93eb17fdbf4ff464dab3d47d7"
+  },
+  "src/test/java/com/equestrian/equis/controller/riders/AdminRiderBalanceApiTest.java": {
+    "mtime": 1794070836.9438105,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bbbba5a06c6ab4463a896dc556a786f4",
+    "semantic_hash": "bbbba5a06c6ab4463a896dc556a786f4"
+  },
+  "src/test/java/com/equestrian/equis/controller/riders/LevelChangeApiTest.java": {
+    "mtime": 1794070836.9438105,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0d3f497b5c0141dfd46ce9a3182841d7",
+    "semantic_hash": "0d3f497b5c0141dfd46ce9a3182841d7"
+  },
+  "src/test/java/com/equestrian/equis/controller/riders/MyRidersControllerTest.java": {
+    "mtime": 1794095976.296009,
+    "seen": 1794096195.302593,
+    "ast_hash": "95e4424fbea00f27b7718e0aeaacb29d",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/riders/RiderAccountJourneyTest.java": {
+    "mtime": 1794075934.895524,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f2cda4a836894d738ef8bab96f8ab9ee",
+    "semantic_hash": "f2cda4a836894d738ef8bab96f8ab9ee"
+  },
+  "src/test/java/com/equestrian/equis/controller/riders/RiderAccountsScenarioTest.java": {
+    "mtime": 1794075934.8975296,
+    "seen": 1794094957.5545533,
+    "ast_hash": "9b64ccefd7d5028d3e5cec69b7f9f7ca",
+    "semantic_hash": "9b64ccefd7d5028d3e5cec69b7f9f7ca"
+  },
+  "src/test/java/com/equestrian/equis/controller/riders/RiderReassignApiTest.java": {
+    "mtime": 1794070836.9458148,
+    "seen": 1794094957.5545533,
+    "ast_hash": "30ac75b3b607d739804dbbbbd3d6c54a",
+    "semantic_hash": "30ac75b3b607d739804dbbbbd3d6c54a"
+  },
+  "src/test/java/com/equestrian/equis/controller/riders/RiderReassignJourneyTest.java": {
+    "mtime": 1793547345.7880807,
+    "seen": 1794094957.5545533,
+    "ast_hash": "307c2dad34f0153ea7afbedf579a25cd",
+    "semantic_hash": "307c2dad34f0153ea7afbedf579a25cd"
+  },
+  "src/test/java/com/equestrian/equis/controller/sessions/AssignOnTheDayApiTest.java": {
+    "mtime": 1794070836.9458148,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8c31d87cda85491c3d27c596bddbaf0a",
+    "semantic_hash": "8c31d87cda85491c3d27c596bddbaf0a"
+  },
+  "src/test/java/com/equestrian/equis/controller/sessions/FinishSessionApiTest.java": {
+    "mtime": 1794070836.9458148,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7214c8611961d9a5700f475fad3ec0a4",
+    "semantic_hash": "7214c8611961d9a5700f475fad3ec0a4"
+  },
+  "src/test/java/com/equestrian/equis/controller/sessions/MySessionsControllerTest.java": {
+    "mtime": 1794095976.3691473,
+    "seen": 1794096195.3073246,
+    "ast_hash": "d730da8d1edd89bbc7dcb65f81e30abb",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/sessions/MyWeekApiTest.java": {
+    "mtime": 1794070836.947819,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a16d889e16756bfc2c17d91b8ec8dfe1",
+    "semantic_hash": "a16d889e16756bfc2c17d91b8ec8dfe1"
+  },
+  "src/test/java/com/equestrian/equis/controller/sessions/SameDaySessionsScenarioTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "255540c9162fde4cf109d21812e694b2",
+    "semantic_hash": "255540c9162fde4cf109d21812e694b2"
+  },
+  "src/test/java/com/equestrian/equis/controller/sessions/SessionTemplateControllerTest.java": {
+    "mtime": 1794095976.4391835,
+    "seen": 1794096195.3073246,
+    "ast_hash": "2ad5d0a87105b6520a1bb5416a60dd6d",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/entity/assessment/AssessmentBookingTest.java": {
+    "mtime": 1792595146.7054033,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8d8357a8f0690771c694aebbccad9af2",
+    "semantic_hash": "8d8357a8f0690771c694aebbccad9af2"
+  },
+  "src/test/java/com/equestrian/equis/entity/assessment/CancelReasonTest.java": {
+    "mtime": 1792595146.7054033,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a7b176376a345748f028ca4fb442dfbc",
+    "semantic_hash": "a7b176376a345748f028ca4fb442dfbc"
+  },
+  "src/test/java/com/equestrian/equis/entity/assessment/MemberStatusTest.java": {
+    "mtime": 1792581138.2992754,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2df5127add0a90581b19b14a87a41ca6",
+    "semantic_hash": "2df5127add0a90581b19b14a87a41ca6"
+  },
+  "src/test/java/com/equestrian/equis/entity/assessment/MemberTest.java": {
+    "mtime": 1792581138.300276,
+    "seen": 1794094957.5545533,
+    "ast_hash": "58b3589827116e6e4ce64de5712d752b",
+    "semantic_hash": "58b3589827116e6e4ce64de5712d752b"
+  },
+  "src/test/java/com/equestrian/equis/entity/evaluations/SessionEvaluationTest.java": {
+    "mtime": 1793473324.1264849,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8988d87894e5e8dbe81bba491e506870",
+    "semantic_hash": "8988d87894e5e8dbe81bba491e506870"
+  },
+  "src/test/java/com/equestrian/equis/entity/payments/PaymentEnumsTest.java": {
+    "mtime": 1792957364.0235007,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f366dae7b74d98b3d0b034a04176f368",
+    "semantic_hash": "f366dae7b74d98b3d0b034a04176f368"
+  },
+  "src/test/java/com/equestrian/equis/entity/payments/PaymentTest.java": {
+    "mtime": 1792957364.023955,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a203a9f0f56397c3409302bc69717a10",
+    "semantic_hash": "a203a9f0f56397c3409302bc69717a10"
+  },
+  "src/test/java/com/equestrian/equis/entity/riders/LevelChangeTest.java": {
+    "mtime": 1792793331.7058513,
+    "seen": 1794094957.5545533,
+    "ast_hash": "76413c3d3d5b6ddf73c9e0fb31fd0d4a",
+    "semantic_hash": "76413c3d3d5b6ddf73c9e0fb31fd0d4a"
+  },
+  "src/test/java/com/equestrian/equis/entity/riders/RiderTest.java": {
+    "mtime": 1793538634.647971,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1ee93443f3cf3933e715980ca2f9944b",
+    "semantic_hash": "1ee93443f3cf3933e715980ca2f9944b"
+  },
+  "src/test/java/com/equestrian/equis/entity/sessions/SessionTest.java": {
+    "mtime": 1793473324.1264849,
+    "seen": 1794094957.5545533,
+    "ast_hash": "cbf97c7ac10620e9323b4791507f4b76",
+    "semantic_hash": "cbf97c7ac10620e9323b4791507f4b76"
+  },
+  "src/test/java/com/equestrian/equis/isolation/EndpointCoverageGuardTest.java": {
+    "mtime": 1794095991.9509172,
+    "seen": 1794096195.3107314,
+    "ast_hash": "1ccf0735049f4d040b7f1c4d0419d74f",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/isolation/EndpointIsolationTest.java": {
+    "mtime": 1794095991.901984,
+    "seen": 1794096195.3107314,
+    "ast_hash": "0cf6dc2e659eb651c614192601a49492",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/isolation/RepositoryIsolationTest.java": {
+    "mtime": 1794072510.6267364,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2e094db4fec05f755bc27385e6459494",
+    "semantic_hash": "2e094db4fec05f755bc27385e6459494"
+  },
+  "src/test/java/com/equestrian/equis/isolation/RowLevelSecurityTest.java": {
+    "mtime": 1794072510.6267364,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6a9a1ca0eed678487b9c2765163b7c02",
+    "semantic_hash": "6a9a1ca0eed678487b9c2765163b7c02"
+  },
+  "src/test/java/com/equestrian/equis/repository/accounts/AdminAccountRepositoryTest.java": {
+    "mtime": 1794078635.605404,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f83abb911ac6feecd13d5378f47abf25",
+    "semantic_hash": "f83abb911ac6feecd13d5378f47abf25"
+  },
+  "src/test/java/com/equestrian/equis/repository/accounts/InviteRepositoryTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "eb89d02edc66aff3fd59051975d1fb38",
+    "semantic_hash": "eb89d02edc66aff3fd59051975d1fb38"
+  },
+  "src/test/java/com/equestrian/equis/repository/accounts/ProdDemoDataCleanupTest.java": {
+    "mtime": 1794070836.947819,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8378e0c6c9de14494e7c84a1b67ad701",
+    "semantic_hash": "8378e0c6c9de14494e7c84a1b67ad701"
+  },
+  "src/test/java/com/equestrian/equis/repository/accounts/RefreshTokenRepositoryTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0be203f5acfad8e7bf934252ff374146",
+    "semantic_hash": "0be203f5acfad8e7bf934252ff374146"
+  },
+  "src/test/java/com/equestrian/equis/repository/accounts/SeedDataTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "de9c3ddd0472ee124212806c61549319",
+    "semantic_hash": "de9c3ddd0472ee124212806c61549319"
+  },
+  "src/test/java/com/equestrian/equis/repository/accounts/TrainerRepositoryTest.java": {
+    "mtime": 1794068223.6313136,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8d60c4dd42e368092383e3fce4b0d234",
+    "semantic_hash": "8d60c4dd42e368092383e3fce4b0d234"
+  },
+  "src/test/java/com/equestrian/equis/repository/assessment/ApplicantIntakeMigrationTest.java": {
+    "mtime": 1794070836.9495647,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e47c0c9393add7a0f48d0b585f918f95",
+    "semantic_hash": "e47c0c9393add7a0f48d0b585f918f95"
+  },
+  "src/test/java/com/equestrian/equis/repository/assessment/AssessmentBookingRepositoryTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "607b16d4cda6ec3edd85ccb8f07def9a",
+    "semantic_hash": "607b16d4cda6ec3edd85ccb8f07def9a"
+  },
+  "src/test/java/com/equestrian/equis/repository/assessment/MemberRepositoryTest.java": {
+    "mtime": 1794068223.6313136,
+    "seen": 1794094957.5545533,
+    "ast_hash": "b456e7088d5cf77b78958f4daddcfb17",
+    "semantic_hash": "b456e7088d5cf77b78958f4daddcfb17"
+  },
+  "src/test/java/com/equestrian/equis/repository/club/ClubRepositoryTest.java": {
+    "mtime": 1794078635.6074078,
+    "seen": 1794094957.5545533,
+    "ast_hash": "087819e56a8581424bd892f3f976dc39",
+    "semantic_hash": "087819e56a8581424bd892f3f976dc39"
+  },
+  "src/test/java/com/equestrian/equis/repository/evaluations/SessionEvaluationRepositoryTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "55e40c3451e3f8586ec43b341719e00b",
+    "semantic_hash": "55e40c3451e3f8586ec43b341719e00b"
+  },
+  "src/test/java/com/equestrian/equis/repository/levels/LevelRepositoryTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "cb1c7f60ff07bea3918eee2bc006fc2d",
+    "semantic_hash": "cb1c7f60ff07bea3918eee2bc006fc2d"
+  },
+  "src/test/java/com/equestrian/equis/repository/notices/NoticeRepositoryTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "bb760014106205279303e94aab8f074e",
+    "semantic_hash": "bb760014106205279303e94aab8f074e"
+  },
+  "src/test/java/com/equestrian/equis/repository/payments/PaymentRepositoryTest.java": {
+    "mtime": 1794078635.6074078,
+    "seen": 1794094957.5545533,
+    "ast_hash": "af4cc3345f126cda264266d79538105a",
+    "semantic_hash": "af4cc3345f126cda264266d79538105a"
+  },
+  "src/test/java/com/equestrian/equis/repository/platform/PlanAndSubscriptionTest.java": {
+    "mtime": 1794098129.8269832,
+    "seen": 1794098326.7523837,
+    "ast_hash": "79eb7948554d91fa9276082e99ddf190",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/repository/riders/LevelChangeRepositoryTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "35c54e34790f14cd6a20928748a935c4",
+    "semantic_hash": "35c54e34790f14cd6a20928748a935c4"
+  },
+  "src/test/java/com/equestrian/equis/repository/riders/RiderAccountMigrationTest.java": {
+    "mtime": 1794070836.9495647,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a2e9fa577df79b11fbcbe88f618e0240",
+    "semantic_hash": "a2e9fa577df79b11fbcbe88f618e0240"
+  },
+  "src/test/java/com/equestrian/equis/repository/riders/RiderRepositoryTest.java": {
+    "mtime": 1794068223.6313136,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5e94885f2a50484dd9e4edbac9434671",
+    "semantic_hash": "5e94885f2a50484dd9e4edbac9434671"
+  },
+  "src/test/java/com/equestrian/equis/repository/sessions/AssignmentRepositoryTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "4fcfe69723bbceda0c4e980c58a42064",
+    "semantic_hash": "4fcfe69723bbceda0c4e980c58a42064"
+  },
+  "src/test/java/com/equestrian/equis/repository/sessions/SessionFinishedMigrationTest.java": {
+    "mtime": 1794070836.9515693,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5816febf9936c999663e4fbae00747e2",
+    "semantic_hash": "5816febf9936c999663e4fbae00747e2"
+  },
+  "src/test/java/com/equestrian/equis/repository/sessions/SessionRepositoryTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "330e73ea7940f1cc62f4095fa9774cbd",
+    "semantic_hash": "330e73ea7940f1cc62f4095fa9774cbd"
+  },
+  "src/test/java/com/equestrian/equis/repository/sessions/SessionTemplateRepositoryTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "cefd6b9972369d18002fd357a626e9df",
+    "semantic_hash": "cefd6b9972369d18002fd357a626e9df"
+  },
+  "src/test/java/com/equestrian/equis/service/accounts/AccountLinkServiceTest.java": {
+    "mtime": 1793547345.7988024,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fffaec2288927b93c709552a6e41e1e2",
+    "semantic_hash": "fffaec2288927b93c709552a6e41e1e2"
+  },
+  "src/test/java/com/equestrian/equis/service/accounts/AdminLockoutServiceTest.java": {
+    "mtime": 1794078635.6074078,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a9d6496616bab5f0d702c2c768ca53cf",
+    "semantic_hash": "a9d6496616bab5f0d702c2c768ca53cf"
+  },
+  "src/test/java/com/equestrian/equis/service/accounts/AuthServiceTest.java": {
+    "mtime": 1794098116.8772936,
+    "seen": 1794098326.7523837,
+    "ast_hash": "c469b0d38e46835881e073b23ae6fbf6",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/service/accounts/AuthTokenServiceTest.java": {
+    "mtime": 1794098116.9406533,
+    "seen": 1794098326.7523837,
+    "ast_hash": "61cf9478fbfed03c9b30b3be56251b2f",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/service/accounts/JwtServiceTest.java": {
+    "mtime": 1794070836.9535737,
+    "seen": 1794094957.5545533,
+    "ast_hash": "02117ab4b4c0031134674c127957fb0f",
+    "semantic_hash": "02117ab4b4c0031134674c127957fb0f"
+  },
+  "src/test/java/com/equestrian/equis/service/accounts/PasswordServiceTest.java": {
+    "mtime": 1791823649.2293265,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d0cc82a50d4b4c92cc9d76fa43db9c91",
+    "semantic_hash": "d0cc82a50d4b4c92cc9d76fa43db9c91"
+  },
+  "src/test/java/com/equestrian/equis/service/accounts/TokenGeneratorTest.java": {
+    "mtime": 1791806496.678414,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a671b801c837298fde6d5207adc29b6f",
+    "semantic_hash": "a671b801c837298fde6d5207adc29b6f"
+  },
+  "src/test/java/com/equestrian/equis/service/accounts/TrainerAccessServiceTest.java": {
+    "mtime": 1794075934.8975296,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0f7754f60cc00a239e5ebde5a2702a56",
+    "semantic_hash": "0f7754f60cc00a239e5ebde5a2702a56"
+  },
+  "src/test/java/com/equestrian/equis/service/assessment/AssessmentRulesTest.java": {
+    "mtime": 1794070836.9535737,
+    "seen": 1794094957.5545533,
+    "ast_hash": "88a1ba98101fc33bc604333a865edba2",
+    "semantic_hash": "88a1ba98101fc33bc604333a865edba2"
+  },
+  "src/test/java/com/equestrian/equis/service/assessment/AssessmentSlotQueryServiceTest.java": {
+    "mtime": 1793547345.8144946,
+    "seen": 1794094957.5545533,
+    "ast_hash": "94d571b0b35c1e8ffa2bf4896df0794b",
+    "semantic_hash": "94d571b0b35c1e8ffa2bf4896df0794b"
+  },
+  "src/test/java/com/equestrian/equis/service/assessment/BookingActionsTest.java": {
+    "mtime": 1792832840.2321303,
+    "seen": 1794094957.5545533,
+    "ast_hash": "7f4fcc22ec176f1832f3662bc3fb56aa",
+    "semantic_hash": "7f4fcc22ec176f1832f3662bc3fb56aa"
+  },
+  "src/test/java/com/equestrian/equis/service/assessment/MemberBookingServiceTest.java": {
+    "mtime": 1793547345.8144946,
+    "seen": 1794094957.5545533,
+    "ast_hash": "68c51f80423136b1ccb206c578ee92b8",
+    "semantic_hash": "68c51f80423136b1ccb206c578ee92b8"
+  },
+  "src/test/java/com/equestrian/equis/service/assessment/MemberStatusResolverTest.java": {
+    "mtime": 1792581138.3012755,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1f1bbfab812f35aaba325add379d5bc4",
+    "semantic_hash": "1f1bbfab812f35aaba325add379d5bc4"
+  },
+  "src/test/java/com/equestrian/equis/service/assessment/RecordResultServiceTest.java": {
+    "mtime": 1794070836.9535737,
+    "seen": 1794094957.5545533,
+    "ast_hash": "44cf44e69da3533361a323167b0b5b5b",
+    "semantic_hash": "44cf44e69da3533361a323167b0b5b5b"
+  },
+  "src/test/java/com/equestrian/equis/service/levels/MyLevelsServiceTest.java": {
+    "mtime": 1793547345.8194053,
+    "seen": 1794094957.5545533,
+    "ast_hash": "5e6d21d6f9a20f4e9ffa83d4a9c83635",
+    "semantic_hash": "5e6d21d6f9a20f4e9ffa83d4a9c83635"
+  },
+  "src/test/java/com/equestrian/equis/service/mail/AccountLinkEmailsTest.java": {
+    "mtime": 1794078635.6094122,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f4300f1a3469c24e5fb81089c79aedbf",
+    "semantic_hash": "f4300f1a3469c24e5fb81089c79aedbf"
+  },
+  "src/test/java/com/equestrian/equis/service/mail/AccountLinkMailListenerTest.java": {
+    "mtime": 1794067747.2348459,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2bfdd00ba6b8b4e3a35f57050179d208",
+    "semantic_hash": "2bfdd00ba6b8b4e3a35f57050179d208"
+  },
+  "src/test/java/com/equestrian/equis/service/mail/SmtpNotificationSenderTest.java": {
+    "mtime": 1794067747.2348459,
+    "seen": 1794094957.5545533,
+    "ast_hash": "98577c136c06539d92d6c0deafc1657c",
+    "semantic_hash": "98577c136c06539d92d6c0deafc1657c"
+  },
+  "src/test/java/com/equestrian/equis/service/payments/PaymentStateTest.java": {
+    "mtime": 1792959385.437886,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d2598b69e5e655f576606233317ec496",
+    "semantic_hash": "d2598b69e5e655f576606233317ec496"
+  },
+  "src/test/java/com/equestrian/equis/service/payments/RiderBalanceServiceTest.java": {
+    "mtime": 1794078635.6094122,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ebd7f6ff7d357297f18515f600657c49",
+    "semantic_hash": "ebd7f6ff7d357297f18515f600657c49"
+  },
+  "src/test/java/com/equestrian/equis/service/payments/SessionUsageServiceTest.java": {
+    "mtime": 1794078635.6114168,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2439654c477086ea46e4cb75477cbab1",
+    "semantic_hash": "2439654c477086ea46e4cb75477cbab1"
+  },
+  "src/test/java/com/equestrian/equis/service/platform/ClubAccessServiceTest.java": {
+    "mtime": 1794078635.6114168,
+    "seen": 1794094957.5545533,
+    "ast_hash": "96d38baeab447078b5d4bd5fd5dbade9",
+    "semantic_hash": "96d38baeab447078b5d4bd5fd5dbade9"
+  },
+  "src/test/java/com/equestrian/equis/service/riders/LevelChangeFlowTest.java": {
+    "mtime": 1794070836.9555788,
+    "seen": 1794094957.5545533,
+    "ast_hash": "8765f4160b33613802e8a9afeeb89566",
+    "semantic_hash": "8765f4160b33613802e8a9afeeb89566"
+  },
+  "src/test/java/com/equestrian/equis/service/riders/LevelChangeRulesTest.java": {
+    "mtime": 1792057889.6422482,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ae81f52d46e49dafe4907c42b3167a7a",
+    "semantic_hash": "ae81f52d46e49dafe4907c42b3167a7a"
+  },
+  "src/test/java/com/equestrian/equis/service/riders/LevelChangeServiceTest.java": {
+    "mtime": 1794070836.9555788,
+    "seen": 1794094957.5545533,
+    "ast_hash": "f9447420de96413d64c2e7119ba719aa",
+    "semantic_hash": "f9447420de96413d64c2e7119ba719aa"
+  },
+  "src/test/java/com/equestrian/equis/service/riders/MyRidersQueryServiceTest.java": {
+    "mtime": 1794078635.6114168,
+    "seen": 1794094957.5545533,
+    "ast_hash": "d3c422c91b853dc2c80125257447a77a",
+    "semantic_hash": "d3c422c91b853dc2c80125257447a77a"
+  },
+  "src/test/java/com/equestrian/equis/service/riders/RiderLevelQueryServiceTest.java": {
+    "mtime": 1793547345.820938,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3cc0c13ee620583eb1dc35cfee3159d4",
+    "semantic_hash": "3cc0c13ee620583eb1dc35cfee3159d4"
+  },
+  "src/test/java/com/equestrian/equis/service/sessions/AssignmentServiceTest.java": {
+    "mtime": 1794078635.6134212,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1769dd6a71ded5e41a85bf91602f2cce",
+    "semantic_hash": "1769dd6a71ded5e41a85bf91602f2cce"
+  },
+  "src/test/java/com/equestrian/equis/service/sessions/SessionDetailServiceTest.java": {
+    "mtime": 1794078635.6134212,
+    "seen": 1794094957.5545533,
+    "ast_hash": "54eb7fc4774f967dbbc367923f515c05",
+    "semantic_hash": "54eb7fc4774f967dbbc367923f515c05"
+  },
+  "src/test/java/com/equestrian/equis/service/sessions/SessionGeneratorTest.java": {
+    "mtime": 1793547345.820938,
+    "seen": 1794094957.5545533,
+    "ast_hash": "c039587902929a86ffbea9f728980a98",
+    "semantic_hash": "c039587902929a86ffbea9f728980a98"
+  },
+  "src/test/java/com/equestrian/equis/service/sessions/SessionTemplateRulesOverlapsTest.java": {
+    "mtime": 1791886591.6516552,
+    "seen": 1794094957.5545533,
+    "ast_hash": "ae6a61147c199bd71c69d0cf96c197fa",
+    "semantic_hash": "ae6a61147c199bd71c69d0cf96c197fa"
+  },
+  "src/test/java/com/equestrian/equis/service/sessions/SessionTemplateRulesTest.java": {
+    "mtime": 1793547345.820938,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fbe0d532b0eee393a2ef268974f803da",
+    "semantic_hash": "fbe0d532b0eee393a2ef268974f803da"
+  },
+  "src/test/java/com/equestrian/equis/service/sessions/SessionTemplateServiceTest.java": {
+    "mtime": 1793547345.820938,
+    "seen": 1794094957.5545533,
+    "ast_hash": "0868cfa1914b2ba3dfc7550a9b2999aa",
+    "semantic_hash": "0868cfa1914b2ba3dfc7550a9b2999aa"
+  },
+  "src/test/java/com/equestrian/equis/support/AdminOversightFixture.java": {
+    "mtime": 1794070836.9575832,
+    "seen": 1794094957.5545533,
+    "ast_hash": "fce465196a87de61e4cd6254b93e7ebc",
+    "semantic_hash": "fce465196a87de61e4cd6254b93e7ebc"
+  },
+  "src/test/java/com/equestrian/equis/support/ClubThreads.java": {
+    "mtime": 1794070836.9575832,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e1d8b4ed50faf86bc27b9630e8cc84cf",
+    "semantic_hash": "e1d8b4ed50faf86bc27b9630e8cc84cf"
+  },
+  "src/test/java/com/equestrian/equis/support/DefaultClubExtension.java": {
+    "mtime": 1794070836.9575832,
+    "seen": 1794094957.5545533,
+    "ast_hash": "6ee66babf2eef4d8cfb46ecffbd83e86",
+    "semantic_hash": "6ee66babf2eef4d8cfb46ecffbd83e86"
+  },
+  "src/test/java/com/equestrian/equis/support/MailTestConfig.java": {
+    "mtime": 1792158527.293084,
+    "seen": 1794094957.5545533,
+    "ast_hash": "62b92c733f3216af1a5bf3a9df70fe15",
+    "semantic_hash": "62b92c733f3216af1a5bf3a9df70fe15"
+  },
+  "src/test/java/com/equestrian/equis/support/MutableClock.java": {
+    "mtime": 1792153156.006031,
+    "seen": 1794094957.5545533,
+    "ast_hash": "3b0a95c9331a164f60ff2e0f9ce3312d",
+    "semantic_hash": "3b0a95c9331a164f60ff2e0f9ce3312d"
+  },
+  "src/test/java/com/equestrian/equis/support/PaymentJourneys.java": {
+    "mtime": 1793469777.9969494,
+    "seen": 1794094957.5545533,
+    "ast_hash": "06d7ac63d6244f7d1e63e07cbf015731",
+    "semantic_hash": "06d7ac63d6244f7d1e63e07cbf015731"
+  },
+  "src/test/java/com/equestrian/equis/support/RecordingNotificationSender.java": {
+    "mtime": 1792158527.293084,
+    "seen": 1794094957.5545533,
+    "ast_hash": "a55920aa951240cadc47c7f11e48cc1b",
+    "semantic_hash": "a55920aa951240cadc47c7f11e48cc1b"
+  },
+  "src/test/java/com/equestrian/equis/support/SameDayJourneys.java": {
+    "mtime": 1793548468.8324976,
+    "seen": 1794094957.5545533,
+    "ast_hash": "038bd4643b587f1635f01bbe0ce27c4d",
+    "semantic_hash": "038bd4643b587f1635f01bbe0ce27c4d"
+  },
+  "src/test/java/com/equestrian/equis/support/TestMembers.java": {
+    "mtime": 1792579203.589919,
+    "seen": 1794094957.5545533,
+    "ast_hash": "60764c099daa72f275e46860a416549e",
+    "semantic_hash": "60764c099daa72f275e46860a416549e"
+  },
+  "src/test/java/com/equestrian/equis/support/TestPostgres.java": {
+    "mtime": 1794070836.9575832,
+    "seen": 1794094957.5545533,
+    "ast_hash": "77eed38626b08346adff38955aef6a63",
+    "semantic_hash": "77eed38626b08346adff38955aef6a63"
+  },
+  "src/test/java/com/equestrian/equis/support/TrainerAccountsFixture.java": {
+    "mtime": 1794075934.8995347,
+    "seen": 1794094957.5545533,
+    "ast_hash": "2bc72631d36e11d27f76d4fa92795dc5",
+    "semantic_hash": "2bc72631d36e11d27f76d4fa92795dc5"
+  },
+  "src/test/java/com/equestrian/equis/support/TwoClubFixture.java": {
+    "mtime": 1794095959.9502769,
+    "seen": 1794096195.329346,
+    "ast_hash": "d11609097cdfc490caf89f40e14c2f99",
+    "semantic_hash": ""
+  },
+  "src/test/resources/db/testgrants/afterMigrate__test_grants.sql": {
+    "mtime": 1794070836.9615934,
+    "seen": 1794094957.5545533,
+    "ast_hash": "e77fcc915f663bfcbc3b32c6dd4be09d",
+    "semantic_hash": "e77fcc915f663bfcbc3b32c6dd4be09d"
+  },
+  "src/test/resources/db/testmigration/V9000__count_riders_seen_by_flyway.sql": {
+    "mtime": 1794070836.9615934,
+    "seen": 1794094957.5545533,
+    "ast_hash": "390fdbed3d33ec8f36334668c88f9f07",
+    "semantic_hash": "390fdbed3d33ec8f36334668c88f9f07"
+  },
+  ".claude/CLAUDE.md": {
+    "mtime": 1794095550.2109149,
+    "seen": 1794096195.329346,
+    "ast_hash": "c232166e6492ba1ed955030b16979b05",
+    "semantic_hash": ""
+  },
+  "CHANGELOG.md": {
+    "mtime": 1793750899.6618938,
+    "seen": 1794094957.5545533,
+    "ast_hash": "eee57ffdb8303283147bbe79add036cb",
+    "semantic_hash": "eee57ffdb8303283147bbe79add036cb"
+  },
+  "CLAUDE.md": {
+    "mtime": 1794095550.2209697,
+    "seen": 1794096195.329346,
+    "ast_hash": "0db960095ffc4aa9a8f4981ccd49dae3",
+    "semantic_hash": "0db960095ffc4aa9a8f4981ccd49dae3"
+  },
+  "README.md": {
+    "mtime": 1794070836.9063468,
+    "seen": 1794094957.5545533,
+    "ast_hash": "1ba4349448df8aca398f1c45fac58aeb",
+    "semantic_hash": "1ba4349448df8aca398f1c45fac58aeb"
+  },
+  "ops/README.md": {
+    "mtime": 1794077178.583323,
+    "seen": 1794094957.5545533,
+    "ast_hash": "05274d84b18c33837abc8e5b38c349ff",
+    "semantic_hash": "05274d84b18c33837abc8e5b38c349ff"
+  },
+  "src/main/java/com/equestrian/equis/common/tenant/ClubAccessFilter.java": {
+    "mtime": 1794095830.6008666,
+    "seen": 1794096195.177356,
+    "ast_hash": "44dc6a9c95c48276c379b39ea050decf",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/controller/club/ClubStatusController.java": {
+    "mtime": 1794095914.5813618,
+    "seen": 1794096195.1826687,
+    "ast_hash": "822142b0039a9f65448c435406fbae18",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/controller/club/package-info.java": {
+    "mtime": 1794095914.6143937,
+    "seen": 1794096195.1826687,
+    "ast_hash": "206940e303136cdc5c00c97d97456537",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/dto/club/ClubStatusView.java": {
+    "mtime": 1794095914.4952283,
+    "seen": 1794096195.1985712,
+    "ast_hash": "d1b3d5f6685a47d406ad0b40dc95085a",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/dto/club/package-info.java": {
+    "mtime": 1794095914.5351682,
+    "seen": 1794096195.1985712,
+    "ast_hash": "17497306ac60fbbf7d8d71d30cbc0be0",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/service/platform/ClubBlockedException.java": {
+    "mtime": 1794095807.8462105,
+    "seen": 1794096195.2664425,
+    "ast_hash": "c7d7d1f747ec6345f5e7af6b8f6f5616",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/service/platform/SubscriptionExpiredException.java": {
+    "mtime": 1794095807.895597,
+    "seen": 1794096195.2664425,
+    "ast_hash": "299a6d644ddd4dcab92f6d6abdb9220e",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/common/tenant/ClubAccessFilterTest.java": {
+    "mtime": 1794096089.3025615,
+    "seen": 1794096195.2893264,
+    "ast_hash": "e3d0704a4b7420df21d88bbef0bd8daa",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/club/ClubAccessStateTest.java": {
+    "mtime": 1794096155.0012069,
+    "seen": 1794096195.297803,
+    "ast_hash": "6c2fb4dd4adc7a17066b778b7d2e4721",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/support/ActiveClubAccess.java": {
+    "mtime": 1794095959.882771,
+    "seen": 1794096195.3258126,
+    "ast_hash": "04969e92cd9f861fe2d780a9d08d7045",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/support/TestSubscriptions.java": {
+    "mtime": 1794095959.8471107,
+    "seen": 1794096195.329346,
+    "ast_hash": "6babbf4e732e090a7859bfc970990c5d",
+    "semantic_hash": ""
+  }
+}
