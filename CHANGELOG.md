@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.0.0] - 2026-11-08
+
+- E17 · Multi-tenancy: one deployment serves many clubs. Every school table has a club_id, isolated by Hibernate @TenantId and PostgreSQL row-level security; the existing data becomes the default club.
+- Platform super admin (created with ops/create-super-admin.sql): signs in on POST /platform/auth/login, creates clubs (the first admin gets a set-password link and the club starts on a trial), adds, lists and voids monthly or annual subscriptions, and suspends or reactivates clubs.
+- Per-club sign-in: club code plus email or phone for admins, trainers and riders; email and phone are unique per club. Breaking: sign-in now needs a club code.
+- Plans (Trial, Basic, Pro, Max, set with ops/upsert-plan.sql) limit trainers and riders: intake, reopen, trainer invite and trainer enable return PLAN_LIMIT_REACHED at the limit. New GET /admin/club/usage and GET /club/status.
+- Club access state: an expired trial, a suspended club or a club with no subscription is blocked (CLUB_BLOCKED); an expired paid subscription is read-only (writes return SUBSCRIPTION_EXPIRED).
+- CI: coverage report and a faster test run; mail tests left out of the default run.
+
+### Database
+
+- V23__club_and_club_id.sql, V24__row_level_security.sql, V25__super_admin.sql, V26__plan_and_subscription.sql, V27__admin_invite.sql.
+- V24 creates the role equis_app: the user that runs Flyway must be a superuser or have CREATEROLE (the postgres image user is).
+
 ## [2.0.2] - 2026-11-04
 
 - Release pipeline: publishing a GitHub Release builds ghcr.io/mmadel/equis-api:<version> from the tag and pushes it to GHCR (GitHub Actions, never tagged latest); the image digest is in the job summary.
