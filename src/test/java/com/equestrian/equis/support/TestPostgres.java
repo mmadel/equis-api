@@ -1,31 +1,24 @@
 package com.equestrian.equis.support;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// One PostgreSQL container for the whole test run; each test class gets its own empty database in it.
-// Starting a container per class cost about 1.2 s each, while CREATE DATABASE takes milliseconds.
-// Testcontainers stops the container when the JVM exits.
+// A new empty database of its own on the shared server (PostgresContainer), for tests that migrate by hand or need
+// Flyway to seed with other placeholders. Every other database test shares the server's own database.
+// CREATE DATABASE takes milliseconds.
 //
 // Usage in a Spring test:
 //   static TestPostgres postgres = TestPostgres.newDatabase();
 //   @DynamicPropertySource
 //   static void datasource(DynamicPropertyRegistry registry) { postgres.register(registry); }
 public final class TestPostgres {
-    // Cached Spring contexts keep their connection pools open, and they all share this one server.
-    private static final PostgreSQLContainer<?> SERVER = new PostgreSQLContainer<>("postgres:17")
-            .withCommand("postgres", "-c", "fsync=off", "-c", "max_connections=1000");
+    private static final PostgreSQLContainer SERVER = PostgresContainer.POSTGRES;
     private static final AtomicInteger DATABASES = new AtomicInteger();
-
-    static {
-        SERVER.start();
-    }
 
     private final String databaseName;
 
@@ -35,8 +28,7 @@ public final class TestPostgres {
 
     public static TestPostgres newDatabase() {
         String name = "test_" + DATABASES.incrementAndGet();
-        try (Connection connection = DriverManager.getConnection(
-                SERVER.getJdbcUrl(), SERVER.getUsername(), SERVER.getPassword());
+        try (Connection connection = PostgresContainer.superuser();
              Statement statement = connection.createStatement()) {
             statement.execute("CREATE DATABASE " + name);
         } catch (SQLException e) {
@@ -47,7 +39,7 @@ public final class TestPostgres {
 
     public String getJdbcUrl() {
         return "jdbc:postgresql://" + SERVER.getHost() + ":"
-                + SERVER.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT) + "/" + databaseName;
+                + SERVER.getMappedPort(5432) + "/" + databaseName;
     }
 
     // The same database for code that runs SQL by hand (migration tests): every connection sees every club's rows,

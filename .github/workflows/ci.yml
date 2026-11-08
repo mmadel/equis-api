@@ -4,22 +4,21 @@ on:
   pull_request:
     branches: [main]
 
+# Dummy values for every required ${...} placeholder. Test use only, never real secrets.
+env:
+  APP_BASE_URL: http://ci.local
+  APP_MAIL_MODE: log
+  # base64 of a 40-byte dummy string (the JWT key must be 32+ bytes)
+  APP_JWT_SECRET: Y2ktZHVtbXktand0LXNlY3JldC1ub3QtZm9yLXByb2R1Y3Rpb24hIQ==
+  # Flyway admin seed (V5__seed_admin.sql); the tests set their own in src/test/resources/config.
+  APP_ADMIN_EMAIL: ci-admin@example.com
+  # BCrypt of "ci-dummy-password"
+  APP_ADMIN_PASSWORD_HASH: $2a$10$7WLnfWkVp4Dn1VVgkhZZ6OEiY.jyEOKPv0CCh5HYg/nUiKyo8hVmu
+
 jobs:
-  build:
+  # Unit and slice tests (*Test, Surefire): no database.
+  unit:
     runs-on: ubuntu-latest
-
-    # Dummy values for every required ${...} placeholder. Test use only, never real secrets.
-    # Tests start their own PostgreSQL with Testcontainers (Docker is on the runner).
-    env:
-      APP_BASE_URL: http://ci.local
-      APP_MAIL_MODE: log
-      # base64 of a 40-byte dummy string (the JWT key must be 32+ bytes)
-      APP_JWT_SECRET: Y2ktZHVtbXktand0LXNlY3JldC1ub3QtZm9yLXByb2R1Y3Rpb24hIQ==
-      # Flyway admin seed (V5__seed_admin.sql)
-      APP_ADMIN_EMAIL: ci-admin@example.com
-      # BCrypt of "ci-dummy-password"
-      APP_ADMIN_PASSWORD_HASH: $2a$10$7WLnfWkVp4Dn1VVgkhZZ6OEiY.jyEOKPv0CCh5HYg/nUiKyo8hVmu
-
     steps:
       - uses: actions/checkout@v6
 
@@ -29,5 +28,98 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build and test
-        run: ./mvnw -B verify
+      - name: Unit tests
+        run: ./mvnw -B test
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: jacoco-unit
+          path: target/jacoco.exec
+          if-no-files-found: error
+
+  # Database tests (*IT, Failsafe) on PostgreSQL with Testcontainers (Docker is on the runner).
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Integration tests
+        run: ./mvnw -B verify -DskipUnitTests
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: jacoco-integration
+          path: target/jacoco-it.exec
+          if-no-files-found: error
+
+  # Merges both jobs' coverage, fails below the floors (pom.xml) and publishes the report.
+  coverage:
+    needs: [unit, integration]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: jacoco-*
+          path: target
+          merge-multiple: true
+
+      - name: Merge, report and check coverage
+        run: ./mvnw -B verify -DskipTests
+
+      - name: Coverage summary
+        if: always()
+        # The report already leaves out DTOs, entities, config and the main class, as the check does.
+        run: |
+          python3 - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import csv, os
+          from collections import defaultdict
+
+          path = "target/site/jacoco-merged/jacoco.csv"
+          if not os.path.exists(path):
+              print("## Coverage\n\nNo coverage report.")
+              raise SystemExit
+          lines, branches = defaultdict(lambda: [0, 0]), defaultdict(lambda: [0, 0])
+          for row in csv.DictReader(open(path)):
+              lines[row["PACKAGE"]][0] += int(row["LINE_COVERED"])
+              lines[row["PACKAGE"]][1] += int(row["LINE_COVERED"]) + int(row["LINE_MISSED"])
+              branches[row["PACKAGE"]][0] += int(row["BRANCH_COVERED"])
+              branches[row["PACKAGE"]][1] += int(row["BRANCH_COVERED"]) + int(row["BRANCH_MISSED"])
+
+          def total(counts, keep=lambda package: True):
+              kept = [c for package, c in counts.items() if keep(package)]
+              return [sum(c[0] for c in kept), sum(c[1] for c in kept)]
+
+          def pct(counts):
+              return f"{100 * counts[0] / counts[1]:.1f}%" if counts[1] else "-"
+
+          service = lambda package: package == "com.equestrian.equis.service" or package.startswith("com.equestrian.equis.service.")
+          print("## Coverage (lines)\n")
+          print("| | Lines | Branches |\n|---|---|---|")
+          print(f"| **Total** (floor 70%) | **{pct(total(lines))}** | {pct(total(branches))} |")
+          print(f"| **service** (floor 80%) | **{pct(total(lines, service))}** | {pct(total(branches, service))} |")
+          print("\n<details><summary>Per package</summary>\n")
+          print("| Package | Lines | Branches |\n|---|---|---|")
+          for package in sorted(lines):
+              print(f"| `{package}` | {pct(lines[package])} | {pct(branches[package])} |")
+          print("\n</details>")
+          EOF
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: coverage-report
+          path: target/site/jacoco-merged

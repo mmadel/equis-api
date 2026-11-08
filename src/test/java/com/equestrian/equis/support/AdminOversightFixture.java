@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // Plays both sides of the admin-oversight journeys (flows W-C and W-D) over HTTP: the admin on W1, W2 and W3, the
 // trainers in the app (A1/A3/A5, My riders, a session's seats). Builds on TrainerAccountsFixture for the admin,
 // the trainers' accounts and the clock. Only the checks the API can't answer (notices, old rows) read the database.
-// The test class gives the context a MutableClock (@TestBean) and @Import(AdminOversightFixture.Config.class).
+// IntegrationTestBase gives the context a MutableClock (@TestBean) and imports AdminOversightFixture.Config.
 public class AdminOversightFixture {
     public static final LocalDate FRI_16 = LocalDate.of(2026, 10, 16);
     public static final LocalDate SAT_17 = LocalDate.of(2026, 10, 17);
