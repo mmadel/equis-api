@@ -326,6 +326,8 @@ class PlatformClubApiTest {
     // 10
     @Test
     void theListShowsEveryClubWithItsPlanStateAndUsage() throws Exception {
+        // The school admin sets up below, which needs a subscription; it is removed again before the list.
+        paidSubscription(Club.DEFAULT_ID, "BASIC", NOV_7.minus(Duration.ofDays(1)), NOV_7.plus(Duration.ofDays(20)));
         createClub("Cairo Equestrian", "cairo-eq", "Hany", HANY).andExpect(status().isCreated());
         UUID mona = fx.invite("Mona Fathy", "01000000001", "mona@example.com").id();
         fx.invite("Omar Adel", "01000000002", "omar@example.com");
@@ -336,6 +338,7 @@ class PlatformClubApiTest {
                     "Person " + i, TestMembers.nextPhone(), TestMembers.nextEmail());
         }
         jdbc.update("update member set closed_at = now() where name = 'Person 0'");
+        jdbc.update("delete from subscription where club_id = ?", Club.DEFAULT_ID);
 
         list("")
                 .andExpect(jsonPath("$.totalItems").value(2))
@@ -483,6 +486,8 @@ class PlatformClubApiTest {
     // 15
     @Test
     void onlyTheSuperAdminReachesClubsAndAnUnknownClubIsNotFound() throws Exception {
+        // The school admin must be able to sign in (a club without a subscription is blocked).
+        paidSubscription(Club.DEFAULT_ID, "BASIC", NOV_7.minus(Duration.ofDays(1)), NOV_7.plus(Duration.ofDays(20)));
         fx.admin(get(CLUBS))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("forbidden"));
@@ -502,6 +507,8 @@ class PlatformClubApiTest {
     // 16
     @Test
     void theExistingDefaultClubAdminStillSignsIn() throws Exception {
+        // With a subscription: since E17 a club without one is blocked.
+        paidSubscription(Club.DEFAULT_ID, "BASIC", NOV_7.minus(Duration.ofDays(1)), NOV_7.plus(Duration.ofDays(20)));
         fx.login(ADMIN_EMAIL, ADMIN_PASSWORD)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("ADMIN"));

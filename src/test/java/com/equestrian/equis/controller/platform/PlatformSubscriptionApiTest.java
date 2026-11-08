@@ -364,6 +364,11 @@ class PlatformSubscriptionApiTest {
     // 15
     @Test
     void aClubAdminCannotReachSubscriptions() throws Exception {
+        // The school admin must be able to sign in (a club without a subscription is blocked).
+        asRoot(() -> jdbc.update("""
+                        insert into subscription (club_id, plan_id, billing_period, starts_at, ends_at, created_by)
+                        select ?, id, 'MONTHLY', ?, ?, ? from plan where code = 'BASIC'""",
+                Club.DEFAULT_ID, Timestamp.from(cairo(2026, 11, 6, 15, 0)), Timestamp.from(DEC_7), superAdminId()));
         UUID trial = asRoot(() -> jdbc.queryForObject("select id from subscription where club_id = ?", UUID.class,
                 club));
         fx.admin(get("/platform/plans")).andExpect(status().isForbidden());
@@ -375,8 +380,9 @@ class PlatformSubscriptionApiTest {
         fx.admin(post("/platform/subscriptions/" + trial + "/void").contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"reason\": \"Not allowed\" }"))
                 .andExpect(status().isForbidden());
-        assertThat(asRoot(() -> jdbc.queryForObject("select count(*) from subscription", Integer.class)))
-                .isEqualTo(1);
+        // Only the trial: nothing was added (the school's own row is left out).
+        assertThat(asRoot(() -> jdbc.queryForObject("select count(*) from subscription where club_id = ?",
+                Integer.class, club))).isEqualTo(1);
     }
 
     // 16

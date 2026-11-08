@@ -374,7 +374,8 @@ public class EvaluationFollowUpApiTest {
         long twentySessions = statistics.getPrepareStatementCount();
 
         assertThat(twentySessions).isEqualTo(oneSession);
-        assertThat(twentySessions).isLessThanOrEqualTo(3);
+        // 3 for the follow-up, +1 for the club access check every club request makes (ClubAccessFilter).
+        assertThat(twentySessions).isLessThanOrEqualTo(4);
     }
 
     // Case 14

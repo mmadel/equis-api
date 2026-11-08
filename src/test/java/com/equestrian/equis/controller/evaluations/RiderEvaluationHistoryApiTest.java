@@ -272,9 +272,10 @@ public class RiderEvaluationHistoryApiTest {
                 .andExpect(jsonPath("$.evaluations", hasSize(30)));
         long adminQueries = statistics.getPrepareStatementCount();
 
-        assertThat(adminQueries).isLessThanOrEqualTo(2);
+        // Each budget has +1 for the club access check every club request makes (ClubAccessFilter).
+        assertThat(adminQueries).isLessThanOrEqualTo(3);
         // The trainer path also checks that the token's trainer is still active, before the controller runs.
-        assertThat(trainerQueries).isLessThanOrEqualTo(3);
+        assertThat(trainerQueries).isLessThanOrEqualTo(4);
     }
 
     private void expectSarasTwoLines(ResultActions result) throws Exception {
