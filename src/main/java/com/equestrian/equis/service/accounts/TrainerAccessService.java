@@ -10,6 +10,7 @@ import com.equestrian.equis.repository.accounts.InviteRepository;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
+import com.equestrian.equis.service.club.PlanLimitService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,15 +26,17 @@ public class TrainerAccessService {
     private final AssessmentBookingRepository bookings;
     private final InviteRepository invites;
     private final AuthTokenService tokens;
+    private final PlanLimitService limits;
 
     public TrainerAccessService(TrainerRepository trainers, RiderRepository riders,
                                 AssessmentBookingRepository bookings, InviteRepository invites,
-                                AuthTokenService tokens) {
+                                AuthTokenService tokens, PlanLimitService limits) {
         this.trainers = trainers;
         this.riders = riders;
         this.bookings = bookings;
         this.invites = invites;
         this.tokens = tokens;
+        this.limits = limits;
     }
 
     // Riders keep their trainer and seats, and upcoming bookings keep the assessor: the admin moves them in E7.
@@ -70,6 +73,8 @@ public class TrainerAccessService {
         if (t.getStatus() != TrainerStatus.DISABLED) {
             throw TrainerErrors.invalidStatus(t, "enable");
         }
+        // Only when the trainer really comes back: a repeat click on an active trainer is never refused.
+        limits.checkCanAddTrainer();
         t.setStatus(TrainerStatus.ACTIVE);
         return t;
     }

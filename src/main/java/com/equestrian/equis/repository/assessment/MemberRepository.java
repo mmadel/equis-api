@@ -22,6 +22,9 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
     Optional<Member> findByEmail(String email);
 
+    // People who aren't closed (riders and applicants), for the plan limit (PlanLimitService).
+    long countByClosedAtIsNull();
+
     // Row lock held until the transaction ends, so closing, reopening and rebooking a person run one after the other.
     // Call it before the member is loaded in this transaction: an entity already loaded comes back as it was.
     @Lock(LockModeType.PESSIMISTIC_WRITE)

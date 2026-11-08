@@ -16,6 +16,7 @@ import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
 import com.equestrian.equis.repository.assessment.MemberRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.AccountLinkService.IssuedLink;
+import com.equestrian.equis.service.club.PlanLimitService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -45,12 +46,13 @@ public class TrainerAdminService {
     private final AssessmentBookingRepository bookings;
     private final InviteRepository invites;
     private final MemberRepository members;
+    private final PlanLimitService limits;
 
     public TrainerAdminService(TrainerRepository trainers, AdminAccountRepository admins, AccountLinkService links,
                                TrainerRowAssembler rows, ApplicationEventPublisher events,
                                TrainerAccessService access, RiderRepository riders,
                                AssessmentBookingRepository bookings, InviteRepository invites,
-                               MemberRepository members) {
+                               MemberRepository members, PlanLimitService limits) {
         this.trainers = trainers;
         this.admins = admins;
         this.links = links;
@@ -61,6 +63,7 @@ public class TrainerAdminService {
         this.bookings = bookings;
         this.invites = invites;
         this.members = members;
+        this.limits = limits;
     }
 
     @Transactional(readOnly = true)
@@ -82,6 +85,8 @@ public class TrainerAdminService {
     // Nothing is saved and no email goes out if any check fails.
     @Transactional
     public TrainerRow invite(InviteTrainerRequest req) {
+        // First, so the club row is locked: two invites can't both take the last place.
+        limits.checkCanAddTrainer();
         if (trainers.existsByPhone(req.phone())) {
             throw TrainerErrors.phoneTaken();
         }

@@ -8,6 +8,7 @@ import com.equestrian.equis.entity.assessment.Member;
 import com.equestrian.equis.repository.assessment.AssessmentBookingRepository;
 import com.equestrian.equis.repository.assessment.MemberRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
+import com.equestrian.equis.service.club.PlanLimitService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,16 +31,18 @@ public class MemberCloseService {
     private final RiderRepository riders;
     private final AssessmentBookingRepository bookings;
     private final AdminBookingRowAssembler rows;
+    private final PlanLimitService limits;
     private final Clock clock;
     private final ZoneId schoolZone;
 
     public MemberCloseService(MemberRepository members, RiderRepository riders, AssessmentBookingRepository bookings,
-                              AdminBookingRowAssembler rows, Clock clock,
+                              AdminBookingRowAssembler rows, PlanLimitService limits, Clock clock,
                               @Value("${app.time-zone}") ZoneId schoolZone) {
         this.members = members;
         this.riders = riders;
         this.bookings = bookings;
         this.rows = rows;
+        this.limits = limits;
         this.clock = clock;
         this.schoolZone = schoolZone;
     }
@@ -72,6 +75,8 @@ public class MemberCloseService {
             throw new ApiException(HttpStatus.CONFLICT, ErrorCodes.MEMBER_NOT_CLOSED,
                     member.getName() + " is not closed.");
         }
+        // A reopened person counts against the plan again.
+        limits.checkCanAddPerson();
         member.reopen(clock.instant());
         return rows.row(latestBooking(id));
     }
