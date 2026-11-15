@@ -4,7 +4,9 @@ import com.equestrian.equis.support.IntegrationTestBase;
 import com.equestrian.equis.common.tenant.TenantContext;
 import com.equestrian.equis.service.sessions.SessionGenerator;
 import com.equestrian.equis.support.TwoClubFixture;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.TenantId;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 // E17 · cases 1 and 2: every repository of a school entity, run as club A, returns only club A's rows and can't
 // find club B's rows by id. The repositories are found in the application context, so a new one is covered as
-// soon as it exists.
+// soon as it exists. The read-only report views (@Immutable entities on report_*_v, E18) are checked through the
+// EntityManager instead: their repositories are not CrudRepositories.
 class RepositoryIsolationIT extends IntegrationTestBase {
 
     @Autowired
@@ -39,6 +42,8 @@ class RepositoryIsolationIT extends IntegrationTestBase {
     JdbcTemplate jdbc;
     @Autowired
     SessionGenerator generator;
+    @Autowired
+    EntityManager em;
 
     // Every school table has an entity with @TenantId and a repository, so none can be missed below.
     @Test
@@ -77,6 +82,29 @@ class RepositoryIsolationIT extends IntegrationTestBase {
         }));
     }
 
+    // E18 · every report view, run as club A, shows only club A's rows and can't find club B's row by id.
+    @TestFactory
+    Stream<DynamicTest> everyReportViewSeesOnlyItsClub() {
+        UUID a = fx.a().clubId();
+        UUID b = fx.b().clubId();
+        assertThat(reportViews()).as("report views").isNotEmpty();
+        return reportViews().stream().map(type -> DynamicTest.dynamicTest(type.getSimpleName(), () -> {
+            String view = table(type);
+            assertThat(fx.count(view, a)).as("club A has %s rows", view).isPositive();
+            assertThat(fx.count(view, b)).as("club B has %s rows", view).isPositive();
+
+            List<?> all = TenantContext.runAs(a, () ->
+                    em.createQuery("from " + type.getSimpleName(), type).getResultList());
+            assertThat(all).extracting(RepositoryIsolationIT::clubOf).containsOnly(a);
+            assertThat(all).hasSize((int) fx.count(view, a));
+
+            UUID bRow = TenantContext.runAsRoot(() -> jdbc.queryForObject(
+                    "SELECT id FROM " + view + " WHERE club_id = ? LIMIT 1", UUID.class, b));
+            assertThat(TenantContext.runAs(a, () -> byId(type, bRow))).isEmpty();
+            assertThat(TenantContext.runAs(b, () -> byId(type, bRow))).hasSize(1);
+        }));
+    }
+
     // Case 11: the only native query, SessionRepository.insertIfAbsent (the session generator), run as club A,
     // adds sessions for club A's templates only, each in club A. It joins nothing, and club_id comes from the
     // connection's club (V24 default).
@@ -99,14 +127,29 @@ class RepositoryIsolationIT extends IntegrationTestBase {
                 WHERE s.club_id <> t.club_id""", Integer.class))).as("sessions of another club's template").isZero();
     }
 
+    // The school tables' entities: @TenantId, not a read-only report view.
     private List<Class<?>> tenantEntities() {
+        return withTenantId(false);
+    }
+
+    // The report views' entities: @TenantId and @Immutable.
+    private List<Class<?>> reportViews() {
+        return withTenantId(true);
+    }
+
+    private List<Class<?>> withTenantId(boolean immutable) {
         List<Class<?>> types = new ArrayList<>();
         for (Class<?> type : new Repositories(context)) {
-            if (tenantField(type) != null) {
+            if (tenantField(type) != null && type.isAnnotationPresent(Immutable.class) == immutable) {
                 types.add(type);
             }
         }
         return types;
+    }
+
+    private List<?> byId(Class<?> type, UUID id) {
+        return em.createQuery("from " + type.getSimpleName() + " where id = :id", type)
+                .setParameter("id", id).getResultList();
     }
 
     private static Field tenantField(Class<?> type) {
