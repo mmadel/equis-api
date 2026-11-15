@@ -10,7 +10,7 @@ public interface ReportDefinition<R> {
     // URL segment and file name prefix, lowercase-kebab, e.g. "trainers".
     String name();
 
-    // Shown in the file (the sheet name now, the title block in story 45).
+    // Shown in the file: the sheet name and the title block.
     String title();
 
     // true: the report covers from..to, which are required. false: a snapshot as of today.

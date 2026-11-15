@@ -16,7 +16,7 @@ class ReportParamsTest {
 
     @Test
     void fromAndToAreWholeDaysInTheClubsZone() {
-        ReportParams params = new ReportParams(LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30),
+        ReportParams params = new ReportParams("Riding School", LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30),
                 LocalDate.of(2026, 11, 14), CAIRO, Instant.parse("2026-11-14T10:00:00Z"), Map.of());
 
         assertThat(params.fromInstant()).isEqualTo(Instant.parse("2026-10-31T22:00:00Z"));
@@ -26,7 +26,7 @@ class ReportParamsTest {
     @Test
     void filtersAreReadByKeyAndCopied() {
         Map<String, String> filters = new HashMap<>(Map.of("method", "cash"));
-        ReportParams params = new ReportParams(null, null, LocalDate.of(2026, 11, 14), CAIRO,
+        ReportParams params = new ReportParams("Riding School", null, null, LocalDate.of(2026, 11, 14), CAIRO,
                 Instant.parse("2026-11-14T10:00:00Z"), filters);
         filters.put("method", "card");
 

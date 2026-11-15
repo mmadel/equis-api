@@ -3,6 +3,9 @@ package com.equestrian.equis.service.reports;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ApiFieldError;
 import com.equestrian.equis.common.error.ErrorCodes;
+import com.equestrian.equis.common.tenant.TenantContext;
+import com.equestrian.equis.entity.club.Club;
+import com.equestrian.equis.repository.club.ClubRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -16,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 // Builds a report's ReportParams from the query and checks the dates.
 // A range report needs from and to (YYYY-MM-DD, whole days in the club's zone, both included), in order, and to
@@ -29,10 +33,12 @@ public class ReportParamsFactory {
 
     private final Clock clock;
     private final ZoneId zone;
+    private final ClubRepository clubs;
 
-    public ReportParamsFactory(Clock clock, @Value("${app.time-zone}") ZoneId zone) {
+    public ReportParamsFactory(Clock clock, @Value("${app.time-zone}") ZoneId zone, ClubRepository clubs) {
         this.clock = clock;
         this.zone = zone;
+        this.clubs = clubs;
     }
 
     public ReportParams build(ReportDefinition<?> report, Map<String, String> query) {
@@ -42,7 +48,7 @@ public class ReportParamsFactory {
         filters.remove(FROM);
         filters.remove(TO);
         if (!report.dateRange()) {
-            return new ReportParams(null, null, today, zone, now, filters);
+            return new ReportParams(clubName(), null, null, today, zone, now, filters);
         }
 
         List<ApiFieldError> errors = new ArrayList<>();
@@ -58,7 +64,17 @@ public class ReportParamsFactory {
         if (!to.isBefore(from.plusMonths(MAX_MONTHS))) {
             throw new ReportRangeTooLongException(MAX_MONTHS);
         }
-        return new ReportParams(from, to, today, zone, now, filters);
+        return new ReportParams(clubName(), from, to, today, zone, now, filters);
+    }
+
+    // The current club's name, read once per export. An admin request always runs in its club.
+    private String clubName() {
+        UUID club = TenantContext.current();
+        if (club == null) {
+            throw new IllegalStateException("A report is exported in a club");
+        }
+        return clubs.findById(club).map(Club::getName)
+                .orElseThrow(() -> new IllegalStateException("No club " + club));
     }
 
     private static LocalDate date(Map<String, String> query, String field, List<ApiFieldError> errors) {

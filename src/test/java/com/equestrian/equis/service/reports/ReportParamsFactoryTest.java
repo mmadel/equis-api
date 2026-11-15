@@ -3,6 +3,9 @@ package com.equestrian.equis.service.reports;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ApiFieldError;
 import com.equestrian.equis.common.error.ErrorCodes;
+import com.equestrian.equis.entity.club.Club;
+import com.equestrian.equis.repository.club.ClubRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -12,10 +15,15 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 // E18 · export engine: the date rules (decisions 5, 7, 8, 9).
 class ReportParamsFactoryTest {
@@ -23,9 +31,28 @@ class ReportParamsFactoryTest {
     // 14 Nov 2026 00:30 in Cairo is still 13 Nov in UTC: "today" must be Cairo's.
     private static final Instant NOW = ZonedDateTime.of(2026, 11, 14, 0, 30, 0, 0, CAIRO).toInstant();
 
-    private final ReportParamsFactory factory = new ReportParamsFactory(Clock.fixed(NOW, CAIRO), CAIRO);
+    private final ClubRepository clubs = mock(ClubRepository.class);
+    private final ReportParamsFactory factory = new ReportParamsFactory(Clock.fixed(NOW, CAIRO), CAIRO, clubs);
     private final ReportDefinition<LocalDate> range = new RangeSampleReport();
     private final ReportDefinition<String> snapshot = new Snapshot();
+
+    // DefaultClubExtension runs every test in the default club.
+    @BeforeEach
+    void theDefaultClubIsRidingSchool() {
+        Club club = new Club();
+        club.setId(Club.DEFAULT_ID);
+        club.setName("Riding School");
+        when(clubs.findById(Club.DEFAULT_ID)).thenReturn(Optional.of(club));
+    }
+
+    // E18 · Excel writer, decision 8: the title block's club name, read once per export.
+    @Test
+    void theClubNameIsTheCurrentClubsName() {
+        assertThat(factory.build(snapshot, Map.of()).clubName()).isEqualTo("Riding School");
+        assertThat(factory.build(range, Map.of("from", "2026-11-01", "to", "2026-11-30")).clubName())
+                .isEqualTo("Riding School");
+        verify(clubs, times(2)).findById(Club.DEFAULT_ID);
+    }
 
     @Test
     void aSnapshotIsAsOfTodayInTheClubsZoneAndIgnoresTheDates() {

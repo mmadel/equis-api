@@ -8,6 +8,7 @@ import com.equestrian.equis.support.TestSubscriptions;
 import com.equestrian.equis.support.TwoClubFixture;
 import com.equestrian.equis.support.TwoClubFixture.ClubData;
 import com.jayway.jsonpath.JsonPath;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -40,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // E18 · export engine: GET /admin/reports/{name}/export, cases 1-9, 11, 12, 14 and 15 (10 and 13 are unit tests,
-// 16 is the rest of the suite). The two clubs of TwoClubFixture: "school" with trainers "Trainer One A" and
+// 16 is the rest of the suite). E18 · Excel writer: cases 14 and 15, the title block of a real export. The two clubs of TwoClubFixture: "school" with trainers "Trainer One A" and
 // "Trainer Two A", "cairo-eq" with "Trainer One B" and "Trainer Two B". The clock is 14 Nov 2026 12:00 in Cairo.
 // "test-range" is the test-only RangeSampleReport: one row per day from..to.
 class ReportExportIT extends IntegrationTestBase {
@@ -49,6 +50,8 @@ class ReportExportIT extends IntegrationTestBase {
     private static final String RANGE = "/admin/reports/" + RangeSampleReport.NAME + "/export";
     private static final String SUPER_EMAIL = "ops@equis.app";
     private static final String SUPER_PASSWORD = "Platform@2026";
+    // POI's 0-based index of the header row (Excel row 6).
+    private static final int HEADER_ROW = 5;
 
     @Autowired
     TwoClubFixture fx;
@@ -218,6 +221,25 @@ class ReportExportIT extends IntegrationTestBase {
                 .isEqualTo("equis_app");
     }
 
+    // Excel writer 14
+    @Test
+    void theTitleBlockNamesTheAdminsClubAndTheDay() throws Exception {
+        CLOCK.set(ZonedDateTime.of(2026, 11, 14, 17, 46, 0, 0, CAIRO).toInstant());
+
+        List<String> title = titleBlock(export(admin("school"), TRAINERS).andExpect(status().isOk()).andReturn());
+
+        assertThat(title).containsExactly("Riding School", "Trainers", "As of 14 Nov 2026",
+                "Generated 14 Nov 2026 17:46 (Cairo)");
+    }
+
+    // Excel writer 15
+    @Test
+    void theOtherClubsExportCarriesItsOwnName() throws Exception {
+        List<String> title = titleBlock(export(admin("cairo-eq"), TRAINERS).andExpect(status().isOk()).andReturn());
+
+        assertThat(title.get(0)).isEqualTo("Cairo Equestrian");
+    }
+
     // ---- helpers
 
     private ResultActions export(String token, String path) throws Exception {
@@ -247,15 +269,21 @@ class ReportExportIT extends IntegrationTestBase {
         return JsonPath.read(body(result), "$.accessToken");
     }
 
-    // Every row of the file's first sheet, as text.
+    // The header and every data row of the file's first sheet, as text (a date as YYYY-MM-DD). The title block
+    // above the header (Excel rows 1-4) is left out; titleBlock reads it.
     private static List<List<String>> rows(MvcResult result) throws Exception {
-        try (XSSFWorkbook book = new XSSFWorkbook(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()))) {
+        try (XSSFWorkbook book = workbook(result)) {
             Sheet sheet = book.getSheetAt(0);
             List<List<String>> rows = new ArrayList<>();
             for (Row row : sheet) {
+                if (row.getRowNum() < HEADER_ROW) {
+                    continue;
+                }
                 List<String> cells = new ArrayList<>();
                 row.forEach(cell -> cells.add(switch (cell.getCellType()) {
-                    case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
+                    case NUMERIC -> DateUtil.isCellDateFormatted(cell)
+                            ? cell.getLocalDateTimeCellValue().toLocalDate().toString()
+                            : String.valueOf((long) cell.getNumericCellValue());
                     case BLANK -> "";
                     default -> cell.getStringCellValue();
                 }));
@@ -263,6 +291,22 @@ class ReportExportIT extends IntegrationTestBase {
             }
             return rows;
         }
+    }
+
+    // Excel rows 1-4: club, report, period, generated at.
+    private static List<String> titleBlock(MvcResult result) throws Exception {
+        try (XSSFWorkbook book = workbook(result)) {
+            Sheet sheet = book.getSheetAt(0);
+            List<String> lines = new ArrayList<>();
+            for (int r = 0; r < 4; r++) {
+                lines.add(sheet.getRow(r).getCell(0).getStringCellValue());
+            }
+            return lines;
+        }
+    }
+
+    private static XSSFWorkbook workbook(MvcResult result) throws Exception {
+        return new XSSFWorkbook(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
     }
 
     private static <T> T root(Supplier<T> work) {
