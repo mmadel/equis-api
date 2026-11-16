@@ -3180,9 +3180,9 @@
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/isolation/EndpointIsolationIT.java": {
-    "mtime": 1794784527.142344,
-    "seen": 1794786037.8143036,
-    "ast_hash": "cb59600eda71da66d47e9ab852edf486",
+    "mtime": 1794856524.4077952,
+    "seen": 1794856776.001322,
+    "ast_hash": "cab1097820f080f17a56cb5def50176b",
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/isolation/RepositoryIsolationIT.java": {
@@ -3492,9 +3492,9 @@
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/repository/club/MigrationFromRelease2IT.java": {
-    "mtime": 1794118659.4833076,
-    "seen": 1794783210.593403,
-    "ast_hash": "0888fadfba4e7b60aeeb9b87f1cbd031",
+    "mtime": 1794850693.6209934,
+    "seen": 1794856776.0153284,
+    "ast_hash": "0894dcdebd192890750f772de86861a3",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/controller/reports/ReportController.java": {
@@ -3516,9 +3516,9 @@
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/ColumnType.java": {
-    "mtime": 1794785763.9272285,
-    "seen": 1794786037.786853,
-    "ast_hash": "929429d55f2c92e70e1cb36a2a3d50fc",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856775.9837885,
+    "ast_hash": "6a2a0e04b93b2cf830d1bfbae3d185f2",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/ReportColumn.java": {
@@ -3528,9 +3528,9 @@
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/ReportDefinition.java": {
-    "mtime": 1794785763.9541728,
-    "seen": 1794786037.786853,
-    "ast_hash": "fb3023dc49045d9311ef022ba5db8076",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856775.9837885,
+    "ast_hash": "994a577739bb8d1b2569a102a962da81",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/ReportExportService.java": {
@@ -3546,14 +3546,14 @@
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/ReportParams.java": {
-    "mtime": 1794785713.9840133,
-    "seen": 1794786037.786853,
-    "ast_hash": "827d0d98d4427406bd09521a9bc0e8ad",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856775.9855375,
+    "ast_hash": "1cfaee9fbef6f326ab7293fe1b82376d",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/ReportParamsFactory.java": {
-    "mtime": 1794785714.3152914,
-    "seen": 1794786037.786853,
+    "mtime": 1794848457.0632827,
+    "seen": 1794856775.9855375,
     "ast_hash": "cb1118ee22ca9879a1453f52e6ec39b8",
     "semantic_hash": ""
   },
@@ -3564,15 +3564,15 @@
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/ReportRegistry.java": {
-    "mtime": 1794785713.7754488,
-    "seen": 1794786037.786853,
-    "ast_hash": "32ebce2d6d51a66a5583cb0138fce91a",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856775.9855375,
+    "ast_hash": "8c287b2c00e8311e5b5f62f79e775115",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/ReportTotal.java": {
-    "mtime": 1794785713.5196507,
-    "seen": 1794786037.786853,
-    "ast_hash": "a9a469084e2b1cd7426c71efb9edf4ce",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856775.9855375,
+    "ast_hash": "08b921cd352ea4d5bd5f910395c15e05",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/ReportWriter.java": {
@@ -3582,9 +3582,9 @@
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/XlsxReportWriter.java": {
-    "mtime": 1794785763.8996987,
-    "seen": 1794786037.786853,
-    "ast_hash": "0a2840596f95a0a659710734a5e803c8",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856775.9855375,
+    "ast_hash": "5c55ac6f22a3077919939c341cab068c",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/definitions/TrainersReport.java": {
@@ -3594,8 +3594,8 @@
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/controller/reports/ReportExportIT.java": {
-    "mtime": 1794785858.477844,
-    "seen": 1794786037.8092906,
+    "mtime": 1794848457.0632827,
+    "seen": 1794856776.001322,
     "ast_hash": "e9bb4328e39a4f10d331c759abb7a8df",
     "semantic_hash": ""
   },
@@ -3606,39 +3606,75 @@
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/service/reports/ReportParamsFactoryTest.java": {
-    "mtime": 1794785840.333436,
-    "seen": 1794786037.8223207,
+    "mtime": 1794848457.0632827,
+    "seen": 1794856776.0169263,
     "ast_hash": "1c3196a5f68ff680a2b43f0716a2ad00",
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/service/reports/ReportParamsTest.java": {
-    "mtime": 1794785839.7474449,
-    "seen": 1794786037.8223207,
-    "ast_hash": "f171e557e88740b722a689d0b967a433",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856776.0169263,
+    "ast_hash": "7f1fe6ee55f73576ae27b6a44bf9cee5",
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/service/reports/ReportRegistryTest.java": {
-    "mtime": 1794785841.0513458,
-    "seen": 1794786037.8223207,
-    "ast_hash": "7f96d043616cc2795d7f6c4c4dcfd2c5",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856776.0169263,
+    "ast_hash": "77f7cc3d0e005d1e131c1ef9a0b1633c",
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/service/reports/XlsxReportWriterTest.java": {
-    "mtime": 1794785893.6082654,
-    "seen": 1794786037.8223207,
-    "ast_hash": "27d0364d578dbb4a73c1faf9d4c3bada",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856776.0169263,
+    "ast_hash": "a95f34ff05f98cc9d3c5bc2bef3cd7eb",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/ExcelStyles.java": {
-    "mtime": 1794785756.1990724,
-    "seen": 1794786037.786853,
-    "ast_hash": "536203b3b68947a1dc5238e6ab82e371",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856775.9837885,
+    "ast_hash": "a9aea2d966e2e8a14d6ae6f92d33129f",
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/service/reports/AllTypesReport.java": {
-    "mtime": 1794785813.2846313,
-    "seen": 1794786037.8223207,
-    "ast_hash": "e349174c8966fc6ec0bfddcd5cf82269",
+    "mtime": 1794848457.0632827,
+    "seen": 1794856776.0169263,
+    "ast_hash": "a05568365be5996e12f5eaa1ce00731a",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/entity/reports/PaymentReportRow.java": {
+    "mtime": 1794856515.5460236,
+    "seen": 1794856775.958241,
+    "ast_hash": "f5d46a99a6bbb93998f7499af971bdf5",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/repository/reports/PaymentReportRepository.java": {
+    "mtime": 1794856515.6038706,
+    "seen": 1794856775.958241,
+    "ast_hash": "2bf85181f33fb82c9249c5fae2ae2b6d",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/service/reports/definitions/PaymentsReport.java": {
+    "mtime": 1794856515.6725376,
+    "seen": 1794856775.9855375,
+    "ast_hash": "479015d7d2736650032af7fdb1872131",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/E18DemoIT.java": {
+    "mtime": 1794850693.6209934,
+    "seen": 1794856775.9855375,
+    "ast_hash": "afe0a59b64587c33fc1d26cd86e6979e",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/reports/PaymentsReportIT.java": {
+    "mtime": 1794856598.6547756,
+    "seen": 1794856776.001322,
+    "ast_hash": "83aa783f50ebb63b78c7904abdb255c2",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/service/reports/definitions/PaymentsReportTest.java": {
+    "mtime": 1794856611.7488303,
+    "seen": 1794856776.0169263,
+    "ast_hash": "88ffae29f1466d71b21a4382f53a277e",
     "semantic_hash": ""
   }
 }
