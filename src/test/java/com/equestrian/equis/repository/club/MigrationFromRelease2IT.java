@@ -1,5 +1,6 @@
 package com.equestrian.equis.repository.club;
 
+import com.equestrian.equis.common.tenant.TenantContext;
 import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.service.platform.AccessReason;
 import com.equestrian.equis.service.platform.AccessState;
@@ -32,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static com.equestrian.equis.support.TrainerAccountsFixture.ADMIN_EMAIL;
 import static com.equestrian.equis.support.TrainerAccountsFixture.ADMIN_PASSWORD;
@@ -45,7 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // E17 · upgrading a release 2 database to 3.0.0. db/r2-sample.sql is a pg_dump of a database migrated with the
 // 2.0.2 migrations (V1-V22, with their Flyway history) plus a row or more in every school table. It is restored into
 // a database of its own before the app starts; the app's own Flyway then runs V23 onwards and Hibernate checks the
-// schema (ddl-auto=validate), as on the production server. Only db/migration runs: no test grants, no test
+// schema (ddl-auto=validate), as on the production server. E18 · the same upgrade creates the report views (V28). Only db/migration runs: no test grants, no test
 // subscription, so plan and subscription stay as a real upgrade leaves them.
 @SpringBootTest(properties = {
         "app.sessions.generate-cron=-",
@@ -69,6 +71,9 @@ class MigrationFromRelease2IT {
     Environment environment;
     @Autowired
     ClubAccessService clubAccess;
+    // The app's own connections: they work as equis_app in the club of TenantContext.
+    @Autowired
+    JdbcTemplate app;
 
     // As the database owner, so row-level security never hides a row from the checks.
     private final JdbcTemplate db = owner();
@@ -142,6 +147,39 @@ class MigrationFromRelease2IT {
         } finally {
             db.update("delete from subscription");
             db.update("delete from plan");
+        }
+    }
+
+    // E18 · the Trainers report view: created by the upgrade, run with the caller's rights (security_invoker), so the
+    // trainer table's row-level security keeps each club's rows apart even for SQL that names no club.
+    @Test
+    void theTrainersReportViewKeepsEachClubsRowsApart() {
+        assertThat(db.queryForObject("""
+                select array_to_string(reloptions, ',') from pg_class
+                where relname = 'report_trainer_v' and relkind = 'v'""", String.class))
+                .contains("security_invoker=true");
+
+        UUID other = db.queryForObject(
+                "insert into club (code, name) values ('other-club', 'Other Club') returning id", UUID.class);
+        try {
+            db.update("""
+                    insert into trainer (club_id, name, phone, email, status)
+                    values (?, 'Other Trainer', '01099999999', 'other@other-club.eg', 'invited')""", other);
+            List<String> releaseTwoTrainers = db.queryForList(
+                    "select name from trainer where club_id = ?", String.class, Club.DEFAULT_ID);
+
+            assertThat(TenantContext.runAs(Club.DEFAULT_ID,
+                    () -> app.queryForList("select name from report_trainer_v", String.class)))
+                    .isNotEmpty()
+                    .containsExactlyInAnyOrderElementsOf(releaseTwoTrainers);
+            assertThat(TenantContext.runAs(other,
+                    () -> app.queryForList("select name from report_trainer_v", String.class)))
+                    .containsExactly("Other Trainer");
+            assertThat(TenantContext.runAs(other, () -> app.queryForObject("select current_user", String.class)))
+                    .isEqualTo("equis_app");
+        } finally {
+            db.update("delete from trainer where club_id = ?", other);
+            db.update("delete from club where id = ?", other);
         }
     }
 
