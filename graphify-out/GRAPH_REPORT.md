@@ -1,103 +1,104 @@
 # Graph Report - equis-api  (2026-11-16)
 
 ## Corpus Check
-- 617 files · ~204,749 words
+- 626 files · ~207,727 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 17 file(s) not represented in the graph (top: .properties 7, (none) 4, .imports 2)
 
 ## Summary
-- 5595 nodes · 24034 edges · 265 communities (82 shown, 183 thin omitted)
-- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 2605 edges (avg confidence: 0.85)
+- 5682 nodes · 24387 edges · 258 communities (90 shown, 168 thin omitted)
+- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 2622 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c6dc8228`
+- Built from commit: `b08696f4`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - SheetWriter
+- IntegrationTestBase
 - assertthat
 - .status
 - AdminTrainerApiIT
 - BookingReminderApiIT
-- AdminOversightFixture
-- Rider
+- .w3
+- RiderRepository
 - RiderAccountJourneyIT
-- .admin
+- .accounts
 - Coach
-- IntegrationTestBase
 - FinishSessionApiIT
 - PlanLimitService
-- .of
+- Session
 - org.junit.jupiter.api.Test
-- TrainerStatus
+- TrainerRef
 - AssessmentSlotQueryServiceIT
 - MySessionsControllerTest.java
 - PlatformSubscriptionApiIT
-- org.springframework.stereotype.Service
-- Session
+- RiderAppQueryService.java
+- AdminOverviewService.java
 - Session.java
 - Repository Layer
 - RiderEvaluationHistoryApiIT
-- .recorder
-- AssessmentBookingRepositoryIT
+- org.springframework.transaction.annotation.Transactional
+- .booking
 - PaymentsScenarioIT
 - SessionEvaluationApiIT
 - SessionTemplateServiceIT
-- AuthServiceIT
+- .login
 - AuthUser
-- SessionTemplateRulesIT
-- LevelRepositoryIT
+- RiderBalancesReportTest.java
+- RiderBalancesReportIT
 - PlanAndSubscriptionIT
-- org.springframework.jdbc.core.JdbcTemplate
+- TestPostgres
 - AdminBookingChangeApiIT
 - LevelChangeFlowIT
 - TrainerAccessServiceIT
-- LevelRiderCount
+- RiderRepositoryIT
 - IntakeScenarioIT
 - AdminBookingApiIT
 - RiderReassignApiIT
 - MyRidersQueryServiceIT
 - AdminOverviewApiIT
-- AuthUserConverterTest.java
+- AdminRiderApiIT
+- .convert
 - Release Workflow
 - .issue
-- EndpointIsolationIT
 - RepositoryIsolationIT.java
+- FreshDatabase.java
 - AssignmentServiceIT
 - API Exception Handler
-- InviteRepositoryIT
+- LevelChangeRulesTest.java
 - AdminMemberCloseApiIT
 - .runAs
-- localdate
-- PasswordService
-- .status
-- AssignOnTheDayApiIT
-- TokenGenerator
-- SubscriptionService.java
+- uuid
 - TenantTransactions
-- ClubAccessService
+- AssessmentRulesIT
+- AssignOnTheDayApiIT
+- AdminRiderService
+- SubscriptionService.java
+- RecordResultServiceIT
+- ClubRepository
 - ClubRepositoryIT
 - Booking Actions
 - TenantIsolationIT
-- PaymentState
+- Payment
 - AdminMemberApiIT
 - ClubAdminService
 - ClubAccessStateIT
 - Prod Environment Check
-- Plan
+- SubscriptionService.java
 - SessionUsageServiceIT
-- SessionTemplate
+- AssessmentBookingRepositoryIT
 - PerClubSignInIT
-- .register
+- AssessmentRules
 - AdminTrainerApiIT.java
-- AssessmentBookingRepository
+- AdminBookingRow
 - CI Workflow
 - notblank
 - PaymentsReportIT
 - EvaluationFollowUpQuery
-- .hash
+- com.equestrian.equis.service.platform.ClubAccessService
 - TrainerRepositoryIT
 - LevelChangeServiceIT
 - AccountLinkServiceIT
@@ -107,41 +108,42 @@
 - EvaluationFollowUpApiIT
 - Two-Club Fixture
 - Member Status
+- AuthService.java
 - AuthProperties
-- AssessmentSlotControllerTest
+- org.flywaydb.core.Flyway
 - MyWeekApiIT
 - PlanLimitApiIT
-- .allowed
+- org.junit.jupiter.params.ParameterizedTest
 - SessionRepository
 - SessionGeneratorIT
 - AdminPaymentVoidApiIT
 - RiderBalanceServiceIT
 - .reset
 - SessionTemplateController.java
-- .admin
+- E18DemoIT
 - AdminPaymentApiIT
 - InvitePurpose
-- TrainerDisableJourneyIT
+- SeedDataIT
 - RiderLevelQueryServiceIT
-- SecurityConfig.java
+- PaymentTest
 - SmtpNotificationSenderTest.java
 - .book
-- JwtServiceTest.java
+- org.springframework.context.annotation.Configuration
 - PlatformSignInJourneyIT
 - AdminLockoutServiceIT
-- RepositoryIsolationIT
+- .toResponse
 - Docker Compose
 - PaymentMethod
 - AdminAccountRepositoryIT
 - RiderTest
 - AdminMemberEditApiIT
-- list
+- ApiException
 - SessionTemplateRepositoryIT
-- .convert
+- InvitePurpose
 - TenantAutoConfiguration.java
 - AdminRiderBalanceApiIT
 - Changelog Epics A
-- .set
+- .of
 - CancelReason
 - Base URLs & Accounts Docs
 - Ops Scripts & Plans Docs
@@ -154,46 +156,38 @@
 - .status
 - Image Release Docs
 - Notification Sender Docs
-- BookingControllerTest
-- AdminNewMemberRequest.java
+- .record
+- .countUsedByPayment
 - LevelChangeApiIT
-- ReportParams
 - LevelChangeRepositoryIT
 - Graphify Rules Docs
 - SubjectType
 - Release 2.0.1
 - Maven POM
-- MySessionsControllerTest
+- .status
 - jakarta.persistence.AttributeConverter
 - TenantIdentifierResolver
-- org.springframework.test.web.servlet.ResultActions
-- SessionGenerationJob.java
+- E17DemoIT
+- SessionTemplateRepository
 - EndpointCoverageGuardIT
 - ReportDefinition
-- OutgoingEmail
-- MailConfig
+- AssessmentSlotMapper
+- Request
 - SessionEvaluationRepositoryIT
 - Trainer
-- TemplateBookedSeats
-- CountingEncoder
 - AssignmentRepositoryIT
 - AccountLinkMailListenerIT.java
 - ReportColumn
-- org.springframework.context.annotation.Bean
-- .aSnapshotSaysAsOf
-- ReportNotFoundException
 - ReportExportIT
 - TrainersReport
 - AccountLinkEmails
-- ReportRangeTooLongException
-- ReportParamsFactoryTest
-- AuthProperties
-- TrainerAccountsFixture
+- ReportParams
+- SmtpNotificationSender.java
+- RiderBalancesReportIT.java
 - ClubAccessFilter.java
 - Override
 - XlsxReportWriterTest
-- SubscriptionService.java
-- Snapshot
+- AccessReason
 
 ## God Nodes (most connected - your core abstractions)
 1. `ApiException` - 126 edges
@@ -227,259 +221,291 @@
 - **Multi-tenant club isolation (RLS, equis_app role, test club context)** — readme_row_level_security, readme_equis_app_role, claude_default_club_in_tests, claude_defaultclubextension, claude_tenantcontext_runas, claude_clubthreads [INFERRED 0.85]
 - **Platform operator setup via ops scripts** — ops_readme_create_super_admin, ops_readme_platform_login, ops_readme_upsert_plan, ops_readme_plan_tiers [INFERRED 0.85]
 
-## Communities (265 total, 183 thin omitted)
+## Communities (258 total, 168 thin omitted)
 
 ### Community 0 - "SheetWriter"
-Cohesion: 0.12
-Nodes (8): ColumnType, DATE, DATETIME, INTEGER, MONEY_EGP, TEXT, ExcelStyles, SheetWriter
+Cohesion: 0.11
+Nodes (9): ColumnType, DATE, DATETIME, INTEGER, MONEY_EGP, TEXT, ExcelStyles, SheetWriter (+1 more)
+
+### Community 1 - "IntegrationTestBase"
+Cohesion: 0.07
+Nodes (4): TrainerAdminAccessIT, IntegrationTestBase, MutableClock, TrainerAccountsFixture
 
 ### Community 2 - "assertthat"
-Cohesion: 0.07
-Nodes (8): PhoneNormalizerTest, ClubAccessFilterTest, MemberRepositoryIT, AssessmentRulesIT, FixedClock, RecordResultServiceIT, Config, PostgresContainer
+Cohesion: 0.06
+Nodes (17): NoticeRepositoryIT, AuthServiceIT, FixedClock, FixedClock, MyLevelsServiceIT, FixedClock, FixedClock, FixedClock (+9 more)
 
 ### Community 5 - "BookingReminderApiIT"
-Cohesion: 0.16
+Cohesion: 0.18
 Nodes (3): BookingReminderApiIT, NoticeRow, Request
 
-### Community 6 - "AdminOversightFixture"
-Cohesion: 0.11
-Nodes (5): AdminOversightAccessIT, ReminderJourneyIT, RiderReassignJourneyIT, AdminOversightFixture, Coach
+### Community 7 - "RiderRepository"
+Cohesion: 0.09
+Nodes (20): AdminPaymentController, MyRidersController, RiderEvaluations, EvaluationHistoryRow, PendingEvaluationRow, SessionEvaluationRepository, PaymentRepository, SessionUsageRepository (+12 more)
 
-### Community 7 - "Rider"
-Cohesion: 0.06
-Nodes (15): BookingController, AdminRiderAccountController, RiderEvaluations, RiderAccount, Rider, RiderRepository, RecordResultService, EvaluationHistoryQuery (+7 more)
-
-### Community 9 - ".admin"
-Cohesion: 0.15
-Nodes (4): OmarAndSara, Person, RiderAccountsScenarioIT, RiderLogin
+### Community 9 - ".accounts"
+Cohesion: 0.07
+Nodes (10): OutgoingEmail, Request, Request, TrainerInviteJourneyIT, TrainerResetJourneyIT, OmarAndSara, Person, RiderAccountsScenarioIT (+2 more)
 
 ### Community 10 - "Coach"
-Cohesion: 0.12
-Nodes (5): SessionEvaluationsScenarioIT, SharedSession, SameDaySessionsScenarioIT, Check, SameDayJourneys
+Cohesion: 0.11
+Nodes (5): SessionEvaluationsScenarioIT, SharedSession, SameDaySessionsScenarioIT, Coach, SameDayJourneys
 
 ### Community 12 - "FinishSessionApiIT"
 Cohesion: 0.14
 Nodes (5): FinishSessionApiIT, Request, State, CANCELLED, SCHEDULED
 
 ### Community 13 - "PlanLimitService"
-Cohesion: 0.11
-Nodes (9): AdminClubUsageController, ClubStatusView, ClubUsageView, Count, LimitedResource, RIDERS, TRAINERS, PlanLimitReachedException (+1 more)
+Cohesion: 0.12
+Nodes (11): AdminClubUsageController, Access, ClubStatusView, ClubUsageView, Count, BlockedSignIn, LimitedResource, RIDERS (+3 more)
+
+### Community 15 - "Session"
+Cohesion: 0.07
+Nodes (10): MySessionsController, Session, SessionRepository, EvaluationService, AssignmentRules, AssignmentService, FinishSessionService, SessionAccess (+2 more)
 
 ### Community 16 - "org.junit.jupiter.api.Test"
-Cohesion: 0.05
-Nodes (10): AuthPropertiesTest, TestConfig, JwtConfigTest, CancelReasonTest, MemberStatusTest, PaymentEnumsTest, EquisApiApplicationIT, RefreshTokenRepositoryIT (+2 more)
+Cohesion: 0.06
+Nodes (10): AccessToken, AuthPropertiesTest, TestConfig, JwtConfigTest, CancelReasonTest, MemberStatusTest, EquisApiApplicationIT, InviteRepositoryIT (+2 more)
 
-### Community 17 - "TrainerStatus"
-Cohesion: 0.08
-Nodes (21): TrainerRef, ActivityItem, AdminRiderRow, RiderTotals, TrainerCard, TrainerStatus, ACTIVE, DISABLED (+13 more)
+### Community 17 - "TrainerRef"
+Cohesion: 0.18
+Nodes (8): TrainerRef, AdminRiderView, AdminRiderRowAssembler, HowAssigned, CHANGED_MANUALLY, FROM_ASSESSMENT, SET_MANUALLY, UNASSIGNED
+
+### Community 19 - "AssessmentSlotQueryServiceIT"
+Cohesion: 0.10
+Nodes (8): AssessmentSlotDayDto, AssessmentSlotDto, AssessmentSlotsDto, BookingRowDto, SlotDetailDto, AssessmentSlotControllerTest, AssessmentSlotQueryServiceIT, FixedClock
 
 ### Community 20 - "MySessionsControllerTest.java"
-Cohesion: 0.10
-Nodes (4): MyLevelsControllerTest, MyRidersControllerTest, ActiveClubAccess, Config
+Cohesion: 0.11
+Nodes (6): BookingControllerTest, MyLevelsControllerTest, MyRidersControllerTest, SessionTemplateControllerTest, ActiveClubAccess, Config
 
-### Community 24 - "org.springframework.stereotype.Service"
-Cohesion: 0.04
-Nodes (37): RiderAppController, PaymentEntry, PaymentResult, PaymentUsage, RiderPayments, VoidPaymentRequest, ExpiringSoon, RiderAssessment (+29 more)
+### Community 24 - "RiderAppQueryService.java"
+Cohesion: 0.09
+Nodes (12): ExpiringSoon, RiderBanners, RiderMe, RiderPackage, RiderPayment, RiderPayments, RiderProgress, RiderSession (+4 more)
 
-### Community 25 - "Session"
-Cohesion: 0.06
-Nodes (13): AdminOverviewController, AdminNewMemberRequest, Attention, OverviewResponse, PendingInvite, TodaySession, TrackFill, WeekFill (+5 more)
+### Community 25 - "AdminOverviewService.java"
+Cohesion: 0.09
+Nodes (12): AdminOverviewController, ActivityItem, Attention, OverviewResponse, PendingInvite, TodaySession, TrackFill, TrainerRiderCount (+4 more)
 
 ### Community 26 - "Session.java"
-Cohesion: 0.05
-Nodes (23): TenantGuard, Admin, Direction, DOWN, UP, LevelChangeRequest, AdminAccount, AdminStatus (+15 more)
+Cohesion: 0.10
+Nodes (15): TenantGuard, SeatEvaluation, AdminAccount, RefreshToken, Trainer, Club, SessionEvaluation, Level (+7 more)
 
 ### Community 27 - "Repository Layer"
-Cohesion: 0.09
-Nodes (5): TrainerRiderCount, InviteRepository, RefreshTokenRepository, SlotBookedCount, SuperAdminRepository
+Cohesion: 0.10
+Nodes (4): InviteRepository, SubscriptionRepository, LevelChangeRepository, MemberRider
 
-### Community 29 - ".recorder"
-Cohesion: 0.12
-Nodes (3): Request, Request, TrainerInviteJourneyIT
-
-### Community 30 - "AssessmentBookingRepositoryIT"
-Cohesion: 0.07
-Nodes (4): RecordResultRequest, ResultRecorded, AssessmentBookingTest, AssessmentBookingRepositoryIT
+### Community 29 - "org.springframework.transaction.annotation.Transactional"
+Cohesion: 0.06
+Nodes (15): Constraints, LevelHistoryEntry, AssessmentBooking, BookingStatus, CANCELLED, NOSHOW, PLACED, UPCOMING (+7 more)
 
 ### Community 32 - "SessionEvaluationApiIT"
 Cohesion: 0.12
 Nodes (5): Request, SessionEvaluationApiIT, State, CANCELLED, SCHEDULED
 
 ### Community 33 - "SessionTemplateServiceIT"
-Cohesion: 0.17
-Nodes (3): DeleteImpact, SessionsCancelledEvent, SessionTemplateServiceIT
-
-### Community 35 - "AuthServiceIT"
 Cohesion: 0.06
-Nodes (15): ClubStatusController, Access, AuthTokens, ClubRef, InviteAcceptRequest, LoginRequest, AuthService, BlockedSignIn (+7 more)
+Nodes (11): BookedSeats, DeleteImpact, OverlapRef, SaveResult, SessionsCancelledEvent, SessionTemplateInput, SessionTemplateRules, SessionTemplateService (+3 more)
+
+### Community 35 - ".login"
+Cohesion: 0.08
+Nodes (3): InviteAccepted, InviteAcceptRequest, LoginRequest
 
 ### Community 36 - "AuthUser"
-Cohesion: 0.04
-Nodes (43): AuthUser, AuthController, AdminAssessmentSlotController, AdminMemberController, AssessmentSlotController, MyEvaluationsController, MyLevelsController, AdminPaymentController (+35 more)
+Cohesion: 0.07
+Nodes (22): AuthUser, AdminAssessmentSlotController, AssessmentSlotController, BookingController, MyEvaluationsController, MyLevelsController, PlatformAuthController, PlatformClubController (+14 more)
 
-### Community 43 - "org.springframework.jdbc.core.JdbcTemplate"
-Cohesion: 0.06
-Nodes (8): ProdDemoDataCleanupIT, ApplicantIntakeMigrationIT, EmptyDatabaseStartIT, MigrationFromRelease2IT, RiderAccountMigrationIT, SessionFinishedMigrationIT, FreshDatabase, TestPostgres
+### Community 37 - "RiderBalancesReportTest.java"
+Cohesion: 0.11
+Nodes (5): RiderReportRow, RiderReportRepository, RiderBalanceReportRow, RiderBalancesReport, RiderBalancesReportTest
 
-### Community 45 - "LevelChangeFlowIT"
-Cohesion: 0.10
-Nodes (4): MyLevelsServiceIT, LevelChangeFlowIT, FixedClock, SessionDetailServiceIT
+### Community 43 - "TestPostgres"
+Cohesion: 0.17
+Nodes (4): ProdDemoDataCleanupIT, ApplicantIntakeMigrationIT, SessionFinishedMigrationIT, TestPostgres
 
 ### Community 48 - "IntakeScenarioIT"
-Cohesion: 0.14
-Nodes (4): BookingOversightJourneyIT, NoShowRebooked, IntakeScenarioIT, Person
-
-### Community 50 - "RiderReassignApiIT"
-Cohesion: 0.08
-Nodes (4): AdminRiderApiIT, Request, Request, RiderReassignApiIT
+Cohesion: 0.09
+Nodes (7): AdminOversightAccessIT, BookingOversightJourneyIT, NoShowRebooked, IntakeScenarioIT, Person, ReminderJourneyIT, AdminOversightFixture
 
 ### Community 51 - "MyRidersQueryServiceIT"
 Cohesion: 0.21
-Nodes (4): BalanceDto, MyRiderDto, UpcomingSeat, MyRidersQueryServiceIT
+Nodes (3): BalanceDto, MyRiderDto, MyRidersQueryServiceIT
 
-### Community 54 - "AuthUserConverterTest.java"
+### Community 54 - ".convert"
 Cohesion: 0.13
-Nodes (7): AuthUserAuthentication, AuthUserConverter, Role, ADMIN, RIDER, SUPER_ADMIN, TRAINER
+Nodes (3): AuthUserAuthentication, AuthUserConverter, AuthUserConverterTest
 
 ### Community 55 - "Release Workflow"
 Cohesion: 0.07
 Nodes (29): DIGEST, IMAGE, TAG, jobs, publish-image, name, on, release (+21 more)
 
-### Community 56 - ".issue"
-Cohesion: 0.13
-Nodes (3): AccessToken, RiderAppApiIT, JwtServiceTest
+### Community 57 - "RepositoryIsolationIT.java"
+Cohesion: 0.08
+Nodes (13): Case, EndpointIsolationIT, Ids, Kind, LIST, OTHER, OWN, UNKNOWN (+5 more)
 
-### Community 57 - "EndpointIsolationIT"
-Cohesion: 0.18
-Nodes (12): Case, EndpointIsolationIT, Ids, Kind, LIST, OTHER, OWN, UNKNOWN (+4 more)
+### Community 62 - "LevelChangeRulesTest.java"
+Cohesion: 0.13
+Nodes (5): Direction, DOWN, UP, LevelChangeRequest, LevelChangeRulesTest
 
 ### Community 64 - ".runAs"
-Cohesion: 0.13
-Nodes (5): TenantContext, TenantContextTest, TenantFilterTest, jakarta.servlet.http.HttpServlet, PlatformPingController
-
-### Community 65 - "localdate"
 Cohesion: 0.09
-Nodes (4): RiderEvaluation, SeatEvaluation, EvaluationHistoryRow, PendingEvaluationRow
+Nodes (5): TenantContext, TenantContextTest, TenantFilterTest, jakarta.servlet.http.HttpServlet, DefaultClubExtension
 
-### Community 66 - "PasswordService"
-Cohesion: 0.22
-Nodes (5): PlatformAuthController, PlatformLoginRequest, AdminLockoutService, PasswordService, PlatformAuthService
+### Community 66 - "TenantTransactions"
+Cohesion: 0.10
+Nodes (9): Outcome, TenantTransactions, PlatformLoginRequest, SuperAdminRepository, AdminLockoutService, PasswordService, PlatformAuthService, CountingEncoder (+1 more)
 
 ### Community 68 - "AssignOnTheDayApiIT"
 Cohesion: 0.17
 Nodes (5): AssignOnTheDayApiIT, State, CANCELLED, FINISHED, SCHEDULED
 
+### Community 69 - "AdminRiderService"
+Cohesion: 0.16
+Nodes (9): AdminRiderController, AdminRiderList, AdminRiderRow, ReassignResult, ReassignRidersRequest, RiderTotals, TrainerCard, AdminRiderService (+1 more)
+
 ### Community 70 - "SubscriptionService.java"
-Cohesion: 0.12
-Nodes (5): PlatformSubscriptionController, SubscriptionResult, Subscription, SubscriptionRepository, SubscriptionService
+Cohesion: 0.09
+Nodes (16): PlatformSubscriptionController, AddSubscriptionRequest, PlanView, StartMode, AFTER_CURRENT, NOW, SubscriptionResult, SubscriptionStatus (+8 more)
 
-### Community 71 - "TenantTransactions"
-Cohesion: 0.10
-Nodes (5): Outcome, TenantTransactions, ClubRepository, ClubErrors, ClubOnboardingService
+### Community 71 - "RecordResultServiceIT"
+Cohesion: 0.28
+Nodes (3): RecordResultRequest, ResultRecorded, RecordResultServiceIT
 
-### Community 72 - "ClubAccessService"
-Cohesion: 0.29
-Nodes (3): ClubAccess, ClubAccessService, ClubAccessServiceTest
+### Community 72 - "ClubRepository"
+Cohesion: 0.11
+Nodes (7): OnExpiry, BLOCK, READ_ONLY, ClubRepository, ClubAccess, ClubAccessService, ClubAccessServiceTest
 
 ### Community 74 - "Booking Actions"
-Cohesion: 0.11
-Nodes (11): BookingAction, CANCEL, CHANGE_ASSESSOR, CLOSE, EDIT, REBOOK, REMIND, REOPEN (+3 more)
+Cohesion: 0.12
+Nodes (10): BookingAction, CANCEL, CHANGE_ASSESSOR, CLOSE, EDIT, REBOOK, REMIND, REOPEN (+2 more)
 
-### Community 76 - "PaymentState"
-Cohesion: 0.22
-Nodes (7): PaymentState, ACTIVE, EXPIRED, UPCOMING, USED_UP, VOIDED, PaymentStateTest
+### Community 76 - "Payment"
+Cohesion: 0.10
+Nodes (13): PaymentEntry, PaymentUsage, RiderPayments, Payment, UsageLine, PaymentEntryAssembler, PaymentState, ACTIVE (+5 more)
 
 ### Community 78 - "ClubAdminService"
-Cohesion: 0.12
-Nodes (10): ClubPage, ClubAdminService, Entry, ClubFilter, ClubSort, CODE, ENDS_AT, NAME (+2 more)
+Cohesion: 0.08
+Nodes (15): Admin, ClubDetail, AdminStatus, ACTIVE, INVITED, ClubAdminService, Entry, ClubFilter (+7 more)
 
 ### Community 81 - "Prod Environment Check"
 Cohesion: 0.16
 Nodes (3): ProdEnvironmentCheck, EquisApiApplication, ProdEnvironmentCheckTest
 
-### Community 82 - "Plan"
-Cohesion: 0.12
-Nodes (6): PlanView, OnExpiry, BLOCK, READ_ONLY, Plan, PlanRepository
+### Community 82 - "SubscriptionService.java"
+Cohesion: 0.15
+Nodes (7): BillingPeriod, ANNUAL, MONTHLY, TRIAL, Plan, Subscription, PlanRepository
 
-### Community 84 - "SessionTemplate"
-Cohesion: 0.17
-Nodes (7): SessionTemplateController, SessionTemplate, SessionTemplateRepository, BookedSeats, SessionGenerator, SessionTemplateRules, SessionTemplateService
+### Community 83 - "SessionUsageServiceIT"
+Cohesion: 0.14
+Nodes (4): VoidPaymentRequest, FixedClock, SessionUsageServiceIT, ClubThreads
 
-### Community 88 - "AssessmentBookingRepository"
-Cohesion: 0.03
-Nodes (34): AdminBookingController, AdminBookingList, AdminBookingRow, BookingTotals, CancelBookingRequest, ChangeBookingRequest, MemberRef, SlotRef (+26 more)
+### Community 86 - "AssessmentRules"
+Cohesion: 0.06
+Nodes (10): InviteTrainerRequest, AdminNewMemberRequest, UpdateMemberRequest, Member, MemberRepository, AssessmentRules, MemberBookingService, MemberDetailsService (+2 more)
+
+### Community 88 - "AdminBookingRow"
+Cohesion: 0.06
+Nodes (18): AdminBookingController, AdminMemberController, AdminBookingList, AdminBookingRow, BookingTotals, CancelBookingRequest, ChangeBookingRequest, MemberRef (+10 more)
 
 ### Community 89 - "CI Workflow"
 Cohesion: 0.07
 Nodes (34): needs, runs-on, steps, env, APP_ADMIN_EMAIL, APP_ADMIN_PASSWORD_HASH, APP_BASE_URL, APP_JWT_SECRET (+26 more)
 
 ### Community 90 - "notblank"
-Cohesion: 0.15
-Nodes (3): ClubAdminInput, CreateClubRequest, VoidSubscriptionRequest
+Cohesion: 0.11
+Nodes (4): PhoneNormalizer, RefreshRequest, ClubAdminInput, CreateClubRequest
 
 ### Community 92 - "EvaluationFollowUpQuery"
-Cohesion: 0.16
-Nodes (15): AdminEvaluationController, EvaluationFollowUp, FollowUpTotals, FollowUpTrainer, RiderRef, UnevaluatedSession, UnfinishedSession, SessionStatus (+7 more)
+Cohesion: 0.25
+Nodes (9): EvaluationFollowUp, FollowUpTotals, FollowUpTrainer, RiderRef, UnevaluatedSession, UnfinishedSession, EvaluationFollowUpQuery, SeatKey (+1 more)
+
+### Community 93 - "com.equestrian.equis.service.platform.ClubAccessService"
+Cohesion: 0.21
+Nodes (3): ClubStatusController, EmptyDatabaseStartIT, MigrationFromRelease2IT
+
+### Community 96 - "AccountLinkServiceIT"
+Cohesion: 0.13
+Nodes (5): AccountLinkService, GeneratedToken, TokenGenerator, AccountLinkServiceIT, TokenGeneratorTest
 
 ### Community 98 - "PaymentsReport"
+Cohesion: 0.22
+Nodes (3): PaymentReportRepository, PaymentsReport, PaymentsReportTest
+
+### Community 101 - "Two-Club Fixture"
 Cohesion: 0.14
-Nodes (4): PaymentReportRepository, PaymentsReport, ReportTotal, PaymentsReportTest
+Nodes (4): RowLevelSecurityIT, Builder, ClubData, TwoClubFixture
 
 ### Community 102 - "Member Status"
-Cohesion: 0.13
+Cohesion: 0.15
 Nodes (7): MemberStatus, CLOSED, NO_SHOW, PENDING_ASSESSMENT, RIDER, MemberStatusResolver, MemberStatusResolverTest
 
-### Community 106 - "AssessmentSlotControllerTest"
-Cohesion: 0.20
-Nodes (5): AssessmentSlotDayDto, AssessmentSlotDto, BookingRowDto, SlotDetailDto, AssessmentSlotControllerTest
+### Community 103 - "AuthService.java"
+Cohesion: 0.09
+Nodes (7): AuthController, AuthTokens, ClubRef, AuthService, AuthTokenService, Issued, AuthTokenServiceIT
+
+### Community 104 - "AuthProperties"
+Cohesion: 0.10
+Nodes (9): Admin, AuthProperties, Invite, Jwt, Lockout, Refresh, Reset, JwtConfig (+1 more)
+
+### Community 109 - "org.junit.jupiter.params.ParameterizedTest"
+Cohesion: 0.09
+Nodes (5): BookingActions, PhoneNormalizerTest, ClubAccessFilterTest, LevelRepositoryIT, BookingActionsTest
 
 ### Community 110 - "SessionRepository"
-Cohesion: 0.04
-Nodes (26): SchoolWeek, SessionDetailMapper, LevelRef, Day, LevelSessionsResponse, Seat, SessionSlot, MyWeek (+18 more)
+Cohesion: 0.06
+Nodes (21): SchoolWeek, LevelRef, Day, LevelSessionsResponse, Seat, SessionSlot, MyLevelSummary, MyWeek (+13 more)
+
+### Community 113 - "RiderBalanceServiceIT"
+Cohesion: 0.17
+Nodes (4): PackageBalance, RiderBalance, FixedClock, RiderBalanceServiceIT
 
 ### Community 115 - "SessionTemplateController.java"
-Cohesion: 0.17
-Nodes (10): SessionTemplateMapper, DeleteResponse, Overlap, SaveResponse, Warning, SessionTemplateCreateRequest, SessionTemplateResponse, SessionTemplateUpdateRequest (+2 more)
+Cohesion: 0.19
+Nodes (9): SessionTemplateController, SessionTemplateMapper, DeleteResponse, Overlap, SaveResponse, Warning, SessionTemplateCreateRequest, SessionTemplateResponse (+1 more)
 
-### Community 118 - "InvitePurpose"
-Cohesion: 0.17
-Nodes (6): DbConverter, InvitePurpose, INVITE, RESET, AccountLinkCreatedEvent, AccountLinkEmailsTest
-
-### Community 122 - "SmtpNotificationSenderTest.java"
-Cohesion: 0.09
-Nodes (4): LogNotificationSender, SmtpNotificationSender, MailConfigTest, SmtpNotificationSenderTest
+### Community 120 - "RiderLevelQueryServiceIT"
+Cohesion: 0.22
+Nodes (3): RiderLevelDto, UpcomingSeat, RiderLevelQueryServiceIT
 
 ### Community 123 - ".book"
-Cohesion: 0.23
+Cohesion: 0.22
 Nodes (3): FixedClock, MemberBookingServiceIT, TestMembers
 
-### Community 124 - "JwtServiceTest.java"
+### Community 124 - "org.springframework.context.annotation.Configuration"
 Cohesion: 0.22
-Nodes (3): ClockConfig, SchedulingConfig, SecurityBeans
+Nodes (3): ClockConfig, MailConfig, SchedulingConfig
+
+### Community 127 - ".toResponse"
+Cohesion: 0.26
+Nodes (5): SessionDetailMapper, AssignmentsRequest, MySeat, RiderOption, SessionDetailResponse
 
 ### Community 128 - "Docker Compose"
 Cohesion: 0.17
 Nodes (11): POSTGRES_DB, POSTGRES_PASSWORD, POSTGRES_USER, environment, image, ports, volumes, services (+3 more)
 
 ### Community 129 - "PaymentMethod"
+Cohesion: 0.10
+Nodes (11): DbConverter, PaymentMethod, BANK_TRANSFER, CARD, CASH, MOBILE_WALLET, OTHER, RiderPaymentStatus (+3 more)
+
+### Community 131 - "RiderTest"
+Cohesion: 0.11
+Nodes (4): Rider, NoSessionsLeftException, LevelChangeTest, RiderTest
+
+### Community 133 - "ApiException"
+Cohesion: 0.07
+Nodes (12): ApiException, ApiFieldError, ErrorCodes, DateRanges, AdminEvaluationController, RiderSessionPage, Levels, AccountErrors (+4 more)
+
+### Community 135 - "InvitePurpose"
 Cohesion: 0.27
-Nodes (7): DbConverter, PaymentMethod, BANK_TRANSFER, CARD, CASH, MOBILE_WALLET, OTHER
-
-### Community 133 - "list"
-Cohesion: 0.09
-Nodes (8): ApiException, ApiFieldError, ErrorCodes, DateRanges, Levels, AccountErrors, TrainerErrors, SessionSeatAssembler
-
-### Community 136 - "TenantAutoConfiguration.java"
-Cohesion: 0.13
-Nodes (3): TenantAutoConfiguration, BeanPostProcessor, TenantAwareDataSource
+Nodes (4): DbConverter, InvitePurpose, INVITE, RESET
 
 ### Community 139 - "Changelog Epics A"
 Cohesion: 0.25
 Nodes (9): E10 Release packaging, E2 Session setup, E3 Scheduling riders, E5 Rider levels, E7 Admin oversight, E8 Week view & hardening, E9 Admin console redesign, Production clean-up afterMigrate__remove_demo_data.sql (+1 more)
 
 ### Community 141 - "CancelReason"
-Cohesion: 0.20
-Nodes (8): CancelReason, FACILITY_CLOSED, HORSE_UNAVAILABLE, OTHER, PERSON_CANCELLED, PERSON_UNWELL, TRAINER_UNAVAILABLE, WEATHER
+Cohesion: 0.21
+Nodes (9): CancelReason, FACILITY_CLOSED, HORSE_UNAVAILABLE, OTHER, PERSON_CANCELLED, PERSON_UNWELL, TRAINER_UNAVAILABLE, WEATHER (+1 more)
 
 ### Community 142 - "Base URLs & Accounts Docs"
 Cohesion: 0.29
@@ -506,44 +532,44 @@ Cohesion: 0.50
 Nodes (3): LogNotificationSender, RecordingNotificationSender, TestPostgres (shared container, per-class DB)
 
 ### Community 162 - "SubjectType"
-Cohesion: 0.17
-Nodes (7): DbConverter, SubjectType, ADMIN, RIDER, SUPER_ADMIN, TRAINER, RoleTest
+Cohesion: 0.08
+Nodes (14): Role, ADMIN, RIDER, SUPER_ADMIN, TRAINER, DbConverter, SubjectType, ADMIN (+6 more)
+
+### Community 205 - ".status"
+Cohesion: 0.08
+Nodes (3): EvaluationRequest, SecurityConfigTest, MySessionsControllerTest
 
 ### Community 206 - "jakarta.persistence.AttributeConverter"
-Cohesion: 0.09
-Nodes (10): DbConverter, DbConverter, DbConverter, DbConverter, NoticeType, RESULT_OVERDUE, SESSION_CANCELLED, DbConverter (+2 more)
+Cohesion: 0.05
+Nodes (22): DbConverter, TrainerStatus, ACTIVE, DISABLED, INVITED, DbConverter, DbConverter, NoticeType (+14 more)
 
-### Community 208 - "org.springframework.test.web.servlet.ResultActions"
-Cohesion: 0.13
-Nodes (3): E17DemoIT, E18DemoIT, TestSubscriptions
+### Community 209 - "SessionTemplateRepository"
+Cohesion: 0.12
+Nodes (6): SessionProperties, SessionTemplateRepository, AssessmentSeatCounts, SessionGenerationJob, SessionGenerator, TemplateBookedSeats
 
 ### Community 213 - "ReportDefinition"
-Cohesion: 0.15
-Nodes (5): ReportController, ReportDefinition, ReportExportService, ReportRegistry, ReportWriter
+Cohesion: 0.10
+Nodes (7): ReportController, ReportDefinition, ReportExportService, ReportRegistry, ReportTotal, ReportWriter, AllTypesReport
 
 ### Community 217 - "Trainer"
 Cohesion: 0.05
-Nodes (20): Constraints, AdminTrainerController, InviteTrainerRequest, LevelCount, PendingLink, RiderCounts, TrainerList, TrainerRow (+12 more)
-
-### Community 250 - "org.springframework.context.annotation.Bean"
-Cohesion: 0.07
-Nodes (12): FixedClock, FixedClock, FixedClock, FixedClock, FixedClock, FixedClock, FixedClock, FixedClock (+4 more)
+Nodes (16): AdminTrainerController, LevelCount, PendingLink, RiderCounts, TrainerList, TrainerRow, TrainerTotals, RiderAccount (+8 more)
 
 ### Community 255 - "AccountLinkEmails"
 Cohesion: 0.21
 Nodes (4): AccountLinkEmails, Texts, AccountLinkMailListener, NotificationSender
 
-### Community 258 - "AuthProperties"
-Cohesion: 0.15
-Nodes (12): Admin, AuthProperties, Invite, Jwt, Lockout, Refresh, Reset, MailSettings (+4 more)
+### Community 257 - "ReportParams"
+Cohesion: 0.11
+Nodes (5): ReportParams, ReportParamsFactory, ReportParamsFactoryTest, Snapshot, ReportParamsTest
 
-### Community 260 - "TrainerAccountsFixture"
-Cohesion: 0.08
-Nodes (8): TrainerAdminAccessIT, TrainerResetJourneyIT, MutableClock, RecordingNotificationSender, TrainerAccountsFixture, ClubData, Config, TwoClubFixture
+### Community 258 - "SmtpNotificationSender.java"
+Cohesion: 0.15
+Nodes (5): MailSettings, Mode, LOG, SMTP, SmtpNotificationSender
 
 ### Community 261 - "ClubAccessFilter.java"
-Cohesion: 0.13
-Nodes (3): ClubAccessFilter, TenantFilter, SubscriptionExpiredException
+Cohesion: 0.09
+Nodes (4): SecurityConfig, ClubAccessFilter, TenantFilter, SubscriptionExpiredException
 
 ### Community 263 - "Override"
 Cohesion: 0.18
@@ -553,29 +579,29 @@ Nodes (3): Named, ReportRegistryTest, Totalled
 Cohesion: 0.16
 Nodes (3): AllTypesReport, Line, XlsxReportWriterTest
 
-### Community 274 - "SubscriptionService.java"
-Cohesion: 0.08
-Nodes (26): AddSubscriptionRequest, ClubAccessView, ClubRow, StartMode, AFTER_CURRENT, NOW, SubscriptionStatus, CURRENT (+18 more)
+### Community 274 - "AccessReason"
+Cohesion: 0.12
+Nodes (17): ChangeClubStatusRequest, ClubAccessView, ClubPage, ClubRow, ClubStatus, ACTIVE, SUSPENDED, AccessReason (+9 more)
 
 ## Knowledge Gaps
-- **122 isolated node(s):** `TEXT`, `DATE`, `DATETIME`, `MONEY_EGP`, `INTEGER` (+117 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 509 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **183 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **122 isolated node(s):** `ADMIN`, `TRAINER`, `RIDER`, `LIST`, `OTHER` (+117 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 511 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **168 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Session` connect `Session` to `assertthat`, `list`, `Rider`, `.of`, `PaymentRepositoryIT`, `org.springframework.stereotype.Service`, `Session.java`, `Repository Layer`, `AssessmentBookingRepositoryIT`, `SessionTemplateServiceIT`, `AuthUser`, `MyRidersQueryServiceIT`, `AssignmentServiceIT`, `localdate`, `SessionUsageServiceIT`, `SessionTemplate`, `AssessmentBookingRepository`, `Trainer`, `EvaluationFollowUpQuery`, `.of`, `AssessmentSlotControllerTest`, `SessionRepository`, `AssignmentRepositoryIT`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
-- **What connects `TEXT`, `DATE`, `DATETIME` to the rest of the system?**
+- **Why does `ApiException` connect `ApiException` to `assertthat`, `RiderTest`, `RiderRepository`, `Session`, `.status`, `RiderAppQueryService.java`, `.record`, `org.springframework.transaction.annotation.Transactional`, `SessionTemplateServiceIT`, `AuthUser`, `AssignmentServiceIT`, `LevelChangeRulesTest.java`, `TenantTransactions`, `AssessmentRulesIT`, `AdminRiderService`, `SubscriptionService.java`, `ClubRepository`, `Payment`, `.status`, `SubscriptionService.java`, `SessionUsageServiceIT`, `AssessmentRules`, `AdminBookingRow`, `Trainer`, `AccountLinkServiceIT`, `SessionRepository`, `SessionTemplateController.java`, `AdminLockoutServiceIT`?**
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._
+- **What connects `ADMIN`, `TRAINER`, `RIDER` to the rest of the system?**
   _122 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `SheetWriter` be split into smaller, more focused modules?**
-  _Cohesion score 0.11596638655462185 - nodes in this community are weakly interconnected._
-- **Why does `ApiException` connect `list` to `assertthat`, `Rider`, `TrainerStatus`, `SubscriptionService.java`, `.status`, `org.springframework.stereotype.Service`, `Session`, `Session.java`, `AssessmentBookingRepositoryIT`, `AuthUser`, `SessionTemplateRulesIT`, `AssignmentServiceIT`, `API Exception Handler`, `PasswordService`, `SubscriptionService.java`, `TenantTransactions`, `ClubAdminService`, `SessionTemplate`, `AssessmentBookingRepository`, `Trainer`, `EvaluationFollowUpQuery`, `.hash`, `SessionRepository`, `AdminLockoutServiceIT`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+  _Cohesion score 0.10510510510510511 - nodes in this community are weakly interconnected._
+- **Why does `CancelReason` connect `CancelReason` to `uuid`, `ApiException`, `jakarta.persistence.AttributeConverter`, `org.junit.jupiter.api.Test`, `AdminBookingRow`, `org.springframework.transaction.annotation.Transactional`, `.booking`?**
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+- **Should `IntegrationTestBase` be split into smaller, more focused modules?**
+  _Cohesion score 0.06622185154295246 - nodes in this community are weakly interconnected._
+- **Why does `AuthUser` connect `AuthUser` to `RiderBalancesReportIT.java`, `ClubAccessFilter.java`, `ApiException`, `RiderRepository`, `IntegrationTestBase`, `FinishSessionApiIT`, `org.junit.jupiter.api.Test`, `.set`, `AssessmentSlotQueryServiceIT`, `.record`, `RiderEvaluationHistoryApiIT`, `org.springframework.transaction.annotation.Transactional`, `SessionEvaluationApiIT`, `SubjectType`, `LevelChangeFlowIT`, `TrainerAccessServiceIT`, `MyRidersQueryServiceIT`, `.convert`, `.issue`, `.runAs`, `uuid`, `AssessmentRulesIT`, `AssignOnTheDayApiIT`, `SubscriptionService.java`, `RecordResultServiceIT`, `.status`, `SessionUsageServiceIT`, `AdminTrainerApiIT.java`, `EvaluationFollowUpApiIT`, `AuthService.java`, `AuthProperties`, `.toResponse`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **Should `assertthat` be split into smaller, more focused modules?**
-  _Cohesion score 0.08289738430583501 - nodes in this community are weakly interconnected._
-- **Why does `RiderRepository` connect `Rider` to `LevelChangeRepositoryIT`, `AuthUser`, `list`, `.convert`, `TrainerAccessServiceIT`, `SessionRepository`, `org.junit.jupiter.api.Test`, `TrainerStatus`, `AuthUserConverterTest.java`, `AssessmentBookingRepository`, `Trainer`, `Repository Layer`, `org.springframework.stereotype.Service`?**
-  _High betweenness centrality (0.012) - this node is a cross-community bridge._
-- **Should `assertthat` be split into smaller, more focused modules?**
-  _Cohesion score 0.07239117471675612 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06418098031001257 - nodes in this community are weakly interconnected._
