@@ -47,7 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // E17 · upgrading a release 2 database to 3.0.0. db/r2-sample.sql is a pg_dump of a database migrated with the
 // 2.0.2 migrations (V1-V22, with their Flyway history) plus a row or more in every school table. It is restored into
 // a database of its own before the app starts; the app's own Flyway then runs V23 onwards and Hibernate checks the
-// schema (ddl-auto=validate), as on the production server. E18 · the same upgrade creates the report views (V28). Only db/migration runs: no test grants, no test
+// schema (ddl-auto=validate), as on the production server. E18 · the same upgrade creates the report views (V28; E19 · V29-V31). Only db/migration runs: no test grants, no test
 // subscription, so plan and subscription stay as a real upgrade leaves them.
 @SpringBootTest(properties = {
         "app.sessions.generate-cron=-",
@@ -179,6 +179,61 @@ class MigrationFromRelease2IT {
                     .isEqualTo("equis_app");
         } finally {
             db.update("delete from trainer where club_id = ?", other);
+            db.update("delete from club where id = ?", other);
+        }
+    }
+
+    // E19 · the three money report views: created by the upgrade (V29-V31), run with the caller's rights
+    // (security_invoker), so the row-level security of payment, session_usage, rider and trainer keeps each club's
+    // rows apart even for SQL that names no club.
+    @Test
+    void theMoneyReportViewsKeepEachClubsRowsApart() {
+        List<String> views = List.of("report_payment_v", "report_rider_v", "report_expired_package_v");
+        for (String view : views) {
+            assertThat(db.queryForObject("""
+                    select array_to_string(reloptions, ',') from pg_class
+                    where relname = ? and relkind = 'v'""", String.class, view))
+                    .as(view).contains("security_invoker=true");
+        }
+
+        UUID other = db.queryForObject(
+                "insert into club (code, name) values ('other-club', 'Other Club') returning id", UUID.class);
+        try {
+            UUID admin = db.queryForObject("""
+                    insert into admin_account (club_id, name, email, password_hash)
+                    values (?, 'Other Admin', 'admin@other-club.eg', 'x') returning id""", UUID.class, other);
+            UUID rider = db.queryForObject("""
+                    insert into rider (club_id, name, level_id) values (?, 'Other Rider', 1) returning id""",
+                    UUID.class, other);
+            // A package of September 2026, never used: listed by all three views.
+            UUID payment = db.queryForObject("""
+                    insert into payment (club_id, rider_id, amount_egp, method, start_month, months, sessions,
+                                         valid_until, recorded_at, recorded_by)
+                    values (?, ?, 2400, 'cash', date '2026-09-01', 1, 8, date '2026-10-31', now(), ?)
+                    returning id""", UUID.class, other, rider, admin);
+
+            assertThat(TenantContext.runAs(Club.DEFAULT_ID,
+                    () -> app.queryForList("select id from report_rider_v", UUID.class)))
+                    .as("the release 2 riders").isNotEmpty();
+            assertThat(TenantContext.runAs(Club.DEFAULT_ID,
+                    () -> app.queryForList("select id from report_payment_v", UUID.class)))
+                    .as("the release 2 payments").isNotEmpty();
+            for (String view : views) {
+                List<UUID> releaseTwo = db.queryForList(
+                        "select id from " + view + " where club_id = ?", UUID.class, Club.DEFAULT_ID);
+                assertThat(TenantContext.runAs(Club.DEFAULT_ID,
+                        () -> app.queryForList("select id from " + view, UUID.class)))
+                        .as(view + " in the default club").containsExactlyInAnyOrderElementsOf(releaseTwo);
+                assertThat(TenantContext.runAs(other, () -> app.queryForList("select id from " + view, UUID.class)))
+                        .as(view + " in the other club")
+                        .containsExactly(view.equals("report_rider_v") ? rider : payment);
+            }
+            assertThat(TenantContext.runAs(other, () -> app.queryForObject("select current_user", String.class)))
+                    .isEqualTo("equis_app");
+        } finally {
+            db.update("delete from payment where club_id = ?", other);
+            db.update("delete from rider where club_id = ?", other);
+            db.update("delete from admin_account where club_id = ?", other);
             db.update("delete from club where id = ?", other);
         }
     }
