@@ -3180,9 +3180,9 @@
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/isolation/EndpointIsolationIT.java": {
-    "mtime": 1794858021.1942065,
-    "seen": 1794858248.3158536,
-    "ast_hash": "840750b4a9775da2a68b80a9c328edf4",
+    "mtime": 1794860063.937285,
+    "seen": 1794860377.3764827,
+    "ast_hash": "5b1f7f5224ac9253ee53400f37adb786",
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/isolation/RepositoryIsolationIT.java": {
@@ -3678,51 +3678,81 @@
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/entity/reports/RiderReportRow.java": {
-    "mtime": 1794857992.2819655,
-    "seen": 1794858248.2499638,
-    "ast_hash": "b25708445c6f190aed6b7e26551abde7",
+    "mtime": 1794858539.1135411,
+    "seen": 1794860377.3161912,
+    "ast_hash": "33b95726d05d7904cac0fd00f96cead9",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/repository/reports/RiderReportRepository.java": {
-    "mtime": 1794857992.3329349,
-    "seen": 1794858248.2605445,
-    "ast_hash": "345c5cfdf66363539e87ed171570ef18",
+    "mtime": 1794858539.1145368,
+    "seen": 1794860377.3247542,
+    "ast_hash": "fc89e2233f9986a94322837cf6d099fb",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/Chunks.java": {
-    "mtime": 1794857992.4029796,
-    "seen": 1794858248.2827308,
-    "ast_hash": "fdb496612669d7dd0aba9a16cbae43bb",
+    "mtime": 1794858539.1145368,
+    "seen": 1794860377.3428016,
+    "ast_hash": "3c81141644c86aeca88103c07e0696c2",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/definitions/RiderBalanceReportRow.java": {
-    "mtime": 1794857992.48965,
-    "seen": 1794858248.284735,
-    "ast_hash": "121bcb90480c0a0c9a2d531e32b7d840",
+    "mtime": 1794858539.1164274,
+    "seen": 1794860377.3457792,
+    "ast_hash": "5d0e9528cd6c9310b5b17e28f85b5b16",
     "semantic_hash": ""
   },
   "src/main/java/com/equestrian/equis/service/reports/definitions/RiderBalancesReport.java": {
-    "mtime": 1794857992.5512383,
-    "seen": 1794858248.284735,
-    "ast_hash": "7cd38e20ee17123a40c1f36fecdf1709",
+    "mtime": 1794858539.1164274,
+    "seen": 1794860377.3457792,
+    "ast_hash": "46fcf805b2c9ee0dc89f9a3f88126dbc",
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/controller/reports/RiderBalancesReportIT.java": {
-    "mtime": 1794858095.1846495,
-    "seen": 1794858248.3098655,
-    "ast_hash": "083b6e172feb90fe1db0b1a417b21109",
+    "mtime": 1794858539.118464,
+    "seen": 1794860377.3709142,
+    "ast_hash": "cc29eab7af95e1e0ba163e575a44a94d",
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/service/reports/ChunksTest.java": {
-    "mtime": 1794858021.032435,
-    "seen": 1794858248.3260243,
-    "ast_hash": "df86046d12b0e6480da0dd79f5f1f4cb",
+    "mtime": 1794858539.1204388,
+    "seen": 1794860377.3861597,
+    "ast_hash": "aceb5c6c511f9eae112159f43e96806b",
     "semantic_hash": ""
   },
   "src/test/java/com/equestrian/equis/service/reports/definitions/RiderBalancesReportTest.java": {
-    "mtime": 1794858021.0989442,
-    "seen": 1794858248.3269877,
-    "ast_hash": "b2a877e912f89df71efd89791a138ff3",
+    "mtime": 1794858539.121445,
+    "seen": 1794860377.387164,
+    "ast_hash": "db26f052240fdee36eacb07cd26ab85e",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/entity/reports/ExpiredPackageReportRow.java": {
+    "mtime": 1794860048.6117287,
+    "seen": 1794860377.3161912,
+    "ast_hash": "2920ae328d3878aba742c3e1b3556635",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/repository/reports/ExpiredPackageReportRepository.java": {
+    "mtime": 1794860048.6632552,
+    "seen": 1794860377.3237033,
+    "ast_hash": "2d2f322aeb4b0fa19366410daa7bf9b8",
+    "semantic_hash": ""
+  },
+  "src/main/java/com/equestrian/equis/service/reports/definitions/ExpiredSessionsReport.java": {
+    "mtime": 1794860053.0325787,
+    "seen": 1794860377.3457792,
+    "ast_hash": "82c9361243c48310177d16cac48aaecc",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/controller/reports/ExpiredSessionsReportIT.java": {
+    "mtime": 1794860271.7857122,
+    "seen": 1794860377.3709142,
+    "ast_hash": "1fddacdb9d71a31051a7296b4c2e0b60",
+    "semantic_hash": ""
+  },
+  "src/test/java/com/equestrian/equis/service/reports/definitions/ExpiredSessionsReportTest.java": {
+    "mtime": 1794860063.9946985,
+    "seen": 1794860377.387164,
+    "ast_hash": "386ce82997f1d4e6d594a5bbaa9583ad",
     "semantic_hash": ""
   }
 }
