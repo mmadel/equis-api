@@ -55,6 +55,8 @@ class EndpointIsolationIT extends IntegrationTestBase {
             list("GET", "/admin/evaluations/follow-up"),
             list("GET", "/admin/overview"),
             new Case("GET", "/admin/reports/{name}/export", Who.ADMIN, Kind.LIST, x -> "/admin/reports/trainers/export", null),
+            new Case("GET", "/admin/reports/{name}/export", Who.ADMIN, Kind.LIST,
+                    x -> "/admin/reports/payments/export?from=2026-10-01&to=2026-10-31", null),
             list("GET", "/admin/riders"),
             new Case("GET", "/admin/session-templates", Who.ADMIN, Kind.LIST, x -> "/admin/session-templates?level=1", null),
             list("GET", "/admin/trainers"),
