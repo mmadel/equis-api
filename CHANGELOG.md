@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.0] - 2026-11-21
+
+- E18 · Reports foundation: GET /admin/reports/{name}/export (admin only, works for a read-only club) streams an .xlsx built with Apache POI: title block, frozen bold header with filters, typed date, EGP and number cells, and a total row. Range reports take from/to (yyyy-MM-dd, club time zone, at most 12 months: REPORT_RANGE_TOO_LONG); an unknown report returns REPORT_NOT_FOUND. Each report is a security_invoker view, a read-only @TenantId entity and a ReportDefinition. Sample report: Trainers.
+- E19 · Money reports: Payments (date range on recorded date; voided rows kept with their reason, total counts valid payments only), Rider balances (today's bought, used, remaining and next expiry per rider, from RiderBalanceService) and Expired sessions (unused sessions per expired package, date range on expiry date).
+
+### Database
+
+- V28__report_trainer_view.sql, V29__report_payment_view.sql, V30__report_rider_view.sql, V31__report_expired_package_view.sql: report views created WITH (security_invoker = true), so row-level security applies through them.
+
 ## [3.0.0] - 2026-11-08
 
 - E17 · Multi-tenancy: one deployment serves many clubs. Every school table has a club_id, isolated by Hibernate @TenantId and PostgreSQL row-level security; the existing data becomes the default club.
