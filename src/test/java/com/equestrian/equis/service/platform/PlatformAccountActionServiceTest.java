@@ -25,6 +25,7 @@ import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
 import com.equestrian.equis.service.accounts.AccountLinkService;
 import com.equestrian.equis.service.accounts.AccountLinkService.IssuedLink;
+import com.equestrian.equis.service.accounts.DemoModeAccounts;
 import com.equestrian.equis.service.accounts.LinkSender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,10 +69,11 @@ class PlatformAccountActionServiceTest {
     private final RiderRepository riders = mock(RiderRepository.class);
     private final PlatformAccountActionRepository actions = mock(PlatformAccountActionRepository.class);
     private final AccountLinkService links = mock(AccountLinkService.class);
+    private final DemoModeAccounts demoMode = mock(DemoModeAccounts.class);
     private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
     private final TenantTransactions tenants = mock(TenantTransactions.class);
     private final PlatformAccountActionService service = new PlatformAccountActionService(clubs, admins, trainers,
-            riders, actions, links, events, tenants, Clock.fixed(NOW, ZoneOffset.UTC));
+            riders, actions, links, demoMode, events, tenants, Clock.fixed(NOW, ZoneOffset.UTC));
 
     private final Club club = mock(Club.class);
 
@@ -194,6 +196,69 @@ class PlatformAccountActionServiceTest {
         Rider none = rider(RiderAccountStatus.NONE, null);
         when(riders.findByIdAndClubIdForUpdate(ACCOUNT, CLUB)).thenReturn(Optional.of(none));
         assertInvalidStatus(AccountType.RIDER, "NO_ACCOUNT");
+    }
+
+    // E23 · demo mode (mail off): the demo password instead of a link and an email; the same action row.
+    @Test
+    void inDemoModeAnAdminGetsTheDemoPasswordAndNoLinkOrEmail() {
+        when(demoMode.isOn()).thenReturn(true);
+        AdminAccount hany = admin(AdminStatus.ACTIVE);
+        when(admins.findByIdAndClubIdForUpdate(ACCOUNT, CLUB)).thenReturn(Optional.of(hany));
+
+        PlatformAccountReset reset = service.resetPassword(CLUB, AccountType.ADMIN, ACCOUNT, SUPER);
+
+        assertThat(reset).isEqualTo(new PlatformAccountReset(ACCOUNT, AccountType.ADMIN, "hany@cairo-eq.com", null));
+        verify(tenants).inClub(eq(CLUB), any());
+        verify(demoMode).resetPassword(hany);
+        PlatformAccountAction row = savedAction();
+        assertThat(row.getAction()).isEqualTo(AccountActionType.RESET_PASSWORD);
+        assertThat(row.getAccountType()).isEqualTo(AccountType.ADMIN);
+        assertThat(row.getDoneBy()).isEqualTo(SUPER);
+        assertThat(row.getDoneAt()).isEqualTo(NOW);
+        verifyNoInteractions(links, events);
+    }
+
+    @Test
+    void inDemoModeATrainerGetsTheDemoPassword() {
+        when(demoMode.isOn()).thenReturn(true);
+        Trainer omar = trainer(TrainerStatus.ACTIVE);
+        when(trainers.findByIdAndClubIdForUpdate(ACCOUNT, CLUB)).thenReturn(Optional.of(omar));
+
+        PlatformAccountReset reset = service.resetPassword(CLUB, AccountType.TRAINER, ACCOUNT, SUPER);
+
+        assertThat(reset).isEqualTo(new PlatformAccountReset(ACCOUNT, AccountType.TRAINER, "omar@cairo-eq.com",
+                null));
+        verify(demoMode).resetPassword(omar);
+        assertThat(savedAction().getAccountType()).isEqualTo(AccountType.TRAINER);
+        verifyNoInteractions(links, events);
+    }
+
+    @Test
+    void inDemoModeARiderGetsTheDemoPassword() {
+        when(demoMode.isOn()).thenReturn(true);
+        Rider laila = rider(RiderAccountStatus.ACTIVE, "laila@example.com");
+        when(riders.findByIdAndClubIdForUpdate(ACCOUNT, CLUB)).thenReturn(Optional.of(laila));
+
+        PlatformAccountReset reset = service.resetPassword(CLUB, AccountType.RIDER, ACCOUNT, SUPER);
+
+        assertThat(reset).isEqualTo(new PlatformAccountReset(ACCOUNT, AccountType.RIDER, "laila@example.com", null));
+        verify(demoMode).resetPassword(laila);
+        assertThat(savedAction().getAccountName()).isEqualTo("Laila Mostafa");
+        verifyNoInteractions(links, events);
+    }
+
+    @Test
+    void inDemoModeTheUsualChecksStillRefuseAndNothingChanges() {
+        when(demoMode.isOn()).thenReturn(true);
+        Trainer disabled = trainer(TrainerStatus.DISABLED);
+        when(trainers.findByIdAndClubIdForUpdate(ACCOUNT, CLUB)).thenReturn(Optional.of(disabled));
+        assertInvalidStatus(AccountType.TRAINER, "DISABLED");
+
+        when(clubs.findById(CLUB)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.resetPassword(CLUB, AccountType.ADMIN, ACCOUNT, SUPER))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("club_not_found"));
+        verify(demoMode, never()).resetPassword(any(Trainer.class));
+        verify(demoMode, never()).resetPassword(any(AdminAccount.class));
     }
 
     private void assertInvalidStatus(AccountType type, String status) {
