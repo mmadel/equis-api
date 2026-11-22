@@ -47,9 +47,27 @@ merges JaCoCo coverage into `target/site/jacoco-merged/` and fails below the flo
 1. No test profile: test settings live in `src/test/resources/config/application.properties`, not `application-test`.
 2. No dedicated no-op sender: `LogNotificationSender` (log mode) and `RecordingNotificationSender` fill that role.
 
-## graphify
+## graphify (the codebase's RAG index)
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+`graphify-out/` (`C:\equis\equis-api\graphify-out`) is the retrieval layer for this codebase: use it as a RAG
+system whenever you need to find data, code or relationships in the repo. Retrieve from the graph first, then read
+only the source lines it points to. It is a knowledge graph of every class, method, test and file, with god nodes,
+community structure and cross-file relationships (calls, imports, tests-of, contains).
+
+What is in it:
+- `graph.json`: the index itself. Query it through the `graphify` CLI, never by reading the file.
+- `GRAPH_REPORT.md`: architecture summary (god nodes, communities). For broad reviews only.
+- `graph.html`: the interactive view, for people. Agents don't need it.
+- `YYYY-MM-DD/` snapshots, `cache/`, `manifest.json`, `cost.json`, `.graphify_*`: build state. Don't read or edit them.
+
+Retrieval order:
+1. `graphify query "<question>"`: the scoped subgraph for a question, with each node's file and line
+   (`src=... loc=L..`). Add `--budget <tokens>` when it says TRUNCATED, or narrow the question.
+2. `graphify explain "<Class or .method()>"`: one node and its neighbours. `graphify path "<A>" "<B>"`: how two
+   things connect.
+3. Read the raw file, only at the lines the graph located.
+4. Grep only for exact text inside files the graph already named, or when the graph has no answer (config values,
+   SQL migrations, properties).
 
 Rules:
 - When graphify-out/graph.json exists, run `graphify query "<question>"` before your first grep, search or source-file read for a codebase question, and put this rule in every subagent prompt that explores code. Read raw files only for lines the graph or an earlier read already located. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
