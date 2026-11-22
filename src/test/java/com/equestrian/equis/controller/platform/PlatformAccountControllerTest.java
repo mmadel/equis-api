@@ -8,6 +8,8 @@ import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.common.security.AuthUser;
 import com.equestrian.equis.common.security.Role;
+import com.equestrian.equis.dto.platform.AccountActivityPage;
+import com.equestrian.equis.dto.platform.AccountActivityRow;
 import com.equestrian.equis.dto.platform.AccountFilter;
 import com.equestrian.equis.dto.platform.AccountPage;
 import com.equestrian.equis.dto.platform.AccountType;
@@ -15,6 +17,7 @@ import com.equestrian.equis.dto.platform.PlatformAccountReset;
 import com.equestrian.equis.dto.platform.PlatformAccountRow;
 import com.equestrian.equis.dto.platform.PlatformAccountStatus;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
+import com.equestrian.equis.entity.platform.AccountActionType;
 import com.equestrian.equis.entity.club.Club;
 import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.platform.SuperAdminRepository;
@@ -60,6 +63,8 @@ class PlatformAccountControllerTest {
     private static final UUID HANY_ID = UUID.fromString("00000000-0000-0000-0000-0000000000d1");
     private static final UUID LAILA_ID = UUID.fromString("00000000-0000-0000-0000-0000000000d2");
     private static final String PATH = "/platform/clubs/" + CLUB_ID + "/accounts";
+    private static final String ACTIVITY = "/platform/clubs/" + CLUB_ID + "/account-activity";
+    private static final UUID ACTION_ID = UUID.fromString("00000000-0000-0000-0000-0000000000e1");
 
     @Autowired
     MockMvc mvc;
@@ -234,6 +239,79 @@ class PlatformAccountControllerTest {
         mvc.perform(post(path)).andExpect(status().isUnauthorized());
         for (Role role : List.of(Role.ADMIN, Role.TRAINER)) {
             mvc.perform(post(path).header(HttpHeaders.AUTHORIZATION, clubBearer(role)))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.code").value("forbidden"));
+        }
+        verifyNoInteractions(actions);
+    }
+
+    // E22 · account activity.
+    @Test
+    void activityAnswersInTheContractShapeWithDefaultPaging() throws Exception {
+        when(actions.activity(CLUB_ID, 0, 25)).thenReturn(new AccountActivityPage(List.of(
+                new AccountActivityRow(ACTION_ID, Instant.parse("2026-11-21T15:40:00Z"), AccountType.ADMIN, HANY_ID,
+                        "Hany Saeed", "hany@cairo-eq.com", AccountActionType.RESET_PASSWORD, "owner@equis.app")),
+                0, 25, 1));
+
+        mvc.perform(superAdmin(get(ACTIVITY)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(25))
+                .andExpect(jsonPath("$.totalItems").value(1))
+                .andExpect(jsonPath("$.items[0].length()").value(8))
+                .andExpect(jsonPath("$.items[0].id").value(ACTION_ID.toString()))
+                .andExpect(jsonPath("$.items[0].doneAt").value("2026-11-21T15:40:00Z"))
+                .andExpect(jsonPath("$.items[0].accountType").value("ADMIN"))
+                .andExpect(jsonPath("$.items[0].accountId").value(HANY_ID.toString()))
+                .andExpect(jsonPath("$.items[0].accountName").value("Hany Saeed"))
+                .andExpect(jsonPath("$.items[0].accountEmail").value("hany@cairo-eq.com"))
+                .andExpect(jsonPath("$.items[0].action").value("RESET_PASSWORD"))
+                .andExpect(jsonPath("$.items[0].doneByName").value("owner@equis.app"));
+    }
+
+    @Test
+    void activityPassesThePaging() throws Exception {
+        when(actions.activity(any(), anyInt(), anyInt())).thenReturn(new AccountActivityPage(List.of(), 1, 25, 30));
+
+        mvc.perform(superAdmin(get(ACTIVITY).param("page", "1").param("size", "25")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalItems").value(30));
+
+        verify(actions).activity(CLUB_ID, 1, 25);
+    }
+
+    @Test
+    void activityPageAndSizeOutOfRangeAreValidationErrors() throws Exception {
+        mvc.perform(superAdmin(get(ACTIVITY).param("size", "500")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("validation_failed"))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("size"));
+        mvc.perform(superAdmin(get(ACTIVITY).param("size", "0")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("size"));
+        mvc.perform(superAdmin(get(ACTIVITY).param("page", "-1")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("validation_failed"))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("page"));
+        verifyNoInteractions(actions);
+    }
+
+    @Test
+    void activityOfAnUnknownClubIsNotFound() throws Exception {
+        when(actions.activity(any(), anyInt(), anyInt())).thenThrow(
+                new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.CLUB_NOT_FOUND, "This club doesn't exist."));
+
+        mvc.perform(superAdmin(get(ACTIVITY)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("club_not_found"));
+    }
+
+    @Test
+    void onlyTheSuperAdminSeesActivity() throws Exception {
+        mvc.perform(get(ACTIVITY)).andExpect(status().isUnauthorized());
+        for (Role role : List.of(Role.ADMIN, Role.TRAINER)) {
+            mvc.perform(get(ACTIVITY).header(HttpHeaders.AUTHORIZATION, clubBearer(role)))
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.code").value("forbidden"));
         }

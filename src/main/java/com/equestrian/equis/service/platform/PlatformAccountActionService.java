@@ -3,6 +3,8 @@ package com.equestrian.equis.service.platform;
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.error.ErrorCodes;
 import com.equestrian.equis.common.tenant.TenantTransactions;
+import com.equestrian.equis.dto.platform.AccountActivityPage;
+import com.equestrian.equis.dto.platform.AccountActivityRow;
 import com.equestrian.equis.dto.platform.AccountType;
 import com.equestrian.equis.dto.platform.PlatformAccountReset;
 import com.equestrian.equis.dto.platform.PlatformAccountStatus;
@@ -27,6 +29,8 @@ import com.equestrian.equis.service.accounts.AccountLinkService;
 import com.equestrian.equis.service.accounts.AccountLinkService.IssuedLink;
 import com.equestrian.equis.service.accounts.LinkSender;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +38,8 @@ import java.time.Clock;
 import java.util.Map;
 import java.util.UUID;
 
-// What the super admin does to one account of a club from the platform's Accounts tab. Today: reset password.
+// What the super admin does to one account of a club from the platform's Accounts tab (today: reset password), and
+// the club's Activity tab that lists what was done.
 //
 // Two transactions, because one transaction works for one club only (TenantTransactions):
 //   1. root mode: the club exists (any state: a suspended or blocked club can still be helped)
@@ -77,6 +82,18 @@ public class PlatformAccountActionService {
             case ADMIN -> resetAdmin(club, accountId, superAdminId);
             case TRAINER -> resetTrainer(clubId, accountId, superAdminId);
             case RIDER -> resetRider(clubId, accountId, superAdminId);
+        });
+    }
+
+    // The club's recorded actions, newest first (doneAt, then id). Read-only. platform_account_action and super_admin
+    // are global tables, so one root-mode transaction reads them for any club.
+    public AccountActivityPage activity(UUID clubId, int page, int size) {
+        return tenants.asRoot(() -> {
+            if (!clubs.existsById(clubId)) {
+                throw ClubErrors.notFound();
+            }
+            Page<AccountActivityRow> rows = actions.findActivity(clubId, PageRequest.of(page, size));
+            return new AccountActivityPage(rows.getContent(), page, size, rows.getTotalElements());
         });
     }
 

@@ -2,6 +2,8 @@ package com.equestrian.equis.service.platform;
 
 import com.equestrian.equis.common.error.ApiException;
 import com.equestrian.equis.common.tenant.TenantTransactions;
+import com.equestrian.equis.dto.platform.AccountActivityPage;
+import com.equestrian.equis.dto.platform.AccountActivityRow;
 import com.equestrian.equis.dto.platform.AccountType;
 import com.equestrian.equis.dto.platform.PlatformAccountReset;
 import com.equestrian.equis.entity.accounts.AdminAccount;
@@ -28,11 +30,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -211,6 +216,40 @@ class PlatformAccountActionServiceTest {
         ArgumentCaptor<AccountLinkCreatedEvent> captor = ArgumentCaptor.forClass(AccountLinkCreatedEvent.class);
         verify(events).publishEvent(captor.capture());
         return captor.getValue();
+    }
+
+    // E22 · account activity.
+    @Test
+    void activityReadsTheClubsPageInRootMode() {
+        AccountActivityRow row = new AccountActivityRow(UUID.randomUUID(), NOW, AccountType.ADMIN, ACCOUNT,
+                "Hany Saeed", "hany@cairo-eq.com", AccountActionType.RESET_PASSWORD, "owner@equis.app");
+        when(clubs.existsById(CLUB)).thenReturn(true);
+        when(actions.findActivity(CLUB, PageRequest.of(1, 25)))
+                .thenReturn(new PageImpl<>(List.of(row), PageRequest.of(1, 25), 26));
+
+        AccountActivityPage page = service.activity(CLUB, 1, 25);
+
+        assertThat(page).isEqualTo(new AccountActivityPage(List.of(row), 1, 25, 26));
+        verify(tenants).asRoot(any());
+    }
+
+    @Test
+    void activityOfAClubWithNoActionsIsAnEmptyPage() {
+        when(clubs.existsById(CLUB)).thenReturn(true);
+        when(actions.findActivity(CLUB, PageRequest.of(0, 25)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 25), 0));
+
+        assertThat(service.activity(CLUB, 0, 25)).isEqualTo(new AccountActivityPage(List.of(), 0, 25, 0));
+    }
+
+    @Test
+    void activityOfAnUnknownClubIsNotFound() {
+        when(clubs.existsById(CLUB)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.activity(CLUB, 0, 25))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.code()).isEqualTo("club_not_found"));
+        verify(actions, never()).findActivity(any(), any());
     }
 
     private static AdminAccount admin(AdminStatus status) {
