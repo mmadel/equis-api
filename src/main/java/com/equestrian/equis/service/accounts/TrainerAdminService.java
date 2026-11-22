@@ -47,12 +47,13 @@ public class TrainerAdminService {
     private final InviteRepository invites;
     private final MemberRepository members;
     private final PlanLimitService limits;
+    private final DemoModeAccounts demoMode;
 
     public TrainerAdminService(TrainerRepository trainers, AdminAccountRepository admins, AccountLinkService links,
                                TrainerRowAssembler rows, ApplicationEventPublisher events,
                                TrainerAccessService access, RiderRepository riders,
                                AssessmentBookingRepository bookings, InviteRepository invites,
-                               MemberRepository members, PlanLimitService limits) {
+                               MemberRepository members, PlanLimitService limits, DemoModeAccounts demoMode) {
         this.trainers = trainers;
         this.admins = admins;
         this.links = links;
@@ -64,6 +65,7 @@ public class TrainerAdminService {
         this.invites = invites;
         this.members = members;
         this.limits = limits;
+        this.demoMode = demoMode;
     }
 
     @Transactional(readOnly = true)
@@ -159,8 +161,17 @@ public class TrainerAdminService {
         trainers.delete(t);
     }
 
-    // Also used by the row actions (resend, reset password).
+    // Also used by the row actions (resend, reset password). In demo mode the demo password is set instead, so the
+    // row built after this call already shows the trainer as active.
     void sendLink(Trainer trainer, InvitePurpose purpose) {
+        if (demoMode.isOn()) {
+            if (purpose == InvitePurpose.RESET) {
+                demoMode.resetPassword(trainer);
+            } else {
+                demoMode.activate(trainer);
+            }
+            return;
+        }
         IssuedLink link = links.issue(trainer, purpose);
         events.publishEvent(new AccountLinkCreatedEvent(SubjectType.TRAINER, trainer.getId(), trainer.getName(),
                 trainer.getEmail(), purpose, link.rawToken(), link.expiresAt(), LinkSender.CLUB_ADMIN));

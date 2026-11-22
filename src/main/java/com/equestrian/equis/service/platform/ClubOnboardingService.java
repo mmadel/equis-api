@@ -18,6 +18,7 @@ import com.equestrian.equis.repository.platform.SubscriptionRepository;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
 import com.equestrian.equis.service.accounts.AccountLinkService;
 import com.equestrian.equis.service.accounts.AccountLinkService.IssuedLink;
+import com.equestrian.equis.service.accounts.DemoModeAccounts;
 import com.equestrian.equis.service.accounts.LinkSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,14 +60,15 @@ public class ClubOnboardingService {
     private final ApplicationEventPublisher events;
     private final TenantTransactions tenants;
     private final ClubAdminService clubAdmin;
+    private final DemoModeAccounts demoMode;
     private final ZoneId schoolZone;
     private final Clock clock;
 
     public ClubOnboardingService(ClubRepository clubs, PlanRepository plans, SubscriptionRepository subscriptions,
                                  AdminAccountRepository admins, AccountLinkService links,
                                  ApplicationEventPublisher events, TenantTransactions tenants,
-                                 ClubAdminService clubAdmin, @Value("${app.time-zone}") ZoneId schoolZone,
-                                 Clock clock) {
+                                 ClubAdminService clubAdmin, DemoModeAccounts demoMode,
+                                 @Value("${app.time-zone}") ZoneId schoolZone, Clock clock) {
         this.clubs = clubs;
         this.plans = plans;
         this.subscriptions = subscriptions;
@@ -75,6 +77,7 @@ public class ClubOnboardingService {
         this.events = events;
         this.tenants = tenants;
         this.clubAdmin = clubAdmin;
+        this.demoMode = demoMode;
         this.schoolZone = schoolZone;
         this.clock = clock;
     }
@@ -127,6 +130,11 @@ public class ClubOnboardingService {
 
     private void inviteAdmin(Club club, String name, String email) {
         AdminAccount admin = admins.saveAndFlush(AdminAccount.invited(name, email));
+        if (demoMode.isOn()) {
+            // Active at once with the demo password: no link, no email.
+            demoMode.activate(admin);
+            return;
+        }
         IssuedLink link = links.issue(admin, InvitePurpose.INVITE);
         events.publishEvent(new AccountLinkCreatedEvent(SubjectType.ADMIN, admin.getId(), admin.getName(),
                 admin.getEmail(), InvitePurpose.INVITE, link.rawToken(), link.expiresAt(),
