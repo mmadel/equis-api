@@ -18,6 +18,7 @@ import com.equestrian.equis.repository.platform.SubscriptionRepository;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
 import com.equestrian.equis.service.accounts.AccountLinkService;
 import com.equestrian.equis.service.accounts.AccountLinkService.IssuedLink;
+import com.equestrian.equis.service.accounts.LinkSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -129,7 +130,7 @@ public class ClubOnboardingService {
         IssuedLink link = links.issue(admin, InvitePurpose.INVITE);
         events.publishEvent(new AccountLinkCreatedEvent(SubjectType.ADMIN, admin.getId(), admin.getName(),
                 admin.getEmail(), InvitePurpose.INVITE, link.rawToken(), link.expiresAt(),
-                club.getName(), club.getCode()));
+                club.getName(), club.getCode(), LinkSender.CLUB_ADMIN));
     }
 
     // Removes the club and its trial. If that fails too, the first error is still the one thrown.

@@ -65,7 +65,8 @@ class PlatformSignInJourneyIT extends IntegrationTestBase {
     @BeforeEach
     void setUp() {
         fx.reset();
-        jdbc.execute("truncate table super_admin");
+        // platform_account_action.done_by references super_admin (V32), so both go together.
+        jdbc.execute("truncate table platform_account_action, super_admin");
     }
 
     // 1

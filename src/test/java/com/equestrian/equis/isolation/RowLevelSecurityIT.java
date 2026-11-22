@@ -25,7 +25,8 @@ class RowLevelSecurityIT extends IntegrationTestBase {
     // Tables without club rows (global) or found before the club is known (auth lookups), per the V23
     // classification. Platform tables of later tickets join this list when they exist.
     private static final Set<String> NOT_TENANT = Set.of(
-            "level", "club", "flyway_schema_history", "invite", "refresh_token", "plan", "subscription", "super_admin");
+            "level", "club", "flyway_schema_history", "invite", "refresh_token", "plan", "subscription", "super_admin",
+            "platform_account_action");
 
     @Autowired
     TwoClubFixture fx;

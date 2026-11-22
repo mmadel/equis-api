@@ -163,7 +163,7 @@ public class TrainerAdminService {
     void sendLink(Trainer trainer, InvitePurpose purpose) {
         IssuedLink link = links.issue(trainer, purpose);
         events.publishEvent(new AccountLinkCreatedEvent(SubjectType.TRAINER, trainer.getId(), trainer.getName(),
-                trainer.getEmail(), purpose, link.rawToken(), link.expiresAt()));
+                trainer.getEmail(), purpose, link.rawToken(), link.expiresAt(), LinkSender.CLUB_ADMIN));
     }
 
     private static long count(List<Trainer> trainers, TrainerStatus status) {

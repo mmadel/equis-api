@@ -24,6 +24,7 @@ import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
 import com.equestrian.equis.service.accounts.AuthTokenService;
 import com.equestrian.equis.service.accounts.JwtService;
+import com.equestrian.equis.service.accounts.LinkSender;
 import com.equestrian.equis.service.accounts.TokenGenerator;
 import com.equestrian.equis.support.TestMembers;
 import com.jayway.jsonpath.JsonPath;
@@ -378,7 +379,8 @@ public class AdminTrainerApiIT extends IntegrationTestBase {
     @Test
     void theEventNeverPrintsTheToken() {
         AccountLinkCreatedEvent event = new AccountLinkCreatedEvent(SubjectType.TRAINER, UUID.randomUUID(), "Mona Fathy",
-                "mona@example.com", InvitePurpose.INVITE, "raw-secret-token-123", CLOCK.instant());
+                "mona@example.com", InvitePurpose.INVITE, "raw-secret-token-123", CLOCK.instant(),
+                LinkSender.CLUB_ADMIN);
 
         assertThat(event.toString()).doesNotContain("raw-secret-token-123").contains("INVITE");
     }

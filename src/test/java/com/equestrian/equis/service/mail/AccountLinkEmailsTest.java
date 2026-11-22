@@ -3,6 +3,7 @@ package com.equestrian.equis.service.mail;
 import com.equestrian.equis.entity.accounts.InvitePurpose;
 import com.equestrian.equis.entity.accounts.SubjectType;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
+import com.equestrian.equis.service.accounts.LinkSender;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -111,7 +112,8 @@ public class AccountLinkEmailsTest {
     @Test
     void clubAdminInviteOpensTheConsoleAndGivesTheClubCode() {
         OutgoingEmail email = emails.build(new AccountLinkCreatedEvent(SubjectType.ADMIN, UUID.randomUUID(), "Hany",
-                "hany@cairoeq.com", InvitePurpose.INVITE, TOKEN, EXPIRES, "Cairo <Equestrian>", "cairo-eq"));
+                "hany@cairoeq.com", InvitePurpose.INVITE, TOKEN, EXPIRES, "Cairo <Equestrian>", "cairo-eq",
+                LinkSender.CLUB_ADMIN));
 
         assertThat(email.to()).isEqualTo("hany@cairoeq.com");
         assertThat(email.subject()).isEqualTo("Your club admin account at Riding Schedule");
@@ -129,13 +131,65 @@ public class AccountLinkEmailsTest {
                 .doesNotContain("<Equestrian>");
     }
 
+    // E22 · a club admin's reset from the platform: the console link, the club code and the equis team's intro.
+    @Test
+    void platformResetOfAClubAdminNamesTheEquisTeamAndGivesTheClubCode() {
+        OutgoingEmail email = emails.build(new AccountLinkCreatedEvent(SubjectType.ADMIN, UUID.randomUUID(), "Hany",
+                "hany@cairo-eq.com", InvitePurpose.RESET, TOKEN, EXPIRES, "Cairo Equestrian", "cairo-eq",
+                LinkSender.PLATFORM));
+
+        assertThat(email.to()).isEqualTo("hany@cairo-eq.com");
+        assertThat(email.subject()).isEqualTo("Set a new password for Riding Schedule");
+        assertThat(email.text())
+                .contains("The equis team sent you a link to set a new password for your admin account.")
+                .contains("Set your password: http://admin.test/invite/" + TOKEN)
+                .contains("Your club code: cairo-eq")
+                .contains("After that, sign in on the web console with this email and your club code.")
+                .contains("Your current password works until you set a new one.")
+                .doesNotContain("You asked for a link");
+        assertThat(email.html())
+                .contains("The equis team sent you a link to set a new password for your admin account.")
+                .contains("href=\"http://admin.test/invite/" + TOKEN + "\"")
+                .contains("Your club code: cairo-eq");
+    }
+
+    @Test
+    void platformResetOfATrainerOrRiderNamesTheEquisTeam() {
+        OutgoingEmail trainer = emails.build(new AccountLinkCreatedEvent(SubjectType.TRAINER, UUID.randomUUID(),
+                "Omar", "omar@example.com", InvitePurpose.RESET, TOKEN, EXPIRES, LinkSender.PLATFORM));
+        OutgoingEmail rider = emails.build(new AccountLinkCreatedEvent(SubjectType.RIDER, UUID.randomUUID(),
+                "Laila", "laila@example.com", InvitePurpose.RESET, TOKEN, EXPIRES, LinkSender.PLATFORM));
+
+        assertThat(trainer.subject()).isEqualTo("Set a new password for Riding Schedule");
+        assertThat(trainer.text())
+                .contains("The equis team sent you a link to set a new password for your trainer account.")
+                .contains("http://test.local/invite/" + TOKEN)
+                .contains("Your current password works until you set a new one.")
+                .doesNotContain("Your admin sent you")
+                .doesNotContain("Your club code");
+        assertThat(rider.text())
+                .contains("The equis team sent you a link to set a new password for your rider account.")
+                .contains("http://rider.test/invite/" + TOKEN)
+                .doesNotContain("Your admin sent you");
+    }
+
+    // The same reset from the club admin keeps the E6 wording.
+    @Test
+    void clubAdminResetKeepsTheAdminIntro() {
+        OutgoingEmail email = emails.build(event("Mona", InvitePurpose.RESET));
+
+        assertThat(email.text())
+                .contains("Your admin sent you a link to set a new password for the Riding Schedule app.")
+                .doesNotContain("The equis team");
+    }
+
     private static AccountLinkCreatedEvent event(String name, InvitePurpose purpose) {
         return new AccountLinkCreatedEvent(SubjectType.TRAINER, UUID.randomUUID(), name, "mona@example.com", purpose,
-                TOKEN, EXPIRES);
+                TOKEN, EXPIRES, LinkSender.CLUB_ADMIN);
     }
 
     private static AccountLinkCreatedEvent riderEvent(InvitePurpose purpose) {
         return new AccountLinkCreatedEvent(SubjectType.RIDER, UUID.randomUUID(), "Omar Hassan", "omar.h@gmail.com",
-                purpose, TOKEN, EXPIRES);
+                purpose, TOKEN, EXPIRES, LinkSender.CLUB_ADMIN);
     }
 }
