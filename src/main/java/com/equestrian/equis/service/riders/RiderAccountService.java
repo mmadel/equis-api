@@ -14,6 +14,7 @@ import com.equestrian.equis.service.accounts.AccountErrors;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
 import com.equestrian.equis.service.accounts.AccountLinkService;
 import com.equestrian.equis.service.accounts.AccountLinkService.IssuedLink;
+import com.equestrian.equis.service.accounts.DemoModeAccounts;
 import com.equestrian.equis.service.accounts.LinkSender;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -33,14 +34,17 @@ public class RiderAccountService {
     private final AdminAccountRepository admins;
     private final AccountLinkService links;
     private final ApplicationEventPublisher events;
+    private final DemoModeAccounts demoMode;
 
     public RiderAccountService(RiderRepository riders, TrainerRepository trainers, AdminAccountRepository admins,
-                               AccountLinkService links, ApplicationEventPublisher events) {
+                               AccountLinkService links, ApplicationEventPublisher events,
+                               DemoModeAccounts demoMode) {
         this.riders = riders;
         this.trainers = trainers;
         this.admins = admins;
         this.links = links;
         this.events = events;
+        this.demoMode = demoMode;
     }
 
     // Called in the placement's transaction, after the rider is saved. A rider with no email gets no invite.
@@ -84,7 +88,17 @@ public class RiderAccountService {
         return sendLink(rider, InvitePurpose.INVITE);
     }
 
+    // In demo mode the demo password is set instead: the rider comes back active and no link expires.
     private RiderAccount sendLink(Rider rider, InvitePurpose purpose) {
+        if (demoMode.isOn()) {
+            if (purpose == InvitePurpose.RESET) {
+                demoMode.resetPassword(rider);
+            } else {
+                demoMode.activate(rider);
+            }
+            return new RiderAccount(rider.getId(), rider.getAccountStatus(),
+                    purpose.name().toLowerCase(Locale.ROOT), null);
+        }
         IssuedLink link = links.issue(rider, purpose);
         events.publishEvent(new AccountLinkCreatedEvent(SubjectType.RIDER, rider.getId(), rider.getName(),
                 rider.getEmail(), purpose, link.rawToken(), link.expiresAt(), LinkSender.CLUB_ADMIN));

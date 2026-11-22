@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EnableConfigurationProperties(AuthProperties.class)
 @Import({AuthService.class, ClubAccessService.class, AdminLockoutService.class, PasswordService.class, AuthTokenService.class, TenantTransactions.class,
-        AccountLinkService.class, JwtService.class, TokenGenerator.class, JwtConfig.class, SecurityBeans.class,
+        AccountLinkService.class, AccountPasswords.class, JwtService.class, TokenGenerator.class, JwtConfig.class, SecurityBeans.class,
         ClockConfig.class})
 public class AuthServiceIT implements PostgresContainer {
     private static final String ADMIN_EMAIL = "auth-admin@example.com";

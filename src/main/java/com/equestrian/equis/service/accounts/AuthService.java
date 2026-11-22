@@ -11,7 +11,6 @@ import com.equestrian.equis.dto.accounts.InviteAccepted;
 import com.equestrian.equis.dto.accounts.LoginRequest;
 import com.equestrian.equis.entity.accounts.AdminAccount;
 import com.equestrian.equis.entity.accounts.Invite;
-import com.equestrian.equis.entity.accounts.InvitePurpose;
 import com.equestrian.equis.entity.accounts.Trainer;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
 import com.equestrian.equis.entity.club.Club;
@@ -43,6 +42,7 @@ public class AuthService {
     private final PasswordService passwords;
     private final AuthTokenService tokens;
     private final AccountLinkService links;
+    private final AccountPasswords accountPasswords;
     private final ClubRepository clubs;
     private final TenantTransactions tenants;
     private final ClubAccessService clubAccess;
@@ -50,7 +50,8 @@ public class AuthService {
 
     public AuthService(AdminAccountRepository admins, TrainerRepository trainers, RiderRepository riders,
                        AdminLockoutService lockout, PasswordService passwords, AuthTokenService tokens,
-                       AccountLinkService links, ClubRepository clubs, TenantTransactions tenants,
+                       AccountLinkService links, AccountPasswords accountPasswords, ClubRepository clubs,
+                       TenantTransactions tenants,
                        ClubAccessService clubAccess, Clock clock) {
         this.admins = admins;
         this.trainers = trainers;
@@ -59,6 +60,7 @@ public class AuthService {
         this.passwords = passwords;
         this.tokens = tokens;
         this.links = links;
+        this.accountPasswords = accountPasswords;
         this.clubs = clubs;
         this.tenants = tenants;
         this.clubAccess = clubAccess;
@@ -201,46 +203,14 @@ public class AuthService {
     private void acceptInClub(InviteAcceptRequest request) {
         // The link is checked first, so an expired link never gets a "password too short" message.
         Invite invite = links.openLink(request.token());
+        // A disabled trainer's link was refused by openLink.
         if (invite.isForRider()) {
-            acceptRiderLink(invite, request.password());
-            return;
-        }
-        if (invite.isForAdmin()) {
-            acceptAdminLink(invite, request.password());
-            return;
-        }
-        Trainer trainer = invite.getTrainer();
-
-        trainer.setPasswordHash(passwords.hash(request.password()));
-        // A reset link leaves an active trainer active; a disabled trainer was refused by openLink.
-        if (trainer.getStatus() == TrainerStatus.INVITED) {
-            trainer.setStatus(TrainerStatus.ACTIVE);
+            accountPasswords.apply(invite.getRider(), invite.getPurpose(), request.password());
+        } else if (invite.isForAdmin()) {
+            accountPasswords.apply(invite.getAdminAccount(), invite.getPurpose(), request.password());
+        } else {
+            accountPasswords.apply(invite.getTrainer(), invite.getPurpose(), request.password());
         }
         links.markUsed(invite);
-
-        if (invite.getPurpose() == InvitePurpose.RESET) {
-            // Sign out everywhere, so a lost phone or leaked password cannot keep a session.
-            tokens.revokeAll(Role.TRAINER, trainer.getId());
-        }
-    }
-
-    // A club admin's link: invited -> active, or a new password. A reset signs the admin out everywhere.
-    private void acceptAdminLink(Invite invite, String rawPassword) {
-        AdminAccount admin = invite.getAdminAccount();
-        admin.setPassword(passwords.hash(rawPassword));
-        links.markUsed(invite);
-        if (invite.getPurpose() == InvitePurpose.RESET) {
-            tokens.revokeAll(Role.ADMIN, admin.getId());
-        }
-    }
-
-    // invited -> active, or a new password for an active rider. A reset signs the rider out everywhere.
-    private void acceptRiderLink(Invite invite, String rawPassword) {
-        Rider rider = invite.getRider();
-        rider.setPassword(passwords.hash(rawPassword));
-        links.markUsed(invite);
-        if (invite.getPurpose() == InvitePurpose.RESET) {
-            tokens.revokeAll(Role.RIDER, rider.getId());
-        }
     }
 }
