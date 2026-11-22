@@ -23,4 +23,9 @@ public interface AdminAccountRepository extends JpaRepository<AdminAccount, UUID
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from AdminAccount a where a.email = :email")
     Optional<AdminAccount> findByEmailForUpdate(@Param("email") String email);
+
+    // The platform's account actions: the admin of that club only, locked until the transaction ends.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from AdminAccount a where a.id = :id and a.clubId = :clubId")
+    Optional<AdminAccount> findByIdAndClubIdForUpdate(@Param("id") UUID id, @Param("clubId") UUID clubId);
 }

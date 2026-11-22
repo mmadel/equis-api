@@ -14,6 +14,7 @@ import com.equestrian.equis.service.accounts.AccountErrors;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
 import com.equestrian.equis.service.accounts.AccountLinkService;
 import com.equestrian.equis.service.accounts.AccountLinkService.IssuedLink;
+import com.equestrian.equis.service.accounts.LinkSender;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -86,7 +87,7 @@ public class RiderAccountService {
     private RiderAccount sendLink(Rider rider, InvitePurpose purpose) {
         IssuedLink link = links.issue(rider, purpose);
         events.publishEvent(new AccountLinkCreatedEvent(SubjectType.RIDER, rider.getId(), rider.getName(),
-                rider.getEmail(), purpose, link.rawToken(), link.expiresAt()));
+                rider.getEmail(), purpose, link.rawToken(), link.expiresAt(), LinkSender.CLUB_ADMIN));
         return new RiderAccount(rider.getId(), rider.getAccountStatus(),
                 purpose.name().toLowerCase(Locale.ROOT), link.expiresAt());
     }

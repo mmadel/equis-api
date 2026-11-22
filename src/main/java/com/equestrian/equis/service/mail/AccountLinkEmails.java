@@ -3,6 +3,7 @@ package com.equestrian.equis.service.mail;
 import com.equestrian.equis.entity.accounts.InvitePurpose;
 import com.equestrian.equis.entity.accounts.SubjectType;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
+import com.equestrian.equis.service.accounts.LinkSender;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.HtmlUtils;
@@ -14,11 +15,15 @@ import java.util.Locale;
 // The invite and set-password email. One email for both; the subject and first lines change with the purpose.
 // A trainer's link opens the trainer app (app.base-url), a rider's the rider app (app.rider-base-url), a club admin's
 // the web console (app.admin-base-url). The admin's email also names the club and gives its code.
+// A reset sent from the platform (sentBy PLATFORM) starts with the equis team instead of the admin.
 @Component
 public class AccountLinkEmails {
     private static final DateTimeFormatter EXPIRES = DateTimeFormatter.ofPattern("EEE d MMM, HH:mm", Locale.ENGLISH);
     private static final String RESET_SUBJECT = "Set a new password for Riding Schedule";
     private static final String RESET_NOTE = "Your current password works until you set a new one.";
+    // A format: "admin", "trainer" or "rider" goes in.
+    private static final String PLATFORM_RESET_INTRO =
+            "The equis team sent you a link to set a new password for your %s account.";
     private static final String IGNORE = "If you weren't expecting this email, you can ignore it.";
 
     private static final Texts TRAINER = new Texts(
@@ -73,7 +78,10 @@ public class AccountLinkEmails {
                 + EXPIRES.format(e.expiresAt().atZone(schoolZone)) + " (Cairo time).";
         String intro;
         String htmlIntro;
-        if (reset) {
+        if (reset && e.sentBy() == LinkSender.PLATFORM) {
+            intro = PLATFORM_RESET_INTRO.formatted(accountWord(e.subjectType()));
+            htmlIntro = intro;
+        } else if (reset) {
             intro = texts.resetIntro();
             htmlIntro = intro;
         } else if (admin) {
@@ -119,6 +127,14 @@ public class AccountLinkEmails {
 
         return new OutgoingEmail(e.email(), reset ? RESET_SUBJECT : texts.inviteSubject(), text.toString(),
                 html.toString());
+    }
+
+    private static String accountWord(SubjectType type) {
+        return switch (type) {
+            case ADMIN -> "admin";
+            case RIDER -> "rider";
+            default -> "trainer";
+        };
     }
 
     private static String stripTrailingSlash(String url) {

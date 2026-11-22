@@ -47,4 +47,9 @@ public interface TrainerRepository extends JpaRepository<Trainer, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from Trainer t where t.id = :id")
     Optional<Trainer> findByIdForUpdate(@Param("id") UUID id);
+
+    // The platform's account actions: the trainer of that club only, locked like findByIdForUpdate.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select t from Trainer t where t.id = :id and t.clubId = :clubId")
+    Optional<Trainer> findByIdAndClubIdForUpdate(@Param("id") UUID id, @Param("clubId") UUID clubId);
 }

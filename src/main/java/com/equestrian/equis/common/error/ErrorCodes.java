@@ -49,6 +49,7 @@ public class ErrorCodes {
     public static final String PLAN_NOT_FOUND     = "plan_not_found";     // 404
     public static final String SUBSCRIPTION_NOT_FOUND = "subscription_not_found"; // 404
     public static final String REPORT_NOT_FOUND   = "report_not_found";   // 404: name
+    public static final String ACCOUNT_NOT_FOUND  = "account_not_found";  // 404: platform, any account type
     public static final String ENDPOINT_REMOVED   = "endpoint_removed";   // 410
     public static final String CLUB_CODE_TAKEN    = "club_code_taken";    // 409
     public static final String NO_PLANS_CONFIGURED = "no_plans_configured"; // 409: no plan with trial_days

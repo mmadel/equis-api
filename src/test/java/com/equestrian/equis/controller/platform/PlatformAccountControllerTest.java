@@ -11,6 +11,7 @@ import com.equestrian.equis.common.security.Role;
 import com.equestrian.equis.dto.platform.AccountFilter;
 import com.equestrian.equis.dto.platform.AccountPage;
 import com.equestrian.equis.dto.platform.AccountType;
+import com.equestrian.equis.dto.platform.PlatformAccountReset;
 import com.equestrian.equis.dto.platform.PlatformAccountRow;
 import com.equestrian.equis.dto.platform.PlatformAccountStatus;
 import com.equestrian.equis.entity.accounts.TrainerStatus;
@@ -19,6 +20,7 @@ import com.equestrian.equis.repository.accounts.TrainerRepository;
 import com.equestrian.equis.repository.platform.SuperAdminRepository;
 import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.JwtService;
+import com.equestrian.equis.service.platform.PlatformAccountActionService;
 import com.equestrian.equis.service.platform.PlatformAccountService;
 import com.equestrian.equis.support.ActiveClubAccess;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +36,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -43,6 +46,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -63,6 +67,8 @@ class PlatformAccountControllerTest {
     JwtService jwtService;
     @MockitoBean
     PlatformAccountService accounts;
+    @MockitoBean
+    PlatformAccountActionService actions;
     @MockitoBean
     TrainerRepository trainerRepository;
     @MockitoBean
@@ -168,6 +174,70 @@ class PlatformAccountControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("forbidden"));
         verifyNoInteractions(accounts);
+    }
+
+    // E22 · reset password from the platform.
+    @Test
+    void resetPasswordAnswersInTheContractShape() throws Exception {
+        when(actions.resetPassword(CLUB_ID, AccountType.ADMIN, HANY_ID, SUPER_ID)).thenReturn(new PlatformAccountReset(
+                HANY_ID, AccountType.ADMIN, "hany@cairo-eq.com", Instant.parse("2026-11-22T15:40:00Z")));
+
+        mvc.perform(superAdmin(post(PATH + "/admin/" + HANY_ID + "/reset-password")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$.accountId").value(HANY_ID.toString()))
+                .andExpect(jsonPath("$.type").value("ADMIN"))
+                .andExpect(jsonPath("$.email").value("hany@cairo-eq.com"))
+                .andExpect(jsonPath("$.linkExpiresAt").value("2026-11-22T15:40:00Z"));
+    }
+
+    @Test
+    void resetPasswordTakesTheLowercaseTypeFromThePath() throws Exception {
+        mvc.perform(superAdmin(post(PATH + "/trainer/" + HANY_ID + "/reset-password"))).andExpect(status().isOk());
+        mvc.perform(superAdmin(post(PATH + "/rider/" + LAILA_ID + "/reset-password"))).andExpect(status().isOk());
+
+        verify(actions).resetPassword(CLUB_ID, AccountType.TRAINER, HANY_ID, SUPER_ID);
+        verify(actions).resetPassword(CLUB_ID, AccountType.RIDER, LAILA_ID, SUPER_ID);
+    }
+
+    @Test
+    void resetPasswordWithAnUnknownTypeIsAValidationError() throws Exception {
+        for (String type : List.of("owner", "ADMIN", "admins")) {
+            mvc.perform(superAdmin(post(PATH + "/" + type + "/" + HANY_ID + "/reset-password")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("validation_failed"))
+                    .andExpect(jsonPath("$.fieldErrors[0].field").value("type"));
+        }
+        verifyNoInteractions(actions);
+    }
+
+    @Test
+    void resetPasswordPassesTheServiceErrorsThrough() throws Exception {
+        when(actions.resetPassword(any(), any(), any(), any()))
+                .thenThrow(new ApiException(HttpStatus.NOT_FOUND, ErrorCodes.ACCOUNT_NOT_FOUND, "Not found."))
+                .thenThrow(new ApiException(HttpStatus.CONFLICT, ErrorCodes.INVALID_ACCOUNT_STATUS, "Not active.",
+                        Map.of("status", "INVITED", "action", "reset_password")));
+
+        mvc.perform(superAdmin(post(PATH + "/admin/" + HANY_ID + "/reset-password")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("account_not_found"));
+        mvc.perform(superAdmin(post(PATH + "/admin/" + HANY_ID + "/reset-password")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("invalid_account_status"))
+                .andExpect(jsonPath("$.status").value("INVITED"))
+                .andExpect(jsonPath("$.action").value("reset_password"));
+    }
+
+    @Test
+    void onlyTheSuperAdminResetsPasswords() throws Exception {
+        String path = PATH + "/admin/" + HANY_ID + "/reset-password";
+        mvc.perform(post(path)).andExpect(status().isUnauthorized());
+        for (Role role : List.of(Role.ADMIN, Role.TRAINER)) {
+            mvc.perform(post(path).header(HttpHeaders.AUTHORIZATION, clubBearer(role)))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.code").value("forbidden"));
+        }
+        verifyNoInteractions(actions);
     }
 
     private MockHttpServletRequestBuilder superAdmin(MockHttpServletRequestBuilder request) {

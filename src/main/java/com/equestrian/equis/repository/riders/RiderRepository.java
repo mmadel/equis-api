@@ -119,6 +119,11 @@ public interface RiderRepository extends JpaRepository<Rider, UUID> {
     @Query("select r from Rider r where r.id = :id")
     Optional<Rider> findByIdForUpdate(@Param("id") UUID id);
 
+    // The platform's account actions: the rider of that club only, locked like findByIdForUpdate (no joins).
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Rider r where r.id = :id and r.clubId = :clubId")
+    Optional<Rider> findByIdAndClubIdForUpdate(@Param("id") UUID id, @Param("clubId") UUID clubId);
+
     // W3 trainer changes: row locks taken in id order, so two overlapping bulk changes cannot deadlock. No join on
     // trainer, for the same reason as findByIdForUpdate.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
