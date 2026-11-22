@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.2.0] - 2026-11-22
+
+- E22 · Accounts administration: the platform super admin acts on any club's accounts. GET /platform/clubs/{clubId}/accounts lists the club's admins, trainers and riders (type, email, phone, status, last sign-in; search and filters). POST /platform/clubs/{clubId}/accounts/{type}/{id}/reset-password emails a set-password link (24-hour expiry) to an Active account, whatever the club's state; setting the new password signs out every session of that account. GET /platform/clubs/{clubId}/account-activity lists the resets (account, action, who, when), newest first. Platform super admin only.
+
+### Database
+
+- V32__platform_account_action.sql: platform_account_action table (a global platform table, no row-level security) that records each account action, today RESET_PASSWORD, with an index on (club_id, done_at DESC).
+
 ## [3.1.0] - 2026-11-21
 
 - E18 · Reports foundation: GET /admin/reports/{name}/export (admin only, works for a read-only club) streams an .xlsx built with Apache POI: title block, frozen bold header with filters, typed date, EGP and number cells, and a total row. Range reports take from/to (yyyy-MM-dd, club time zone, at most 12 months: REPORT_RANGE_TOO_LONG); an unknown report returns REPORT_NOT_FOUND. Each report is a security_invoker view, a read-only @TenantId entity and a ReportDefinition. Sample report: Trainers.
