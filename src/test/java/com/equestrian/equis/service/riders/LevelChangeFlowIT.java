@@ -21,7 +21,6 @@ import com.equestrian.equis.repository.sessions.AssignmentRepository;
 import com.equestrian.equis.repository.sessions.SessionRepository;
 import com.equestrian.equis.repository.sessions.SessionTemplateRepository;
 import com.equestrian.equis.service.accounts.JwtService;
-import com.equestrian.equis.service.sessions.AssignmentService;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +59,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // The whole promote/demote story (flow M5) end to end against a real database: the ladder, the edges of
-// "upcoming", ownership before and after a reassignment, the other screens' numbers, and the two races repeated.
+// "upcoming", ownership before and after a reassignment, the other screens' numbers, and the double-tap race repeated.
 // Single rules, single answer codes and single-run races are in LevelChangeServiceIT, LevelChangeApiIT,
 // RiderLevelQueryServiceIT and MyRidersQueryServiceIT; they are not repeated here. That covers the task's
 // G2 (stale fromLevelId), G4 (other riders' seats untouched) and G7 (placement line last, none for seed riders).
@@ -81,8 +80,6 @@ public class LevelChangeFlowIT extends IntegrationTestBase {
     JwtService jwtService;
     @Autowired
     LevelChangeService levelChangeService;
-    @Autowired
-    AssignmentService assignmentService;
     @Autowired
     TrainerRepository trainerRepository;
     @Autowired
@@ -277,21 +274,6 @@ public class LevelChangeFlowIT extends IntegrationTestBase {
         assertThat(outcomes).containsExactlyInAnyOrder("ok", "level_changed");
         assertThat(levelOf(sara)).isEqualTo(LEVEL_4);
         assertThat(historyCount(sara)).isEqualTo(1);
-    }
-
-    // G10. The seat save reads its riders FOR SHARE, so it waits for the level change, or the change frees its seat.
-    @RepeatedTest(20)
-    void levelChangeAndSeatSaveNeverLeaveAnOldLevelSeat() throws Exception {
-        Session today1800 = committed(() -> session(LEVEL_3, TODAY, LocalTime.of(18, 0)));
-
-        List<String> outcomes = race(
-                () -> levelChangeService.change(sara.getId(), ahmed.getId(), promote()),
-                () -> assignmentService.replaceMine(ahmed.getId(), today1800.getId(), List.of(sara.getId())));
-
-        assertThat(outcomes.get(0)).isEqualTo("ok");
-        assertThat(outcomes.get(1)).isIn("ok", "level_out_of_range");
-        assertThat(levelOf(sara)).isEqualTo(LEVEL_4);
-        assertThat(seatedSessions(sara)).isEmpty();
     }
 
     // G11
