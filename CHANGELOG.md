@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.3.0] - 2026-11-23
+
+- E23 · Demo mode: with EQUIS_MAIL_ENABLED=false the API sends no email at all. Club admin, trainer and rider invites and password resets set EQUIS_DEMO_PASSWORD at once instead of sending a link, with the same result as accepting the link; a reset signs the account out everywhere, and any link sent earlier stops working. Startup fails if the demo password is missing or not 8 to 72 bytes; it is never logged or returned. Mail stays on when the flag is unset. Demo instances only.
+- Platform password reset (POST /platform/clubs/{clubId}/accounts/{type}/{id}/reset-password) in demo mode sets the demo password and returns linkExpiresAt as null.
+
+### Database
+
+- No new Flyway scripts.
+
 ## [3.2.0] - 2026-11-22
 
 - E22 · Accounts administration: the platform super admin acts on any club's accounts. GET /platform/clubs/{clubId}/accounts lists the club's admins, trainers and riders (type, email, phone, status, last sign-in; search and filters). POST /platform/clubs/{clubId}/accounts/{type}/{id}/reset-password emails a set-password link (24-hour expiry) to an Active account, whatever the club's state; setting the new password signs out every session of that account. GET /platform/clubs/{clubId}/account-activity lists the resets (account, action, who, when), newest first. Platform super admin only.
