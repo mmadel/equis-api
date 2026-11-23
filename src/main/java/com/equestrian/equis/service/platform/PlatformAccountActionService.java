@@ -27,6 +27,7 @@ import com.equestrian.equis.repository.riders.RiderRepository;
 import com.equestrian.equis.service.accounts.AccountLinkCreatedEvent;
 import com.equestrian.equis.service.accounts.AccountLinkService;
 import com.equestrian.equis.service.accounts.AccountLinkService.IssuedLink;
+import com.equestrian.equis.service.accounts.DemoModeAccounts;
 import com.equestrian.equis.service.accounts.LinkSender;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -43,8 +44,9 @@ import java.util.UUID;
 //
 // Two transactions, because one transaction works for one club only (TenantTransactions):
 //   1. root mode: the club exists (any state: a suspended or blocked club can still be helped)
-//   2. in the club: the account (by id and club, locked), its new link and the action row; the email goes after
-//      this one commits (AccountLinkMailListener), so a refused or rolled-back reset writes and sends nothing.
+//   2. in the club: the account (by id and club, locked), its new link (or, in demo mode, the demo password) and the
+//      action row; the email goes after this one commits (AccountLinkMailListener), so a refused or rolled-back reset
+//      writes and sends nothing.
 @Service
 public class PlatformAccountActionService {
     static final String RESET_PASSWORD = "reset_password";
@@ -55,6 +57,7 @@ public class PlatformAccountActionService {
     private final RiderRepository riders;
     private final PlatformAccountActionRepository actions;
     private final AccountLinkService links;
+    private final DemoModeAccounts demoMode;
     private final ApplicationEventPublisher events;
     private final TenantTransactions tenants;
     private final Clock clock;
@@ -62,13 +65,15 @@ public class PlatformAccountActionService {
     public PlatformAccountActionService(ClubRepository clubs, AdminAccountRepository admins,
                                         TrainerRepository trainers, RiderRepository riders,
                                         PlatformAccountActionRepository actions, AccountLinkService links,
-                                        ApplicationEventPublisher events, TenantTransactions tenants, Clock clock) {
+                                        DemoModeAccounts demoMode, ApplicationEventPublisher events,
+                                        TenantTransactions tenants, Clock clock) {
         this.clubs = clubs;
         this.admins = admins;
         this.trainers = trainers;
         this.riders = riders;
         this.actions = actions;
         this.links = links;
+        this.demoMode = demoMode;
         this.events = events;
         this.tenants = tenants;
         this.clock = clock;
@@ -76,6 +81,8 @@ public class PlatformAccountActionService {
 
     // A 24-hour set-password link for an active account; the account's older open link stops working. The old
     // password works until the link is used. Call outside a transaction: each step opens its own.
+    // Demo mode (mail off): no link and no email; the demo password replaces the old one at once, the account's open
+    // links are deleted and the person is signed out everywhere (DemoModeAccounts). linkExpiresAt is then null.
     public PlatformAccountReset resetPassword(UUID clubId, AccountType type, UUID accountId, UUID superAdminId) {
         Club club = tenants.asRoot(() -> clubs.findById(clubId).orElseThrow(ClubErrors::notFound));
         return tenants.inClub(clubId, () -> switch (type) {
@@ -103,6 +110,11 @@ public class PlatformAccountActionService {
         if (admin.getStatus() != AdminStatus.ACTIVE) {
             throw invalidStatus(PlatformAccountStatus.INVITED);
         }
+        if (demoMode.isOn()) {
+            demoMode.resetPassword(admin);
+            record(club.getId(), AccountType.ADMIN, admin.getId(), admin.getName(), admin.getEmail(), superAdminId);
+            return new PlatformAccountReset(admin.getId(), AccountType.ADMIN, admin.getEmail(), null);
+        }
         IssuedLink link = links.issue(admin, InvitePurpose.RESET);
         record(club.getId(), AccountType.ADMIN, admin.getId(), admin.getName(), admin.getEmail(), superAdminId);
         events.publishEvent(new AccountLinkCreatedEvent(SubjectType.ADMIN, admin.getId(), admin.getName(),
@@ -118,6 +130,11 @@ public class PlatformAccountActionService {
             throw invalidStatus(trainer.getStatus() == TrainerStatus.DISABLED
                     ? PlatformAccountStatus.DISABLED : PlatformAccountStatus.INVITED);
         }
+        if (demoMode.isOn()) {
+            demoMode.resetPassword(trainer);
+            record(clubId, AccountType.TRAINER, trainer.getId(), trainer.getName(), trainer.getEmail(), superAdminId);
+            return new PlatformAccountReset(trainer.getId(), AccountType.TRAINER, trainer.getEmail(), null);
+        }
         IssuedLink link = links.issue(trainer, InvitePurpose.RESET);
         record(clubId, AccountType.TRAINER, trainer.getId(), trainer.getName(), trainer.getEmail(), superAdminId);
         events.publishEvent(new AccountLinkCreatedEvent(SubjectType.TRAINER, trainer.getId(), trainer.getName(),
@@ -132,6 +149,11 @@ public class PlatformAccountActionService {
         if (rider.getAccountStatus() != RiderAccountStatus.ACTIVE || rider.getEmail() == null) {
             throw invalidStatus(rider.getAccountStatus() == RiderAccountStatus.INVITED
                     ? PlatformAccountStatus.INVITED : PlatformAccountStatus.NO_ACCOUNT);
+        }
+        if (demoMode.isOn()) {
+            demoMode.resetPassword(rider);
+            record(clubId, AccountType.RIDER, rider.getId(), rider.getName(), rider.getEmail(), superAdminId);
+            return new PlatformAccountReset(rider.getId(), AccountType.RIDER, rider.getEmail(), null);
         }
         IssuedLink link = links.issue(rider, InvitePurpose.RESET);
         record(clubId, AccountType.RIDER, rider.getId(), rider.getName(), rider.getEmail(), superAdminId);
